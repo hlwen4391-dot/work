@@ -23,11 +23,12 @@ class Character {
 }
 
 
-//怪物类
+//怪物类躲避和暴击
 class Monster extends Character {
     constructor(name, hp, attack, defense) {
         super(name, hp, attack, defense);//调用父类构造函数
         this.miss = 0.45;//怪物攻击有45%的概率miss
+        this.crit = 0.1;//怪物攻击有10%的概率暴击
     }
     attackTarget(target) {
         const random = Math.random();//生成0-1之间的随机数
@@ -37,17 +38,32 @@ class Monster extends Character {
             console.log(`${this.name}攻击${target.name}失败！`);
             return;
         }
+        //如果随机数小于crit，则暴击
+        const isCrit = Math.random() < this.crit;//生成0-1之间的随机数
+        if (isCrit) {
+            console.log(`${this.name}暴击了！`);
+            target.hp -= this.attack * 2;//
+            console.log(`${target.name}剩余HP:${target.hp}`);
+        }
+
         super.attackTarget(target);
+        //如果暴击，回到原概率
+        if (isCrit) {
+            {
+                this.crit /= 2;
+            }
+        }
     }
 }
 
 
 
-//英雄类
+//英雄类躲避和暴击
 class Hero extends Character {
     constructor(name, hp, attack, defense) {
         super(name, hp, attack, defense);//调用父类构造函数
         this.miss = 0.2;//英雄攻击有20%的概率miss
+        this.crit = 0.5;//怪物攻击有50%的概率暴击
     }
     attackTarget(target) {
         const radom = Math.random();//生成0-1之间的随机数
@@ -57,11 +73,25 @@ class Hero extends Character {
             console.log(`${this.name}攻击${target.name}失败！`);
             return;
         }
+        //如果随机数小于crit，则暴击
+        const isCrit = Math.random() < this.crit;//生成0-1之间的随机数
+        if (isCrit) {
+            console.log(`${this.name}暴击了！`);
+            target.hp -= this.attack * 2;
+            console.log(`${target.name}剩余HP:${target.hp}`);
+        }
+
         super.attackTarget(target);
+        //如果暴击，回到原概率
+        if (isCrit) {
+            {
+                this.crit /= 2;
+            }
+        }
     }
 
-
 }
+
 
 const hero = new Hero("英雄", 100, 10, 5); //hero的实例化
 const monster = new Monster("怪物", 150, 20, 8); //monster的实例化
