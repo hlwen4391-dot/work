@@ -1,4 +1,6 @@
 const mulberry32 = require("./random");
+const replayBattleStep = require("./replayBattleStep");
+
 // const rand = mulberry32(Date.now());
 
 const rand = mulberry32(122333);
@@ -172,8 +174,8 @@ battleTeams(heros, monsters);
 function testBattle(heros, monsters, seed = 123456) {
 
 
-    const logs = [];
-    const log = (msg) => logs.push(msg);
+    // const logs = [];
+    // const log = (msg) => logs.push(msg);
 
     const isFinished = () => {
         return heros.length === 0 || monsters.length === 0;
@@ -206,26 +208,16 @@ function testBattle(heros, monsters, seed = 123456) {
     log(heros.length > monsters.length ? "英雄胜利！" : "怪物胜利！");
 
 
-    console.log(`======== seed:${seed} 战斗日志 =========`);
-    console.log(`${logs.join("\n")}`);
+    // console.log(`======== seed:${seed} 战斗日志 =========`);
+    // console.log(`${logs.join("\n")}`);
 
-
-
+    replayBattleStep({ seed, logs });
 }
 
 
 for (let i = 0; i < 1; i++) {
     testBattle([...heros], [...monsters], 123456);
 }
-
-
-
-// hero.attackTarget(monster);//英雄攻击怪物
-
-// monster.attackTarget(hero);//怪物攻击英雄
-
-
-
 // while (true) {
 //     hero.attackTarget(monster);
 
