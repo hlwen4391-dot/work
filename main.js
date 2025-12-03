@@ -5,15 +5,28 @@ class Character {
         this.attack = args.attack || 1;
         this.defense = args.defense || 1;
         this.speed = args.speed || 1;
+        this.immune = args.immune || 0;//免伤率
     }//定义角色属性
 
-    //攻击目标方法 
-    attackTarget(target) {
-        const damage = Math.max(this.attack - target.defense, 1);//攻击-防御=伤害
-        target.hp -= damage;//血量-伤害=剩余血量
+    getDamage(target, rand, log) {
+        let damage = 0;
+        //暴击判定
+        const isCrit = rand() < this.crit;//生成0-1之间的随机数
+        if (isCrit) {
+            log(`${this.name}暴击了！`);
+            damage = Math.max((this.attack - target.defense) * 2, 1)
+            return damage;//暴击后直接返回，不进行后续攻击
+        }
+        damage = Math.max(this.attack - target.defense, 1);//攻击-防御=伤害
+        return damage;
+    }
 
-        console.log(`${this.name}对${target.name}造成了${damage}点伤害`)//打印攻击信息
-        console.log(`${target.name}剩余HP:${target.hp}`)//打印剩余血量
+    //攻击目标方法 
+    attackTarget(target, rand, log) {
+        const damage = this.getDamage(target, rand, log) * (1 - target.immune);//攻击-防御=伤害
+        target.hp -= damage;//血量-伤害=剩余血量
+        log(`${this.name}对${target.name}造成了${damage}点伤害`)//打印攻击信息
+        log(`${target.name}剩余HP:${target.hp}`)//打印剩余血量
     }//attackTarget方法用来攻击目标角色
 
 
@@ -32,33 +45,17 @@ class Monster extends Character {
         this.crit = args.crit || 0;//怪物攻击有10%的概率暴击
         this.team = "monster";
     }
-    attackTarget(target) {
-        const random = Math.random();//生成0-1之间的随机数
+    attackTarget(target, rand, log) {
+        const random = rand();//生成0-1之间的随机数
         // console.log(`${this.name}攻击${target.name}的概率为${random}`);
         //如果随机数小于miss，则攻击失败，miss判定
         if (random < target.miss) {
-            console.log(`${this.name}攻击${target.name}失败！`);
+            log(`${this.name}攻击${target.name}失败！`);
             return;
         }
-        //暴击判定
-        const isCrit = Math.random() < this.crit;//生成0-1之间的随机数
-        if (isCrit) {
-
-            console.log(`${this.name}暴击了！`);
-
-            const damage = Math.max((this.attack - target.defense) * 2, 1)
-            target.hp -= damage;//暴击逻辑
-
-            console.log(`暴击伤害${damage}!`);
-            console.log(`${this.name}对${target.name}造成了${damage}点伤害`)
-            console.log(`${target.name}剩余HP:${target.hp}`);
-            return;//暴击后直接返回，不进行后续攻击
-        }
-
-        super.attackTarget(target);
+        super.attackTarget(target, rand, log);
     }
 }
-
 
 
 //英雄类躲避和暴击
@@ -69,45 +66,24 @@ class Hero extends Character {
         this.crit = args.crit || 0;//怪物攻击有10%的概率暴击
         this.team = "hero";
     }
-    attackTarget(target) {
-        const radom = Math.random();//生成0-1之间的随机数
+    attackTarget(target, rand, log) {
+        const radom = rand();//生成0-1之间的随机数
         // console.log(`${this.name}攻击${target.name}的概率是${radom}`);
         //如果随机数小于miss，则攻击失败
         if (radom < this.miss) {
-            console.log(`${this.name}攻击${target.name}失败！`);
+            log(`${this.name}攻击${target.name}失败！`);
             return;
         }
-        //如果随机数小于crit，则暴击
-        const isCrit = Math.random() < this.crit;//生成0-1之间的随机数
-        if (isCrit) {
-
-            console.log(`${this.name}暴击了！`);
-
-            const damage = Math.max((this.attack - target.defense) * 2, 1);
-            target.hp -= damage;//暴击逻辑
-
-            console.log(`暴击伤害${damage}!`);
-            console.log(`${this.name}对${target.name}造成了${damage}点伤害`);
-            console.log(`${target.name}剩余HP:${target.hp}`);
-            return;//暴击后直接返回，不进行后续攻击
-        }
-
-        super.attackTarget(target);
-        //如果暴击，回到原概率
-        // if (isCrit) {
-        //     {
-        //         this.crit /= 2;
-        //     }
-        // }
+        super.attackTarget(target, rand, log);
     }
 
 }
 
 const heros = [
-    new Hero({ name: "战士", hp: 150, attack: 15, defense: 10, speed: 20 }),
-    new Hero({ name: "法师", hp: 100, attack: 20, defense: 8, speed: 18 }),
-    new Hero({ name: "射手", hp: 110, attack: 18, defense: 6, speed: 16 }),
-    new Hero({ name: "刺客", hp: 130, attack: 12, defense: 10, speed: 14 }),
+    new Hero({ name: "战士", hp: 150, attack: 15, defense: 10, speed: 20, crit: 0.6 }),
+    new Hero({ name: "法师", hp: 100, attack: 20, defense: 8, speed: 19, crit: 0.1, miss: 0.2 }),
+    new Hero({ name: "射手", hp: 110, attack: 18, defense: 6, speed: 16, crit: 0.1, miss: 0.2 }),
+    new Hero({ name: "刺客", hp: 130, attack: 12, defense: 10, speed: 14, crit: 0.1, miss: 0.2 }),
     new Hero({ name: "辅助", hp: 100, attack: 10, defense: 12, speed: 12 }),
 ]
 
@@ -115,14 +91,23 @@ const monsters = [
     new Monster({ name: "小兵", hp: 50, attack: 1, defense: 1, speed: 10 }),
     new Monster({ name: "野怪", hp: 80, attack: 5, defense: 3, speed: 10 }),
     new Monster({ name: "巨狼", hp: 100, attack: 10, defense: 5, speed: 8 }),
-    new Monster({ name: "小boss", hp: 200, attack: 20, defense: 10, speed: 6 }),
-    new Monster({ name: "大boss", hp: 300, attack: 30, defense: 15, speed: 4 }),
+    new Monster({ name: "小boss", hp: 110, attack: 20, defense: 10, speed: 6, immune: 0.1 }),
+    new Monster({ name: "大boss", hp: 100, attack: 30, defense: 15, speed: 4, miss: 0.35, crit: 0.1, immune: 0.2 }),
 ]
 
-function speedBattle(heros, monsters) {
+function speedBattle() {
 
 }
 
+function createSeedRandom(seed) {
+    return function () {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    }
+}
+// }//createSeedRandom函数用来生成随机数，seed是种子，每次调用函数时，seed会发生变化，从而生成不同的随机数
+// const rand = createSeedRandom(123456);
+// rand();
 
 
 
@@ -182,40 +167,58 @@ function battleTeams(heros, monsters) {
 
 // battleTeams(heros, monsters);
 
-function testBattle(heros, monsters) {
+function testBattle(heros, monsters, seed = 123456) {
+
+    const rand = createSeedRandom(seed);
+    const logs = [];
+    const log = (msg) => logs.push(msg);
+
     const isFinished = () => {
         return heros.length === 0 || monsters.length === 0;
-    };
+    };//判断阵营人数是否为0，如果为0，则战斗结束
 
     let gameRound = 0;
     while (!isFinished()) {
-        const speedSorted = [...heros, ...monsters].sort((a, b) => b.speed - a.speed);
+        const speedSorted = [...heros, ...monsters].sort((a, b) => b.speed - a.speed);//按速度排序，速度快的先出手
         gameRound++;
         for (const character of speedSorted) {
             if (character.isDead()) {
                 continue;
             }
-            const target = character.team === "hero" ? monsters[Math.floor(Math.random() * monsters.length)] : heros[Math.floor(Math.random() * heros.length)];
+            const target = character.team === "hero" ? monsters[Math.floor(rand() * monsters.length)] : heros[Math.floor(rand() * heros.length)];//随机选择目标，如果
             if (target) {
-                character.attackTarget(target);
+                character.attackTarget(target, rand, log);
                 if (target.isDead()) {
                     if (target.team === "hero") {
-                        heros.splice(heros.indexOf(target), 1);
+                        heros.splice(heros.indexOf(target), 1);//删除已死亡的英雄
                     } else {
-                        monsters.splice(monsters.indexOf(target), 1);
+                        monsters.splice(monsters.indexOf(target), 1);//删除已死亡的怪物
                     }
                 }
             }
-
         }
-        console.log("gameRound:", gameRound, "回合结束！");
-        console.log("\n");
+        log("gameRound:", gameRound, "回合结束！");
+        log("\n");
     }
-    console.log("战斗结束！");
+
+    if (heros.length > monsters.length) {
+        log("英雄胜利！");
+    } else {
+        log("怪物胜利！");
+    }
+
+    // const logs = [];
+    // return logs;//返回日志数组
+    // function log(msg) {
+    //     logs.push(msg);
+    //     console.log(msg);
+    // }
 }
 
 
-testBattle(heros, monsters);
+for (let i = 0; i < 1; i++) {
+    testBattle([...heros], [...monsters], 123456);
+}
 
 
 
