@@ -1,3 +1,8 @@
+const mulberry32 = require("./random");
+// const rand = mulberry32(Date.now());
+
+const rand = mulberry32(122333);
+
 class Character {
     constructor(args) {
         this.name = args.name;
@@ -8,7 +13,7 @@ class Character {
         this.immune = args.immune || 0;//免伤率
     }//定义角色属性
 
-    getDamage(target, rand, log) {
+    getDamage(target, log) {
         let damage = 0;
         //暴击判定
         const isCrit = rand() < this.crit;//生成0-1之间的随机数
@@ -22,7 +27,7 @@ class Character {
     }
 
     //攻击目标方法 
-    attackTarget(target, rand, log) {
+    attackTarget(target, log) {
         const damage = this.getDamage(target, rand, log) * (1 - target.immune);//攻击-防御=伤害
         target.hp -= damage;//血量-伤害=剩余血量
         log(`${this.name}对${target.name}造成了${damage}点伤害`)//打印攻击信息
@@ -46,10 +51,10 @@ class Monster extends Character {
         this.team = "monster";
     }
     attackTarget(target, rand, log) {
-        const random = rand();//生成0-1之间的随机数
+        // const rand = rand();//生成0-1之间的随机数
         // console.log(`${this.name}攻击${target.name}的概率为${random}`);
         //如果随机数小于miss，则攻击失败，miss判定
-        if (random < target.miss) {
+        if (rand() < this.miss) {
             log(`${this.name}攻击${target.name}失败！`);
             return;
         }
@@ -67,10 +72,10 @@ class Hero extends Character {
         this.team = "hero";
     }
     attackTarget(target, rand, log) {
-        const radom = rand();//生成0-1之间的随机数
+        // const random = rand();//生成0-1之间的随机数
         // console.log(`${this.name}攻击${target.name}的概率是${radom}`);
         //如果随机数小于miss，则攻击失败
-        if (radom < this.miss) {
+        if (rand() < this.miss) {
             log(`${this.name}攻击${target.name}失败！`);
             return;
         }
@@ -89,7 +94,7 @@ const heros = [
 
 const monsters = [
     new Monster({ name: "小兵", hp: 50, attack: 1, defense: 1, speed: 10 }),
-    new Monster({ name: "野怪", hp: 80, attack: 5, defense: 3, speed: 10 }),
+    new Monster({ name: "野怪", hp: 80, attack: 5, defense: 3, speed: 9 }),
     new Monster({ name: "巨狼", hp: 100, attack: 10, defense: 5, speed: 8 }),
     new Monster({ name: "小boss", hp: 110, attack: 20, defense: 10, speed: 6, immune: 0.1 }),
     new Monster({ name: "大boss", hp: 100, attack: 30, defense: 15, speed: 4, miss: 0.35, crit: 0.1, immune: 0.2 }),
@@ -99,20 +104,17 @@ function speedBattle() {
 
 }
 
-function createSeedRandom(seed) {
-    return function () {
-        seed = (seed * 9301 + 49297) % 233280;
-        return seed / 233280;
-    }
-}
-// }//createSeedRandom函数用来生成随机数，seed是种子，每次调用函数时，seed会发生变化，从而生成不同的随机数
-// const rand = createSeedRandom(123456);
-// rand();
 
 
 
-//多人战斗函数
+
+// 多人战斗函数
 function battleTeams(heros, monsters) {
+
+
+    const log = console.log;
+
+
     let heroIndex = 0;
     let monsterIndex = 0;
 
@@ -128,7 +130,7 @@ function battleTeams(heros, monsters) {
 
         //英雄攻击怪物
         if (hero.speed >= monster.speed) {
-            hero.attackTarget(monster);
+            hero.attackTarget(monster, rand, log);
             if (monster.isDead()) {
                 console.log(`${hero.name}战胜了${monster.name}！`);
                 monsterIndex++;
@@ -136,13 +138,13 @@ function battleTeams(heros, monsters) {
             }
 
             //怪物攻击英雄
-            monster.attackTarget(hero);
+            monster.attackTarget(hero, rand, log);
             if (hero.isDead()) {
                 console.log(`${monster.name}战胜了${hero.name}！`);
                 heroIndex++;
                 continue;
             } else {
-                monster.attackTarget(hero);
+                monster.attackTarget(hero, rand, log);
                 if (hero.isDead()) {
                     console.log(`${monster.name}战胜了${hero.name}！`);
                     heroIndex++;
@@ -165,11 +167,11 @@ function battleTeams(heros, monsters) {
 
 }
 
-// battleTeams(heros, monsters);
+battleTeams(heros, monsters);
 
 function testBattle(heros, monsters, seed = 123456) {
 
-    const rand = createSeedRandom(seed);
+
     const logs = [];
     const log = (msg) => logs.push(msg);
 
@@ -187,7 +189,7 @@ function testBattle(heros, monsters, seed = 123456) {
             }
             const target = character.team === "hero" ? monsters[Math.floor(rand() * monsters.length)] : heros[Math.floor(rand() * heros.length)];//随机选择目标，如果
             if (target) {
-                character.attackTarget(target, rand, log);
+                character.attackTarget(target, log);
                 if (target.isDead()) {
                     if (target.team === "hero") {
                         heros.splice(heros.indexOf(target), 1);//删除已死亡的英雄
@@ -197,22 +199,18 @@ function testBattle(heros, monsters, seed = 123456) {
                 }
             }
         }
-        log("gameRound:", gameRound, "回合结束！");
+        log(`gameRound:${gameRound} 回合结束！`);
         log("\n");
     }
 
-    if (heros.length > monsters.length) {
-        log("英雄胜利！");
-    } else {
-        log("怪物胜利！");
-    }
+    log(heros.length > monsters.length ? "英雄胜利！" : "怪物胜利！");
 
-    // const logs = [];
-    // return logs;//返回日志数组
-    // function log(msg) {
-    //     logs.push(msg);
-    //     console.log(msg);
-    // }
+
+    console.log(`======== seed:${seed} 战斗日志 =========`);
+    console.log(`${logs.join("\n")}`);
+
+
+
 }
 
 
