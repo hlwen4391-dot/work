@@ -1,6 +1,6 @@
-//旧版主类Character
 const mulberry32 = require("./random");
 const rand = mulberry32(122333);
+const { normalAttack } = require("./skill");
 
 class Character {
     constructor(args) {
@@ -11,15 +11,22 @@ class Character {
         this.speed = args.speed || 1;
         this.immune = args.immune || 0;//免伤率
 
-        this.attackDelay = 1000 / this.speed;
+        this.attackInterval = 1 / this.speed;
+        this.attackTimer = 0;
 
-        this.attackWindow = args.attackWindow || 0;//攻击前摇时间
-        this.attackCooldown = args.attackCooldown || 0;//攻击后摇时间
+        this.skills = args.skills ? [...args.skills] : [];//技能列表
+        normalAttack.cooldown = this.attackInterval;//普通攻击的冷却时间等于攻击间隔
+        this.skills.push(normalAttack);//默认添加普通攻击
 
-        this.nextAttackTime = 0;//下次攻击时间
+        this.skillTimers = {};//技能冷却时间
+        this.skills.forEach(s => (this.skillTimers[s.name] = 0));
 
-        this.skills = args.skills || [];
+        this.miss = args.miss || 0;//miss概率
+        this.crit = args.crit || 0;//暴击概率
+
         this.stunned = 0;//眩晕状态
+        this.stunTimer = 0;
+        this.team = null;
     }//定义角色属性
 
 
@@ -29,4 +36,4 @@ class Character {
 
 }
 
-module.exports = { Character, rand };
+module.exports = Character;

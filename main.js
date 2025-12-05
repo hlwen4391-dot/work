@@ -1,10 +1,66 @@
 const mulberry32 = require("./random");
-const replayBattleStep = require("./replayBattleStep");
 const Hero = require("./Hero");
 const Monster = require("./Monster");
-const { stunSkill, fireball, rageSkill } = require("./skill");
+const { stunSkill, fireball, rageSkill, normalAttack } = require("./skill");
+const BattleLogger = require("./BattleLogger");
+const ActionSystem = require("./ActionSystem");
 
-const rand = mulberry32(Date.now());
+function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}//睡眠函数
+
+async function battleRTS(heros, monsters, seed = Date.now()) {
+
+    const rand = mulberry32(seed);
+    const logger = new BattleLogger();
+    const action = new ActionSystem(logger, rand);
+
+    logger.log("===== 战斗开始（deltaTime实时模式） =====");
+
+
+    const isFinished = () =>
+        heros.length === 0 || monsters.length === 0;//判断阵营人数是否为0，如果为0，则战斗结束
+
+    let last = Date.now();
+
+
+    while (!isFinished()) {
+        let now = Date.now();
+        let delta = (now - last) / 1000;
+        last = now;
+        // updateAllUnits(delta);//更新所有单位
+
+        // 找到下一个要行动的单位
+        const units = [...heros, ...monsters].filter(u => !u.isDead());
+
+
+
+        for (const actor of units) {
+            if (actor.isDead()) continue;
+            const target = action.pickRandomTarget(actor, heros, monsters);
+            if (!target) break;
+            if (action.updateStun(actor, delta)) continue;
+            if (action.updateSkill(actor, target, delta)) {
+                if (target.isDead()) {
+                    logger.log(`${target.name} 被击杀！`);
+                    if (target.team === "hero") heros.splice(heros.indexOf(target), 1);
+                    else monsters.splice(monsters.indexOf(target), 1);
+                }
+                continue;
+            }
+
+            await sleep(16);
+
+
+            // deltaTime = Math.min(0.016, (Date.now() - lastDelta) / 1000); // 模拟游戏引擎的帧率
+            // lastDelta = Date.now();
+            // await new Promise(resolve => setTimeout(resolve, deltaTime));// sleep diffTime ms
+
+        }
+    }
+    logger.log(heros.length > monsters.length ? "英雄胜利！" : "怪物胜利！");
+    logger.log("===== 实时时间驱动战斗结束 =====");
+}
 
 
 const heros = [
@@ -23,117 +79,6 @@ const monsters = [
     new Monster({ name: "大boss", hp: 100, attack: 30, defense: 15, speed: 4, miss: 0.35, crit: 0.1, immune: 0.2 }),
 ]
 
-
-
-function battleRTS(heros, monsters, seed) {
-
-
-    const rand = mulberry32(seed);
-    const log = console.log;
-
-    log("===== 实时时间驱动战斗开始 =====");
-
-    // 初始化全部单位的 nextActionTime = 0
-    const allUnits = [...heros, ...monsters];
-    allUnits.forEach(u => u.nextActionTime = 0);
-
-    let now = 0;
-
-    const isFinished = () =>
-        heros.length === 0 || monsters.length === 0;//判断阵营人数是否为0，如果为0，则战斗结束
-
-
-    let gameRound = 0;
-
-    while (!isFinished()) {
-        console.log(`游戏回合：${gameRound} 开始！`);
-
-        // 找到下一个要行动的单位
-        const aliveUnits = allUnits.filter(u => !u.isDead());
-        aliveUnits.sort((a, b) => a.nextActionTime - b.nextActionTime);
-        gameRound++;
-        const actor = aliveUnits[0];
-        now = actor.nextActionTime; // 推进全局时间
-
-        // 选择目标
-        const targetTeam = actor.team === "hero" ? monsters : heros;
-        if (targetTeam.length === 0) break;
-
-        const target = targetTeam[Math.floor(rand() * targetTeam.length)];
-
-        // 眩晕判定
-        if (actor.stunned > 0) {
-            log(`[${now.toFixed(0)}ms] ${actor.name} 被眩晕，跳过行动！`);
-            actor.stunned--;
-            actor.nextActionTime = now + actor.attackDelay;
-            continue;
-        }
-
-        // 技能释放判定（使用真实时间 now）
-        let castSkill = false;
-        for (const skill of actor.skills) {
-            if (!skill.lastUse) skill.lastUse = -99999999;
-
-            if (now - skill.lastUse >= skill.cooldown) {
-                log(`[${now.toFixed(0)}ms] ${actor.name} 释放技能【${skill.name}】`);
-                skill.effect(actor, target, log);
-                skill.lastUse = now;
-
-                // 技能释放后进入冷却（后摇）
-                actor.nextActionTime = now + actor.attackDelay;
-                castSkill = true;
-
-                // 死亡处理
-                if (target.isDead()) {
-                    log(`${target.name} 被击杀！`);
-                    targetTeam.splice(targetTeam.indexOf(target), 1);
-                }
-
-                break;
-            }
-        }
-        if (castSkill) continue;
-
-        // 普通攻击前摇
-        log(`[${now.toFixed(0)}ms] ${actor.name} 开始攻击 ${target.name} (前摇 ${actor.attackWindow}ms)`);
-        const attackStartTime = now + actor.attackWindow;
-
-        // MISS 判定
-        if (actor.miss && rand() < actor.miss) {
-            log(`[${attackStartTime.toFixed(0)}ms] ${actor.name} 攻击 ${target.name} 失败！`);
-            actor.nextActionTime = attackStartTime + actor.attackDelay;
-            continue;
-        }
-
-        // 普通攻击、暴击判定
-        let dmg = 0;
-        const isCrit = rand() < actor.crit;
-        if (isCrit) {
-            log(`${actor.name}暴击了！`);
-            dmg = Math.max((actor.attack - target.defense) * 2, 1);
-        } else {
-            dmg = Math.max(actor.attack - target.defense, 1);
-        }
-
-        dmg *= (1 - target.immune);
-
-        // 造成伤害
-        target.hp -= dmg;
-        log(`[${attackStartTime.toFixed(0)}ms] ${actor.name} 对 ${target.name} 造成了 ${dmg} 点伤害，${target.name}剩余HP:${target.hp}`);
-
-        // 后摇时间
-        actor.nextActionTime = attackStartTime + actor.attackDelay;
-
-        // 目标死亡处理
-        if (target.isDead()) {
-            log(`${target.name} 被击杀！`);
-            targetTeam.splice(targetTeam.indexOf(target), 1);
-        }
-    }
-
-    log(heros.length > monsters.length ? "英雄胜利！" : "怪物胜利！");
-    log("===== 实时时间驱动战斗结束 =====");
-}
 
 for (let i = 0; i < 1; i++) {
     battleRTS([...heros], [...monsters], 123456);
