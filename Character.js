@@ -1,6 +1,7 @@
 const mulberry32 = require("./random");
 const rand = mulberry32(122333);
 const { normalAttack } = require("./skill");
+const BuffManager = require("./BuffManager");
 
 class Character {
     constructor(args) {
@@ -19,7 +20,7 @@ class Character {
         this.skills.push(normalAttack);//默认添加普通攻击
 
         this.skillTimers = {};//技能冷却时间
-        this.skills.forEach(s => (this.skillTimers[s.name] = 0));
+        this.skills.forEach(s => (this.skillTimers[s.name] = 0));//初始化技能冷却时间
 
         this.miss = args.miss || 0;//miss概率
         this.crit = args.crit || 0;//暴击概率
@@ -27,6 +28,8 @@ class Character {
         this.stunned = 0;//眩晕状态
         this.stunTimer = 0;
         this.team = null;
+
+        this.buffManager = new BuffManager(this);
     }//定义角色属性
 
 
@@ -36,4 +39,6 @@ class Character {
 
 }
 
-module.exports = Character;
+
+
+module.exports = Character;//导出Character类

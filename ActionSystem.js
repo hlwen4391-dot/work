@@ -1,4 +1,4 @@
-
+const { SkillEnum } = require("./config");
 class ActionSystem {
 
     constructor(logger, rand) {
@@ -19,7 +19,7 @@ class ActionSystem {
 
             if (actor.skillTimers[skill.name] >= skill.cooldown) {
 
-                if (skill.name === "普通攻击" && actor.miss && this.rand() < actor.miss) {
+                if (skill.id === SkillEnum.normalAttack && actor.miss && this.rand() < actor.miss) {
                     this.logger.log(`${actor.name} 攻击 ${target.name} 失败！`);
                     actor.skillTimers[skill.name] = 0;//重置技能冷却时间
                     return true;
@@ -76,13 +76,10 @@ class ActionSystem {
     //     return true;
     // }
 
-    updateStun(actor, deltaTime) {
-        if (actor.stunned > 0) {
-            actor.stunTimer -= deltaTime;
-            if (actor.stunTimer <= 0) {
-                actor.stunned = 0;
-                this.logger.log(`${actor.name} 眩晕状态结束！`);
-            }
+    updateStatusEffects(actor, deltaTime) {
+        actor.buffManager.updateBuffs(deltaTime, this.logger.log.bind(this.logger));//
+
+        if (actor.buffManager.hasStatus("stun")) {
             return true;
         }
         return false;
