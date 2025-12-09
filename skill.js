@@ -1,5 +1,6 @@
 const BuffSystem = require("./BuffSystem");
 const { SkillEnum } = require("./config");
+const TeamRef = require("./TeamRef");
 const stunSkill = {
     name: "盾击",
     cooldown: 4.0,
@@ -15,7 +16,7 @@ const stunSkill = {
 
 const fireball = {
     name: "火球术",
-    cooldown: 1.5,//技能冷却时间
+    cooldown: 3.0,//技能冷却时间
     id: SkillEnum.fireball,
     effect: (self, target, log) => {
         const dmg = 5;
@@ -35,6 +36,22 @@ const rageSkill = {
     }
 };
 
+//战吼
+const warCry = {
+    name: "战吼",
+    id: SkillEnum.warCry,
+    cooldown: 10.0,
+    effect: (self, target, log) => {
+
+        log(`${self.name}发出了战吼`);
+        const alllies = self.team === "hero" ? TeamRef.herosRef : TeamRef.monstersRef;
+
+        alllies.forEach(ally => {
+            BuffSystem.addbuff(ally, "warCry", log);
+
+        });
+    }
+};
 const normalAttack = {
     name: "普通攻击",
     id: SkillEnum.normalAttack,
@@ -70,4 +87,4 @@ const normalAttack = {
 
 
 
-module.exports = { stunSkill, fireball, rageSkill, normalAttack };
+module.exports = { stunSkill, fireball, rageSkill, normalAttack, warCry };

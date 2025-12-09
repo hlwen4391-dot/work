@@ -22,4 +22,21 @@ module.exports = {
         }
     },
 
+    warCry: {
+        name: "战吼",
+        duration: 3,
+        modifiers: {
+            attack: 5,
+            speed: 3
+        },
+
+        onApply(target, log) {
+            log(`${target.name}受到战吼鼓舞，攻击力增加了5点，速度增加了3点`);
+        },
+        onExpire(target, log) {
+            log(`${target.name}战吼效果结束`);
+        }
+
+
+    }
 };
