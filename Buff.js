@@ -7,11 +7,11 @@ class Buff {
 
         this.onApply = config.onApply || null;//添加时
         this.onTick = config.onTick || null;//每秒
-        this.onRemove = config.onRemove || null;//结束时
+        this.onExpire = config.onExpire || null;//结束时
 
         this.modifiers = config.modifiers || {};//属性增减
         this.interval = config.interval || 1.0;//Tick间隔
-        this.tickTimer = 0;
+        this.tickTimer = 0;//初始化tickTimer
 
         this.status = config.status || {}; //特殊状态
     }
@@ -21,6 +21,11 @@ class Buff {
 
         for (const key in this.modifiers) {
             target[key] += this.modifiers[key];//属性增减
+        }
+
+        if (this.onTick) {
+            this.onTick(target, logger);
+            this.tickTimer = 0;
         }
     }
 
@@ -36,7 +41,7 @@ class Buff {
 
         return this.elapsed >= this.duration;
     }
-
+    //结束buff
     expire(target, logger) {
         if (this.onExpire) this.onExpire(target, logger);
         //自动恢复属性

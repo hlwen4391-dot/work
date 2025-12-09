@@ -8,7 +8,7 @@ const BuffSystem = require("./BuffSystem");
 
 function sleep(ms) {
     return new Promise(r => setTimeout(r, ms));
-}//睡眠函数
+}//睡眠函数，用于等待一段时间
 
 async function battleRTS(heros, monsters, seed = Date.now()) {
 
@@ -28,7 +28,8 @@ async function battleRTS(heros, monsters, seed = Date.now()) {
     while (!isFinished()) {
         let now = Date.now();
         let delta = (now - last) / 1000;
-        last = now;
+        last = now;//更新上次时间戳
+        // console.log(delta);
         // updateAllUnits(delta);//更新所有单位
 
         // 找到下一个要行动的单位
@@ -54,15 +55,12 @@ async function battleRTS(heros, monsters, seed = Date.now()) {
             }
 
 
-
-            await sleep(16);
-
-
             // deltaTime = Math.min(0.016, (Date.now() - lastDelta) / 1000); // 模拟游戏引擎的帧率
             // lastDelta = Date.now();
             // await new Promise(resolve => setTimeout(resolve, deltaTime));// sleep diffTime ms
 
         }
+        await sleep(16);
     }
 
 
@@ -72,15 +70,16 @@ async function battleRTS(heros, monsters, seed = Date.now()) {
 
 
 const heros = [
-    new Hero({ name: "战士", hp: 150, attack: 15, defense: 10, speed: 20, crit: 0.6, skills: [stunSkill] }),
-    new Hero({ name: "法师", hp: 100, attack: 20, defense: 8, speed: 19, crit: 0.1, miss: 0.2, skills: [fireball] }),
-    new Hero({ name: "射手", hp: 110, attack: 18, defense: 6, speed: 16, crit: 0.1, miss: 0.2 }),
+    new Hero({ name: "战士", hp: 150, attack: 8, defense: 10, speed: 15, crit: 0.6, skills: [normalAttack, stunSkill] }),
+    new Hero({ name: "法师", hp: 100, attack: 10, defense: 8, speed: 6, crit: 0.1, miss: 0.2, skills: [normalAttack, fireball] }),
+    // new Hero({ name: "射手", hp: 110, attack: 6, defense: 6, speed: 7, crit: 0.1, miss: 0.2 }),
 ]
 
 const monsters = [
-    new Monster({ name: "小兵", hp: 50, attack: 1, defense: 1, speed: 10 }),
-    new Monster({ name: "野怪", hp: 80, attack: 5, defense: 3, speed: 9 }),
-    new Monster({ name: "巨狼", hp: 200, attack: 10, defense: 5, speed: 8, skills: [rageSkill] }),
+    new Monster({ name: "小兵", hp: 50, attack: 3, defense: 1, speed: 10, skills: [normalAttack] }),
+    // new Monster({ name: "野怪", hp: 80, attack: 4, defense: 3, speed: 9 }),
+    new Monster({ name: "巨狼", hp: 200, attack: 7, defense: 5, speed: 8, skills: [normalAttack, rageSkill] }),
+    // new Monster({ name: "boss", hp: 400, attacl: 10, defence: 10, speed: 10, skills: [rageSkill,] }),
 
 ]
 

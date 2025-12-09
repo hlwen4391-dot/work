@@ -1,6 +1,6 @@
 const Buff = require("./Buff");
 const BuffRegistry = require("./BuffRegistry");
-
+//buff工厂
 class BuffFactory {
     static creat(name) {
         const data = BuffRegistry[name];
@@ -17,6 +17,6 @@ class BuffFactory {
             stackable: data.stackable,    //是否可叠加
         });
     }
-} //创建buff
+}
 
 module.exports = BuffFactory;

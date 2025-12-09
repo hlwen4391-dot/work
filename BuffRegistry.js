@@ -1,7 +1,7 @@
 module.exports = {
     burn: {
         name: "燃烧",
-        duration: 10,
+        duration: 3,
         interval: 1,
         onTick: (target, log) => {
             let dmg = 5;
@@ -12,7 +12,7 @@ module.exports = {
 
     stun: {
         name: "眩晕",
-        duration: 1,
+        duration: 1,//眩晕时间
         status: { stun: true },
         onApply(target, log) {
             log(`${target.name}被眩晕了`);
@@ -21,4 +21,5 @@ module.exports = {
             log(`${target.name}眩晕状态结束`);
         }
     },
+
 };

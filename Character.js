@@ -14,10 +14,10 @@ class Character {
 
         this.attackInterval = 1 / this.speed;
         this.attackTimer = 0;
-
+        // this.normalAttackCooldown = this.attackInterval;
         this.skills = args.skills ? [...args.skills] : [];//技能列表
-        normalAttack.cooldown = this.attackInterval;//普通攻击的冷却时间等于攻击间隔
-        this.skills.push(normalAttack);//默认添加普通攻击
+
+        // this.skills.push({ name: normalAttack.name, id: normalAttack.id, cooldown: this.attackInterval, effect: normalAttack.effect, });//默认添加普通攻击
 
         this.skillTimers = {};//技能冷却时间
         this.skills.forEach(s => (this.skillTimers[s.name] = 0));//初始化技能冷却时间

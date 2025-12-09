@@ -12,24 +12,36 @@ class ActionSystem {
         return enemyTeam[Math.floor(this.rand() * enemyTeam.length)];
     }
 
-
+    //更新技能
     updateSkill(actor, target, deltaTime) {
         for (const skill of actor.skills) {
             actor.skillTimers[skill.name] += deltaTime;
+            // console.log(actor.skillTimers[skill.name]);
+        }
+        const normol = SkillEnum.normalAttack;
+        const nonNormalSkill = actor.skills.filter(s => s.id !== normol);//非普通攻击技能
+        const normalSkill = actor.skills.find(s => s.id === normol);//普通攻击技能
 
-            if (actor.skillTimers[skill.name] >= skill.cooldown) {
-
-                if (skill.id === SkillEnum.normalAttack && actor.miss && this.rand() < actor.miss) {
-                    this.logger.log(`${actor.name} 攻击 ${target.name} 失败！`);
-                    actor.skillTimers[skill.name] = 0;//重置技能冷却时间
-                    return true;
-                }
-
-                this.logger.log(`${actor.name} 释放技能【${skill.name}】`);
-                skill.effect(actor, target, this.logger.log.bind(this.logger));
-                actor.skillTimers[skill.name] = 0;
+        for (const s of nonNormalSkill) {
+            if (actor.skillTimers[s.name] >= s.cooldown) {
+                this.logger.log(`${actor.name} 释放技能【${s.name}】`);
+                s.effect(actor, target, this.logger.log.bind(this.logger));
+                actor.skillTimers[s.name] = 0;//重置技能冷却时间
                 return true;
             }
+        }
+
+        if (normalSkill && actor.skillTimers[normalSkill.name] >= normalSkill.cooldown) {
+            // console.log("normalSkill", actor.skillTimers[normalSkill.name], normalSkill.cooldown);
+            if (actor.miss && this.rand() < actor.miss) {
+                this.logger.log(`${actor.name} 攻击 ${target.name} 失败！`);
+                actor.skillTimers[normalSkill.name] = 0;
+                return true;
+            }
+            this.logger.log(`${actor.name} 释放技能【${normalSkill.name}】`);
+            normalSkill.effect(actor, target, this.logger.log.bind(this.logger));
+            actor.skillTimers[normalSkill.name] = 0;
+            return true;
         }
         return false;
     }
@@ -76,6 +88,12 @@ class ActionSystem {
     //     return true;
     // }
 
+
+
+
+
+
+    //更新状态效果(跳过该单位回合)
     updateStatusEffects(actor, deltaTime) {
         actor.buffManager.updateBuffs(deltaTime, this.logger.log.bind(this.logger));//
 
