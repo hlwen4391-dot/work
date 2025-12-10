@@ -17,8 +17,6 @@ class Character {
         // this.normalAttackCooldown = this.attackInterval;
         this.skills = args.skills ? [...args.skills] : [];//技能列表
 
-        // this.skills.push({ name: normalAttack.name, id: normalAttack.id, cooldown: this.attackInterval, effect: normalAttack.effect, });//默认添加普通攻击
-
         this.skillTimers = {};//技能冷却时间
         this.skills.forEach(s => (this.skillTimers[s.name] = 0));//初始化技能冷却时间
 
@@ -26,16 +24,17 @@ class Character {
         this.crit = args.crit || 0;//暴击概率
 
         this.stunned = 0;//眩晕状态
-        this.stunTimer = 0;
+        this.stunTimer = 0;//眩晕时间
         this.team = null;
 
         this.buffManager = new BuffManager(this);
     }//定义角色属性
 
 
-    isDead() {
-        return this.hp <= 0;
-    }//Character 类的实例方法用来判断角色是否死亡
+    // isDead() {
+    //     return this.hp <= 0;
+    // }//Character 类的实例方法用来判断角色是否死亡
+
 
 }
 
