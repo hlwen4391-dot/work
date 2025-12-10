@@ -23,6 +23,10 @@ class Buff {
             target[key] += this.modifiers[key];//属性增减
         }
 
+        if (this.modifiers.speed !== undefined) {
+            target.attackInterval = 1 / target.speed;
+        }
+
         if (this.onTick) {
             this.onTick(target, logger);
             this.tickTimer = 0;
@@ -47,6 +51,10 @@ class Buff {
         //自动恢复属性
         for (const key in this.modifiers) {
             target[key] -= this.modifiers[key];//属性增减
+        }
+        //重新计算速度
+        if (this.modifiers.speed !== undefined) {
+            target.attackInterval = 1 / target.speed;
         }
     }
 

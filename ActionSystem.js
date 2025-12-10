@@ -9,7 +9,8 @@ class ActionSystem {
     //随机选择目标
     pickRandomTarget(actor, heros, monsters) {
         const enemyTeam = actor.team === "hero" ? monsters : heros;
-        return enemyTeam[Math.floor(this.rand() * enemyTeam.length)];
+        if (enemyTeam.length === 0) return null;//如果敌方阵营为空，则返回null
+        return enemyTeam[Math.floor(this.rand() * enemyTeam.length)];//随机选择一个敌方单位
     }
 
     //更新技能
@@ -25,7 +26,7 @@ class ActionSystem {
         for (const s of nonNormalSkill) {
             if (actor.skillTimers[s.name] >= s.cooldown) {
                 this.logger.log(`${actor.name} 释放技能【${s.name}】`);
-                s.effect(actor, target, this.logger.log.bind(this.logger));
+                s.effect(actor, target, this.logger.log.bind(this.logger), this.rand);
                 actor.skillTimers[s.name] = 0;//重置技能冷却时间
                 return true;
             }
@@ -39,7 +40,7 @@ class ActionSystem {
                 return true;
             }
             this.logger.log(`${actor.name} 释放技能【${normalSkill.name}】`);
-            normalSkill.effect(actor, target, this.logger.log.bind(this.logger));
+            normalSkill.effect(actor, target, this.logger.log.bind(this.logger), this.rand);
             actor.skillTimers[normalSkill.name] = 0;
             return true;
         }

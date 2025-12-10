@@ -31,8 +31,8 @@ const rageSkill = {
     id: SkillEnum.rageSkill,
     cooldown: 2.0,
     effect: (self, target, log) => {
-        self.attack += 5;
-        log(`${self.name}进入了狂暴状态，攻击力增加了5点`);
+        BuffSystem.addbuff(self, "rage", log);
+        log(`${self.name}进入了狂暴状态`);
     }
 };
 
@@ -41,6 +41,7 @@ const warCry = {
     name: "战吼",
     id: SkillEnum.warCry,
     cooldown: 10.0,
+
     effect: (self, target, log) => {
 
         log(`${self.name}发出了战吼`);
@@ -48,43 +49,30 @@ const warCry = {
 
         alllies.forEach(ally => {
             BuffSystem.addbuff(ally, "warCry", log);
-
         });
     }
 };
+
+//普通攻击
 const normalAttack = {
     name: "普通攻击",
     id: SkillEnum.normalAttack,
     cooldown: 1.0,
-    effect: (self, target, log) => {
+    effect: (self, target, log, rand) => {
         let dmg = Math.max(self.attack - target.defense, 1);
 
         //暴击
-        if (Math.random() < self.crit) {
+        if (rand() < self.crit) {
             dmg *= 2;
             log(`${self.name}暴击了！`);
         }
         //免伤
-        dmg *= Math.floor(1 - target.immune);
+        dmg *= (1 - target.immune);
 
         //扣血
         target.hp -= dmg;
         log(`${self.name}对${target.name}造成了${dmg}点伤害`);
     }
 };
-
-
-// const burnBuff = new Buff({
-//     name: "燃烧",
-//     duration: 10,
-//     interval: 1,
-//     onTick: (target, log) => {
-//         let dmg = 5;
-//         target.hp -= dmg;
-//         log(`${target.name}燃烧，每秒损失${dmg}点燃烧伤害`);
-//     }
-// });
-
-
 
 module.exports = { stunSkill, fireball, rageSkill, normalAttack, warCry };

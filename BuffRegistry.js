@@ -2,7 +2,7 @@ module.exports = {
     burn: {
         name: "燃烧",
         duration: 3,
-        interval: 1,
+        interval: 1,//每秒执行一次
         onTick: (target, log) => {
             let dmg = 5;
             target.hp -= dmg;
@@ -31,12 +31,24 @@ module.exports = {
         },
 
         onApply(target, log) {
-            log(`${target.name}受到战吼鼓舞，攻击力增加了5点，速度增加了3点`);
+            log(`${target.name}受到战吼鼓舞，攻击力增加了5点，速度提升了3点`);
         },
         onExpire(target, log) {
             log(`${target.name}战吼效果结束`);
         }
+    },
 
-
+    rage: {
+        name: "狂暴",
+        duration: 3,
+        modifiers: {
+            attack: 5,
+        },
+        onApply(target, log) {
+            log(`${target.name}进入了狂暴状态，攻击力增加了5点`);
+        },
+        onExpire(target, log) {
+            log(`${target.name}狂暴状态结束`);
+        }
     }
 };

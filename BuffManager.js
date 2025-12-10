@@ -9,7 +9,7 @@ class BuffManager {
         if (!buff.stackable) {
             const old = this.buffs.find(b => b.name === buff.name);//查找是否存在同名buff
             if (old) {
-                old.duration = buff.duration;//
+                old.duration = buff.duration;//延长buff持续时间
                 old.elapsed = 0;
                 if (old.onApply) old.onApply(this.owner, logger);
                 return;

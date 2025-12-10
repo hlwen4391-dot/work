@@ -14,6 +14,8 @@ function sleep(ms) {
 async function battleRTS(heros, monsters, seed = Date.now()) {
 
     const rand = mulberry32(seed);
+    TeamRef.herosRef = heros;
+    TeamRef.monstersRef = monsters;
     const logger = new BattleLogger();
     const actionSystem = new ActionSystem(logger, rand);
 
@@ -42,7 +44,10 @@ async function battleRTS(heros, monsters, seed = Date.now()) {
             if (actionSystem.updateStatusEffects(actor, delta)) continue;
 
             const target = actionSystem.pickRandomTarget(actor, heros, monsters);
-            if (!target) break;
+            if (!target) {
+                logger.log("敌方阵营为空，战斗结束！");
+                return;
+            }
 
 
             if (actionSystem.updateSkill(actor, target, delta)) {
@@ -74,13 +79,12 @@ const heros = [
 const monsters = [
     // new Monster({ name: "小兵", hp: 50, attack: 3, defense: 1, speed: 10, skills: [normalAttack] }),
     // new Monster({ name: "野怪", hp: 80, attack: 4, defense: 3, speed: 9 }),
-    new Monster({ name: "巨狼", hp: 200, attack: 7, defense: 5, speed: 8, skills: [normalAttack, rageSkill] }),
-    new Monster({ name: "boss", hp: 300, attacl: 10, defence: 10, speed: 10, skills: [normalAttack, rageSkill, warCry] }),
+    new Monster({ name: "巨狼", hp: 200, attack: 7, defense: 7, speed: 14, skills: [normalAttack, rageSkill] }),
+    new Monster({ name: "boss", hp: 300, attacl: 10, defence: 20, speed: 10, skills: [normalAttack, rageSkill, warCry] }),
 
 ]
 
-TeamRef.herosRef = heros;
-TeamRef.monstersRef = monsters;
+
 
 for (let i = 0; i < 1; i++) {
     battleRTS([...heros], [...monsters], 123456);
