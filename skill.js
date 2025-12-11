@@ -2,6 +2,8 @@ const BuffSystem = require("./BuffSystem");
 const { SkillEnum } = require("./config");
 const TeamRef = require("./TeamRef");
 const StatsComponent = require("./StatsComponent");
+const TeamComponent = require("./TeamComponent");
+const BuffFactory = require("./BuffFactory");
 const stunSkill = {
     name: "盾击",
     cooldown: 4.0,
@@ -48,20 +50,25 @@ const warCry = {
     name: "战吼",
     id: SkillEnum.warCry,
     cooldown: 10.0,
+    effect: (self, target, log, rand) => {
 
-    effect: (self, target, log) => {
+        const atk = self.get(StatsComponent);
+        const teamComp = self.get(TeamComponent);  // 获取队伍组件
 
-        log(`${self.name}发出了战吼`);
-        const alllies = self.team === "hero" ? TeamRef.herosRef : TeamRef.monstersRef;
+        const allies = teamComp.team === "hero"
+            ? TeamRef.herosRef
+            : TeamRef.monstersRef;
 
-        return alllies.map(ally => ({
-            type: "applyBuffTarget",
-            target: ally,
-            buff: "warCry"
-        }));
+        log(`${self.name}释放了战吼`);
+
+        //添加战吼buff
+        for (const ally of allies) {
+            const buffComp = BuffFactory.create("warCry");
+            BuffSystem.addBuff(ally, buffComp, log);
+        }
+        return [];
     }
 };
-
 //普通攻击
 const normalAttack = {
     name: "普通攻击",
@@ -71,15 +78,15 @@ const normalAttack = {
 
         const atk = self.get(StatsComponent);
         const def = target.get(StatsComponent);
-        let dmg = Math.max(self.attack - target.defense, 1);
+        let dmg = Math.max(atk.attack - def.defense, 1);
 
         //暴击
-        if (rand() < self.crit) {
+        if (rand() < atk.crit) {
             dmg *= 2;
             log(`${self.name}暴击了！`);
         }
         //免伤
-        dmg *= (1 - target.immune);
+        dmg *= (1 - def.immune);
 
         //扣血
         return [

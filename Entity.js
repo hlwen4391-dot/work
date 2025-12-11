@@ -15,6 +15,11 @@ class Entity {
     }
 
     getAll(componentClass) {
+        if (typeof componentClass !== "function") {
+            console.error("getAll 参数不是类！实际传入：", componentClass);
+            throw new Error("componentClass 被污染");
+
+        }
         return [...this.components.values()].filter(c => c instanceof componentClass);
     }
 

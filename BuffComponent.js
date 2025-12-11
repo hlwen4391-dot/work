@@ -16,3 +16,5 @@ class BuffComponent {
         this.status = config.status || {}; //特殊状态
     }
 }
+
+module.exports = BuffComponent;
