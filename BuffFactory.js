@@ -1,11 +1,12 @@
-const Buff = require("./Buff");
+const BuffComponent = require("./BuffComponent");
 const BuffRegistry = require("./BuffRegistry");
 //buff工厂
 class BuffFactory {
-    static creat(name) {
+    static create(name) {
         const data = BuffRegistry[name];
         if (!data) return null;
-        return new Buff({
+
+        return new BuffComponent({
             name: data.name,    //buff名称
             duration: data.duration,    //持续时间
             interval: data.interval,    //每秒执行一次

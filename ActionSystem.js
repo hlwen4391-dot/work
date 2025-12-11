@@ -106,3 +106,85 @@
 // }
 
 // module.exports = ActionSystem;
+
+
+const TeamComponent = require("./TeamComponent");
+const TeamRef = require("./TeamRef");
+const StatsComponent = require("./StatsComponent");
+const SkillSystem = require("./SkillSystem");
+const BuffSystem = require("./BuffSystem");
+const SkillComponent = require("./SkillComponent");
+
+class ActionSystem {
+    constructor(logger, rand) {
+        this.logger = logger;
+        this.rand = rand;
+    }
+
+    //随机选择目标
+    pickRandomTarget(entity) {
+        const teamComps = entity.get(TeamComponent);//获取单位阵营
+        if (!teamComps) return null;//如果单位阵营为空，则返回null
+
+        const enemyTeam = teamComps.team === "hero" ? TeamRef.monstersRef : TeamRef.herosRef;//获取敌方阵营
+        const aliveEnemies = enemyTeam.filter(e => !e.get(StatsComponent).isDead());//过滤掉死亡的敌人
+        if (aliveEnemies.length === 0) return null;//如果敌方阵营为空，则返回null
+        return aliveEnemies[Math.floor(this.rand() * aliveEnemies.length)];//随机选择一个敌方单位
+    }
+    //更新buff效果
+    updateBuffEffects(entity, dataTime) {
+        const stats = entity.get(StatsComponent);//获取单位状态
+        if (!stats) return true;//如果单位状态为空，则返回true，可以行动
+
+        BuffSystem.update(entity, dataTime, this.logger.log.bind(this.logger));//更新buff效果
+        if (BuffSystem.hasStatus(entity, "stun")) {
+            return false;
+        }
+        return true;//如果单位没有眩晕状态，则返回true，可以行动
+    }
+    //更新技能冷却时间
+    updateSkillCooldowns(entity, dataTime) {
+        SkillSystem.updateCooldowns(entity, dataTime);
+    }
+
+    //执行行动状态：更新、选技能、找目标、释放技能
+    performAction(entity, dataTime) {
+        const stats = entity.get(StatsComponent);//获取单位状态
+        if (!stats || stats.isDead()) return;
+        //更新buff效果
+        const canAct = this.updateBuffEffects(entity, dataTime);//更新buff效果
+        if (!canAct) return;
+        //更新技能冷却时间
+        this.updateSkillCooldowns(entity, dataTime);
+
+        //找技能
+        const skill = SkillSystem.findAvailableSkill(entity);
+        if (!skill) return;
+
+        //找目标
+        const target = this.pickRandomTarget(entity);//随机选择目标
+        if (!target) return;
+
+        //日志
+        this.logger.log(`${entity.name}执行行动`);
+
+        //执行技能
+        SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand);
+
+        const targetStats = target.get(StatsComponent);//获取目标状态
+        if (targetStats.isDead()) {//如果目标死亡，则记录日志
+            this.logger.log(`${target.name}被击杀！`);
+
+            const teamComp = target.get(TeamComponent);//获取目标阵营
+            const teamArr = teamComp.team === "hero" ? TeamRef.herosRef : TeamRef.monstersRef;//获取目标阵营数组
+
+            //删除已死亡的单位
+            const idx = teamArr.indexOf(target);
+            if (idx !== -1) {
+                teamArr.splice(idx, 1);
+            }
+        }
+    }
+}
+
+module.exports = ActionSystem;

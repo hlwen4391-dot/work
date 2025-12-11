@@ -44,21 +44,23 @@ const rageSkill = {
 };
 
 //战吼
-// const warCry = {
-//     name: "战吼",
-//     id: SkillEnum.warCry,
-//     cooldown: 10.0,
+const warCry = {
+    name: "战吼",
+    id: SkillEnum.warCry,
+    cooldown: 10.0,
 
-//     effect: (self, target, log) => {
+    effect: (self, target, log) => {
 
-//         log(`${self.name}发出了战吼`);
-//         const alllies = self.team === "hero" ? TeamRef.herosRef : TeamRef.monstersRef;
+        log(`${self.name}发出了战吼`);
+        const alllies = self.team === "hero" ? TeamRef.herosRef : TeamRef.monstersRef;
 
-//         alllies.forEach(ally => {
-//             BuffSystem.addbuff(ally, "warCry", log);
-//         });
-//     }
-// };
+        return alllies.map(ally => ({
+            type: "applyBuffTarget",
+            target: ally,
+            buff: "warCry"
+        }));
+    }
+};
 
 //普通攻击
 const normalAttack = {

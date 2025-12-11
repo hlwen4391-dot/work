@@ -13,6 +13,20 @@ class Entity {
     get(componentClass) {
         return this.components.get(componentClass.name);//获取组件
     }
+
+    getAll(componentClass) {
+        return [...this.components.values()].filter(c => c instanceof componentClass);
+    }
+
+    //删除组件实例
+    removeComponentInstance(instance) {
+        for (const [key, comp] of this.components.entries()) {
+            if (comp === instance) {
+                this.components.delete(key);
+                return;
+            }
+        }
+    }
 }
 
 module.exports = Entity;

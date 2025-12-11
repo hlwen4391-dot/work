@@ -1,9 +1,18 @@
 class StatsComponent {
-    constructor({ hp = 100, attack = 1, defense = 1, speed = 1 }) {
-        this.hp = hp;
-        this.attack = attack;
-        this.defense = defense;
-        this.speed = speed;
+    constructor(args) {
+        this.hp = args.hp || 100;
+        this.attack = args.attack || 1;
+        this.defense = args.defense || 1;
+        this.speed = args.speed || 1;
+        this.immune = args.immune || 0;
+        this.miss = args.miss || 0;
+        this.crit = args.crit || 0;
+
+        this.attackInterval = 1 / this.speed;
+    }
+
+    updateAttackInterval() {
+        this.attackInterval = 1 / this.speed;
     }
 
     isDead() {

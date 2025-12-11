@@ -88,23 +88,37 @@
 //     battleRTS([...heros], [...monsters], 123456);
 // }
 
-
+const mulberry32 = require("./random");
 const Hero = require("./Hero");
 const Monster = require("./Monster");
-const CombatSystem = require("./CombatSystem");
-const StatsComponent = require("./StatsComponent");
+const BattleLogger = require("./BattleLogger");
+const BattleSystem = require("./BattleSystem");
+const { normalAttack, stunSkill, fireball, rageSkill, warCry } = require("./skill");
 
-const hero = new Hero({ name: "战士", hp: 20, attack: 8, defense: 10, speed: 15 });
-const wolf = new Monster({ name: "巨狼", hp: 15, attack: 7, defense: 7, speed: 14 });
+const rand = mulberry32(123456);
+const logger = new BattleLogger()
 
-const heroStats = () => hero.get(StatsComponent);
-const wolfStats = () => wolf.get(StatsComponent);
+const heros = [
+    new Hero({ name: "战士", hp: 20, attack: 8, defense: 10, speed: 15, skills: [normalAttack, stunSkill] }),
+    new Hero({ name: "法师", hp: 100, attack: 10, defense: 8, speed: 9, crit: 0.1, miss: 0.2, skills: [normalAttack, fireball] }),
+];
+const monsters = [
+    new Monster({ name: "巨狼", hp: 15, attack: 7, defense: 7, speed: 14, skills: [normalAttack, rageSkill] }),
+    new Monster({ name: "boss", hp: 300, attacl: 10, defence: 20, speed: 10, skills: [normalAttack, warCry] }),
+];
 
-while (!heroStats().isDead() && !wolfStats().isDead()) {
-    CombatSystem.attack(hero, wolf);
-    if (wolfStats().isDead()) break;
 
-    CombatSystem.attack(wolf, hero);
-}
+const battle = new BattleSystem(heros, monsters, logger, rand);
 
-console.log("战斗结束！");
+let last = Date.now();
+//模拟实时战斗循环，每100ms更新一次
+const interval = setInterval(() => {
+    const now = Date.now();
+    const delta = (now - last) / 1000;
+    last = now;
+    battle.update(delta);
+    if (battle.finished) {
+        clearInterval(interval);//清除定时器
+    }
+}, 100);
+
