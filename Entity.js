@@ -13,6 +13,25 @@ class Entity {
     get(componentClass) {
         return this.components.get(componentClass.name);//获取组件
     }
+
+    getAll(componentClass) {
+        if (typeof componentClass !== "function") {
+            console.error("getAll 参数不是类！实际传入：", componentClass);
+            throw new Error("componentClass 被污染");
+
+        }
+        return [...this.components.values()].filter(c => c instanceof componentClass);
+    }
+
+    //删除组件实例
+    removeComponentInstance(instance) {
+        for (const [key, comp] of this.components.entries()) {
+            if (comp === instance) {
+                this.components.delete(key);
+                return;
+            }
+        }
+    }
 }
 
 module.exports = Entity;

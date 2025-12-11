@@ -1,3 +1,5 @@
+const StatsComponent = require("./StatsComponent");
+
 module.exports = {
     burn: {
         name: "燃烧",
@@ -5,7 +7,8 @@ module.exports = {
         interval: 1,//每秒执行一次
         onTick: (target, log) => {
             let dmg = 5;
-            target.hp -= dmg;
+            const stats = target.get(StatsComponent);
+            stats.hp -= dmg;
             log(`${target.name}燃烧，每秒损失${dmg}点燃烧伤害`);
         }
     },
