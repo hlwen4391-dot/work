@@ -6,6 +6,7 @@ const SkillEnum = {
     fireball: 3,
     rageSkill: 4,
     warCry: 5,
+    shieldAllies: 6,
 }
 
 module.exports = { SkillEnum };

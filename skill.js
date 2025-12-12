@@ -12,7 +12,7 @@ const stunSkill = {
         const atk = self.get(StatsComponent);
         const def = target.get(StatsComponent);
 
-        const dmg = Math.max(atk.attack - def.defense, 1);
+        const dmg = Math.max(atk.attack - def.defense, 1);//
         return [
             { type: "damage", value: dmg },//伤害效果
             { type: "applyBuff", buff: "stun" }
@@ -25,10 +25,10 @@ const fireball = {
     name: "火球术",
     cooldown: 3.0,//技能冷却时间
     id: SkillEnum.fireball,
-    effect: (self, target) => {
+    effect: (target) => {
         return [
             { type: "damageTrue", value: 5 },
-            { type: "applyBuff", buff: "burn" }//伤害效果
+            { type: "applyBuff", buff: "burn", target: target }//伤害效果
         ];
 
     }
@@ -40,7 +40,7 @@ const rageSkill = {
     cooldown: 2.0,
     effect: (self) => {
         return [
-            { type: "applyBuff", buff: "rage" }
+            { type: "applyBuff", buff: "rage", target: self }
         ];
     }
 };
@@ -64,6 +64,25 @@ const warCry = {
         //添加战吼buff
         for (const ally of allies) {
             const buffComp = BuffFactory.create("warCry");
+            BuffSystem.addBuff(ally, buffComp, log);
+        }
+        return [];
+    }
+};
+
+const shieldAllies = {
+    name: "群体护盾",
+    id: SkillEnum.shieldAllies,
+    cooldown: 9.0,
+    effect: (self, target, log) => {
+
+        const teamComp = self.get(TeamComponent);
+        const allies = teamComp.team === "hero"
+            ? TeamRef.herosRef
+            : TeamRef.monstersRef;
+        log(`${self.name}释放了群体护盾`);
+        for (const ally of allies) {
+            const buffComp = BuffFactory.create("shield");
             BuffSystem.addBuff(ally, buffComp, log);
         }
         return [];
@@ -95,4 +114,4 @@ const normalAttack = {
     }
 };
 
-module.exports = { stunSkill, fireball, rageSkill, normalAttack, warCry };
+module.exports = { stunSkill, fireball, rageSkill, normalAttack, warCry, shieldAllies };

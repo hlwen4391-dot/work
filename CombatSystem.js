@@ -1,5 +1,8 @@
 const StatsComponent = require("./StatsComponent");
 const CombatComponent = require("./CombatComponent");
+const BuffComponent = require("./BuffComponent");
+
+
 
 class CombatSystem {
     static attack(attacker, defender, log = console.log) {
@@ -19,9 +22,23 @@ class CombatSystem {
 
     static damage(attacker, defender, value, log) {
         const def = defender.get(StatsComponent);//获取防御者状态
-        def.hp -= value;//防御者扣血
-        log(`${attacker.name}对${defender.name}造成了${value}点伤害,${defender.name}剩余HP:${def.hp}`);
-        return value;//返回伤害值
+        const shieldBuff = defender.getAll(BuffComponent).find(b => b.name === "护盾");
+        if (shieldBuff) {
+            let absorb = Math.min(value, shieldBuff.shield);//计算吸收的伤害
+            shieldBuff.shield -= absorb;//护盾值耐久减少
+            value -= absorb;//剩余伤害
+            log(`${defender.name}的护盾吸收了${absorb}点伤害`);
+            if (shieldBuff.shield <= 0) {
+                BuffSystem.removeInstance(defender, shieldBuff);
+                log(`${defender.name}的护盾被击破了`);
+            }
+        }
+
+        if (value > 0) {
+            def.hp -= value;//防御者扣血
+            log(`${attacker.name}对${defender.name}造成了${value}点伤害,${defender.name}剩余HP:${def.hp}`);
+            return value;
+        }//返回伤害值
     }
     static damageTrue(attacker, defender, value, log) {
         const def = defender.get(StatsComponent);//获取防御者状态

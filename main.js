@@ -93,18 +93,18 @@ const Hero = require("./Hero");
 const Monster = require("./Monster");
 const BattleLogger = require("./BattleLogger");
 const BattleSystem = require("./BattleSystem");
-const { normalAttack, stunSkill, fireball, rageSkill, warCry } = require("./skill");
+const { normalAttack, stunSkill, fireball, rageSkill, warCry, shieldAllies } = require("./skill");
 
 const rand = mulberry32(123456);
 const logger = new BattleLogger()
 
 const heros = [
-    new Hero({ name: "战士", hp: 20, attack: 8, defense: 10, speed: 15, skills: [normalAttack, stunSkill] }),
-    new Hero({ name: "法师", hp: 100, attack: 10, defense: 8, speed: 9, crit: 0.1, miss: 0.2, skills: [normalAttack, fireball] }),
+    new Hero({ name: "战士", hp: 50, attack: 8, defense: 6, speed: 15, skills: [normalAttack, stunSkill, shieldAllies] }),
+    new Hero({ name: "法师", hp: 100, attack: 10, defense: 6, speed: 9, crit: 0.1, miss: 0.2, skills: [normalAttack, fireball] }),
 ];
 const monsters = [
-    new Monster({ name: "巨狼", hp: 15, attack: 7, defense: 7, speed: 14, skills: [normalAttack, rageSkill] }),
-    new Monster({ name: "boss", hp: 300, attacl: 10, defence: 20, speed: 10, skills: [normalAttack, warCry] }),
+    new Monster({ name: "巨狼", hp: 50, attack: 7, defense: 7, speed: 14, skills: [normalAttack, rageSkill] }),
+    new Monster({ name: "boss", hp: 200, attack: 10, defense: 20, speed: 10, skills: [normalAttack, warCry] }),
 ];
 
 

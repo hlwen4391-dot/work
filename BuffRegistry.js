@@ -1,5 +1,5 @@
 const StatsComponent = require("./StatsComponent");
-
+//buff数据库
 module.exports = {
     burn: {
         name: "燃烧",
@@ -53,5 +53,23 @@ module.exports = {
         onExpire(target, log) {
             log(`${target.name}狂暴状态结束`);
         }
+    },
+
+    shield: {
+        name: "盾牌",
+        duration: 3,
+        status: {},
+        modifiers: {},
+        shieldValue: 10,//护盾值
+        onApply(target, log) {
+            // const buffList = target.getAll(BuffComponent);
+            // const selfBuff = buffList.find(b => b.name === "护盾");
+            // selfBuff.shield = 10;//初始化护盾值耐久
+            log(`${target.name}获得了10点护盾`);
+        },
+        onExpire(target, log) {
+            log(`${target.name}护盾效果结束`);
+        }
+
     }
 };

@@ -1,8 +1,10 @@
 const StatsComponent = require("./StatsComponent");
 const SkillComponent = require("./SkillComponent");
-const CombatSystem = require("./CombatSystem");
+
 const BuffSystem = require("./BuffSystem");
 const BuffFactory = require("./BuffFactory");
+const CombatSystem = require("./CombatSystem");
+
 
 class SkillSystem {
     //更新技能冷却时间

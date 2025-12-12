@@ -33,8 +33,11 @@ class BattleSystem {
     //单帧更新
     update(deltaTime) {
         if (this.finished) return;
+
         if (this.isFinished()) {
             this.finished = true;
+            const winner = this.heros.length > 0 ? "英雄" : "怪物";
+            this.logger.log(`====战斗结束：${winner}胜利====`);
             return;
         }
 
@@ -53,6 +56,7 @@ class BattleSystem {
             const winner = this.heros.length > 0 ? "英雄" : "怪物";
             this.logger.log(`====战斗结束：${winner}胜利====`);
         }
+        return;
     }
 }
 

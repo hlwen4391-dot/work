@@ -114,11 +114,14 @@ const StatsComponent = require("./StatsComponent");
 const SkillSystem = require("./SkillSystem");
 const BuffSystem = require("./BuffSystem");
 const SkillComponent = require("./SkillComponent");
+const DeathSystem = require("./DeathSystem");
 
 class ActionSystem {
     constructor(logger, rand) {
         this.logger = logger;
         this.rand = rand;
+        this.deathSystem = new DeathSystem(logger);
+        this.skillSystem = new SkillSystem(logger, rand);//创建技能系统
     }
 
     //随机选择目标
@@ -133,10 +136,12 @@ class ActionSystem {
     }
     //更新buff效果
     updateBuffEffects(entity, dataTime) {
-        const stats = entity.get(StatsComponent);//获取单位状态
-        if (!stats) return true;//如果单位状态为空，则返回true，可以行动
-
         BuffSystem.update(entity, dataTime, this.logger.log.bind(this.logger));//更新buff效果
+        const stats = entity.get(StatsComponent);//获取单位状态
+        if (!stats) return false;
+        if (this.deathSystem.checkAndHandleDeath(entity)) {
+            return false;//如果单位死亡，则返回false，不能行动
+        }
         if (BuffSystem.hasStatus(entity, "stun")) {
             return false;
         }
@@ -172,18 +177,8 @@ class ActionSystem {
         SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand);
 
         const targetStats = target.get(StatsComponent);//获取目标状态
-        if (targetStats.isDead()) {//如果目标死亡，则记录日志
-            this.logger.log(`${target.name}被击杀！`);
 
-            const teamComp = target.get(TeamComponent);//获取目标阵营
-            const teamArr = teamComp.team === "hero" ? TeamRef.herosRef : TeamRef.monstersRef;//获取目标阵营数组
-
-            //删除已死亡的单位
-            const idx = teamArr.indexOf(target);
-            if (idx !== -1) {
-                teamArr.splice(idx, 1);
-            }
-        }
+        this.deathSystem.checkAndHandleDeath(target);
     }
 }
 
