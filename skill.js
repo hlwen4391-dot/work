@@ -25,10 +25,10 @@ const fireball = {
     name: "火球术",
     cooldown: 3.0,//技能冷却时间
     id: SkillEnum.fireball,
-    effect: (target) => {
+    effect: (self, target) => {
         return [
             { type: "damageTrue", value: 5 },
-            { type: "applyBuff", buff: "burn", target: target }//伤害效果
+            { type: "applyBuff", buff: "burn" }//伤害效果
         ];
 
     }
@@ -38,9 +38,9 @@ const rageSkill = {
     name: "狂暴",
     id: SkillEnum.rageSkill,
     cooldown: 2.0,
-    effect: (self) => {
+    effect: (self, target, log, rand) => {
         return [
-            { type: "applyBuff", buff: "rage", target: self }
+            { type: "applyBuffSelf", buff: "rage" }
         ];
     }
 };

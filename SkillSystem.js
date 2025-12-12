@@ -57,10 +57,18 @@ class SkillSystem {
                     }
                     break;
                 }
+
+                case "applyBuffSelf": {
+                    const buffComp = BuffFactory.create(evt.buff);//创建buff组件
+                    if (buffComp) {
+                        BuffSystem.addBuff(entity, buffComp, log);//添加buff
+                    }
+                    break;
+                }
                 case "applyBuffTarget": {
                     const buffComp = BuffFactory.create(evt.buff);//创建buff组件
                     if (buffComp) {
-                        BuffSystem.addBuff(evt.target, buffComp, log);//添加buff
+                        BuffSystem.addBuff(entity, buffComp, log);//添加buff
                     }
                     break;
                 }
