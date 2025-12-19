@@ -43,7 +43,7 @@ module.exports = {
 
     rage: {
         name: "狂暴",
-        duration: 3,
+        duration: 2,//持续时间
         modifiers: {
             attack: 5,
         },
@@ -73,3 +73,4 @@ module.exports = {
 
     }
 };
+

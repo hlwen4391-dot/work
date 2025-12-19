@@ -1,3 +1,4 @@
+
 const BuffComponent = require("./BuffComponent");
 const BuffFactory = require("./BuffFactory");
 const StatsComponent = require("./StatsComponent");
@@ -9,30 +10,38 @@ class BuffSystem {
 
         if (existing && !buffComponent.stackable) {
             //如果存在且不可叠加，则重置持续时间
-            existing.elapsed = 0;
-            existing.duration = buffComponent.duration;
-
+            existing.elapsed = 0;//重置持续时间
+            existing.duration = buffComponent.duration;//重置持续时间
+            //执行添加时回调
             if (existing.onApply) existing.onApply(entity, logger);
-            return;
+            return;//返回，不添加新的buff
         }
 
         entity.addComponent(buffComponent);
-        if (buffComponent.onApply) buffComponent.onApply(entity, logger);
+        const stats = entity.get(StatsComponent);
+        if (stats && buffComponent.modifiers) {
+            for (const key in buffComponent.modifiers) {
+                if (stats[key] !== undefined) {
+                    stats[key] += buffComponent.modifiers[key];//属性增加
+                }
+            }
+            if (buffComponent.modifiers.speed !== undefined) {//如果速度发生变化，则重新计算攻击间隔
+                stats.updateAttackInterval();//重新计算攻击间隔
+            }
+        }
+        if (buffComponent.onApply) buffComponent.onApply(entity, logger);//执行添加时回调
     }
 
     //更新buff效果
     static update(entity, deltaTime, logger) {
         const buffs = entity.getAll(BuffComponent);
-        if (typeof BuffComponent !== "function") {
-            console.log("BuffComponent 已经被污染：", BuffComponent);
-        }
         const stats = entity.get(StatsComponent);
 
-        for (let i = buffs.length - 1; i >= 0; i--) {
+        for (let i = buffs.length - 1; i >= 0; i--) {//从后向前遍历buffs
             const buff = buffs[i];
             //更新持续时间
-            buff.elapsed += deltaTime;
-            buff.tickTimer += deltaTime;
+            buff.elapsed += deltaTime;//持续时间增加
+            buff.tickTimer += deltaTime;//tickTimer增加
 
             //执行tick
             if (buff.onTick && buff.tickTimer >= buff.interval) {

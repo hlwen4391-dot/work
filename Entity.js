@@ -6,7 +6,7 @@ class Entity {
 
     addComponent(component) {
         this.components.set(component.constructor.name, component);//组件名称作为键，组件本身作为值
-        component.entity = this;
+        component.entity = this;//组件所属实体 
         return this;
     }//返回实体本身，方便链式调用
 
@@ -15,12 +15,14 @@ class Entity {
     }
 
     getAll(componentClass) {
-        return [...this.components.values()].filter(c => c instanceof componentClass);
+        return [...this.components.values()].filter(c => c instanceof componentClass);//过滤出所有组件实例
     }
 
     //删除组件实例
     removeComponentInstance(instance) {
+        //遍历组件列表，找到实例并删除
         for (const [key, comp] of this.components.entries()) {
+            //如果组件实例与要删除的实例相同，则删除
             if (comp === instance) {
                 this.components.delete(key);
                 return;

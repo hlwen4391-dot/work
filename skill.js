@@ -37,7 +37,7 @@ const fireball = {
 const rageSkill = {
     name: "狂暴",
     id: SkillEnum.rageSkill,
-    cooldown: 2.0,
+    cooldown: 4.0,//技能冷却时间
     effect: (self, target, log, rand) => {
         return [
             { type: "applyBuffSelf", buff: "rage" }
