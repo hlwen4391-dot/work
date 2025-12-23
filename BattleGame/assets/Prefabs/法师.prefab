@@ -559,10 +559,10 @@
     ],
     "paused": false,
     "defaultSkin": "default",
-    "defaultAnimation": "atk",
+    "defaultAnimation": "",
     "_preCacheMode": 0,
     "_cacheMode": 0,
-    "loop": true,
+    "loop": false,
     "premultipliedAlpha": true,
     "timeScale": 1,
     "_accTime": 0,
@@ -598,6 +598,7 @@
     "attackDistance": 60,
     "attackDuration": 0.6,
     "isAttacking": false,
+    "useSpineAnimation": true,
     "_id": ""
   },
   {

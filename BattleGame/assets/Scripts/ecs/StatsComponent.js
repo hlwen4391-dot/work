@@ -15,14 +15,8 @@ cc.Class({
 
     onLoad() {
         this.updateAttackInterval();
-        // 延迟获取血条组件引用,确保所有组件都已初始化
-        this.scheduleOnce(() => {
-            this.healthBar = this.node.getComponent("HealthBar");
-            // 确保初始化时更新血条
-            if (this.healthBar && this.maxHp > 0) {
-                this.healthBar.updateHealth(this.hp, this.maxHp);
-            }
-        }, 0);
+        // 获取血条组件引用
+        this.healthBar = this.node.getComponent("HealthBar");
     },
 
     updateAttackInterval() {

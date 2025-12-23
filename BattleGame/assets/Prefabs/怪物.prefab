@@ -636,7 +636,7 @@
     ],
     "paused": false,
     "defaultSkin": "default",
-    "defaultAnimation": "wait",
+    "defaultAnimation": "",
     "_preCacheMode": 0,
     "_cacheMode": 0,
     "loop": false,
@@ -647,7 +647,7 @@
     "_frameCache": null,
     "_curFrame": null,
     "_skeletonCache": null,
-    "_animationName": "wait",
+    "_animationName": "atk",
     "_animationQueue": [],
     "_headAniInfo": null,
     "_playTimes": 1,
@@ -675,6 +675,7 @@
     "attackDistance": 40,
     "attackDuration": 0.5,
     "isAttacking": false,
+    "useSpineAnimation": true,
     "_id": ""
   },
   {

@@ -1,3 +1,12 @@
+const AnimationState = {
+    ATTACK: "ack",
+    By_ATK: "byatk",
+    DIE: "die",
+    SHI_HUA: "shihua",
+    WAIT: "wait",
+}
+
+
 /**
  * 战斗控制器
  * 负责战斗场景的初始化和战斗系统的驱动
@@ -30,11 +39,6 @@ cc.Class({
         // 创建单位（这是初始化 ECS 组件的关键步骤）
         this.spawnUnits();
 
-        // 延迟一帧,确保所有组件都初始化完成后再更新血条
-        this.scheduleOnce(() => {
-            this.refreshAllHealthBars();
-        }, 0);
-
         // 创建战斗系统
         this.battleSystem = new BattleSystem(
             this.heros,
@@ -51,20 +55,19 @@ cc.Class({
 
         // 英雄数据配置
         const heroData = [
-            {
-                name: "战士",
-                hp: 50,
-                attack: 8,
-                defense: 6,
-                speed: 15,
-                crit: 0.1,
-                position: cc.v2(-200, 0), // 设置初始位置
-                skills: [
-                    SkillConfig.normalAttack,
-                    SkillConfig.stunSkill,
-                    SkillConfig.shieldAllies
-                ]
-            },
+            // {
+            //     name: "战士",
+            //     hp: 50,
+            //     attack: 8,
+            //     defense: 6,
+            //     speed: 15,
+            //     crit: 0.1,
+            //     skills: [
+            //         SkillConfig.normalAttack,
+            //         SkillConfig.stunSkill,
+            //         SkillConfig.shieldAllies
+            //     ]
+            // },
             {
                 name: "法师",
                 hp: 100,
@@ -73,7 +76,6 @@ cc.Class({
                 speed: 9,
                 crit: 0.1,
                 miss: 0.2,
-                position: cc.v2(-200, -100), // 设置初始位置
                 skills: [
                     SkillConfig.normalAttack,
                     SkillConfig.fireball
@@ -81,16 +83,16 @@ cc.Class({
             }
         ];
 
-        for (let i = 0; i < heroData.length; i++) {
-            let data = heroData[i];
+        for (let data of heroData) {
             let node = cc.instantiate(this.heroPrefab);
             node.parent = this.heroParent;
-            // 设置初始位置
-            if (data.position) {
-                node.setPosition(data.position);
-            } else {
-                node.setPosition(-200, i * -100);
+
+            // 设置初始待机动画
+            const skeleton = node.getComponent(sp.Skeleton);
+            if (skeleton) {
+                skeleton.setAnimation(0, AnimationState.WAIT, true);
             }
+
             this.initEntity(node, data, "hero");
             this.heros.push(node);
         }
@@ -103,36 +105,34 @@ cc.Class({
                 attack: 7,
                 defense: 7,
                 speed: 14,
-                position: cc.v2(200, 0), // 设置初始位置
                 skills: [
                     SkillConfig.normalAttack,
                     SkillConfig.rageSkill
                 ]
             },
-            {
-                name: "Boss",
-                hp: 200,
-                attack: 10,
-                defense: 20,
-                speed: 10,
-                position: cc.v2(200, -100), // 设置初始位置
-                skills: [
-                    SkillConfig.normalAttack,
-                    SkillConfig.warCry
-                ]
-            }
+            // {
+            //     name: "Boss",
+            //     hp: 200,
+            //     attack: 10,
+            //     defense: 20,
+            //     speed: 10,
+            //     skills: [
+            //         SkillConfig.normalAttack,
+            //         SkillConfig.warCry
+            //     ]
+            // }
         ];
 
-        for (let i = 0; i < monsterData.length; i++) {
-            let data = monsterData[i];
+        for (let data of monsterData) {
             let node = cc.instantiate(this.monsterPrefab);
             node.parent = this.monsterParent;
-            // 设置初始位置
-            if (data.position) {
-                node.setPosition(data.position);
-            } else {
-                node.setPosition(200, i * -100);
+
+            // 设置初始待机动画
+            const skeleton = node.getComponent(sp.Skeleton);
+            if (skeleton) {
+                skeleton.setAnimation(0, AnimationState.WAIT, true);
             }
+
             this.initEntity(node, data, "monster");
             this.monsters.push(node);
         }
@@ -162,19 +162,9 @@ cc.Class({
 
         // 设置队伍
         team.team = teamName;
-    },
 
-    /**
-     * 刷新所有单位的血条显示
-     */
-    refreshAllHealthBars() {
-        const allUnits = [...this.heros, ...this.monsters];
-        for (let unit of allUnits) {
-            const stats = unit.getComponent("StatsComponent");
-            if (stats) {
-                stats.updateHealthBar();
-            }
-        }
+        // 初始化血条显示
+        stats.updateHealthBar();
     },
 
     update() {

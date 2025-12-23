@@ -2,6 +2,16 @@
  * 攻击移动组件
  * 负责处理攻击时的移动动画：移动到目标 -> 攻击 -> 返回原位置
  */
+
+// 动画状态常量
+const AnimationState = {
+    ATTACK: "atk",        // 攻击动画
+    BY_ATK: "byatk",      // 受击动画
+    DIE: "die",           // 死亡动画
+    SHI_HUA: "shihua",    // 石化动画
+    WAIT: "wait",         // 待机动画
+};
+
 cc.Class({
     extends: cc.Component,
 
@@ -12,13 +22,19 @@ cc.Class({
         // 攻击距离（停留在目标前方的距离）
         attackDistance: 50,
 
-        // 攻击动画持续时间
+        // 攻击动画持续时间（如果使用Spine动画，这个会被动画实际时长覆盖）
         attackDuration: 0.3,
 
         // 是否正在执行攻击动画
         isAttacking: {
             default: false,
             visible: false
+        },
+
+        // 是否使用Spine动画（如果false则使用简单的缩放动画）
+        useSpineAnimation: {
+            default: true,
+            tooltip: "是否使用Spine动画，false则使用简单缩放动画"
         }
     },
 
@@ -30,6 +46,17 @@ cc.Class({
         this.originalScaleY = 1.0;
         // 当前动画回调
         this.onAttackComplete = null;
+        // 当前目标（用于播放受击动画）
+        this.currentTarget = null;
+        // Spine组件引用
+        this.skeleton = this.node.getComponent(sp.Skeleton);
+
+        // 调试信息
+        if (this.skeleton) {
+            cc.log(`[AttackMover] ${this.node.name} Spine 组件加载成功`);
+        } else {
+            cc.warn(`[AttackMover] ${this.node.name} 没有 Spine 组件!`);
+        }
     },
 
     /**
@@ -51,6 +78,7 @@ cc.Class({
 
         this.isAttacking = true;
         this.onAttackComplete = onComplete;
+        this.currentTarget = target; // 保存目标引用
 
         // 1. 保存原始位置和 scale (分别保存 X 和 Y 轴)
         this.originalPosition = this.node.position.clone();
@@ -100,10 +128,81 @@ cc.Class({
     },
 
     /**
-     * 播放攻击动画效果（使用 cc.tween 新 API）
+     * 播放攻击动画效果
      * @private
      */
     _playAttackAnimation() {
+        if (this.useSpineAnimation && this.skeleton) {
+            // 使用 Spine 动画
+            this._playSpineAttackAnimation();
+        } else {
+            // 使用简单的缩放动画
+            this._playScaleAnimation();
+        }
+    },
+
+    /**
+     * 播放 Spine 攻击动画
+     * @private
+     */
+    _playSpineAttackAnimation() {
+        if (!this.skeleton) {
+            cc.error(`[AttackMover] ${this.node.name} 没有 Spine 组件!`);
+            return;
+        }
+
+        // 1. 播放攻击者的攻击动画
+        cc.log(`[AttackMover] ${this.node.name} 播放攻击动画`);
+        this.skeleton.setAnimation(0, AnimationState.ATTACK, false);
+
+        // 2. 同时播放被攻击者的受击动画
+        if (this.currentTarget && this.currentTarget.isValid) {
+            const targetSkeleton = this.currentTarget.getComponent(sp.Skeleton);
+            if (targetSkeleton) {
+                cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画`);
+                // 播放受击动画（不循环）
+                targetSkeleton.setAnimation(0, AnimationState.BY_ATK, false);
+
+                // 受击动画播放完后返回待机状态
+                // 注意：死亡检测和死亡动画由 DeathSystem 处理
+                targetSkeleton.setCompleteListener(() => {
+                    // 检查目标是否还存活（可能已经被 DeathSystem 处理了）
+                    if (this.currentTarget && this.currentTarget.isValid) {
+                        const targetStats = this.currentTarget.getComponent("StatsComponent");
+                        // 只有存活的才返回待机动画
+                        if (targetStats && !targetStats.isDead()) {
+                            targetSkeleton.setAnimation(0, AnimationState.WAIT, true);
+                            cc.log(`[AttackMover] ${this.currentTarget.name} 返回待机动画`);
+                        }
+                    }
+                    // 清除监听器，避免重复触发
+                    targetSkeleton.setCompleteListener(null);
+                });
+            } else {
+                cc.warn(`[AttackMover] ${this.currentTarget.name} 没有 Spine 组件`);
+            }
+        }
+
+        // 3. 监听攻击动画完成，用于控制时序
+        this.skeleton.setCompleteListener(() => {
+            // 攻击动画完成后返回待机状态
+            this.skeleton.setAnimation(0, AnimationState.WAIT, true);
+            cc.log(`[AttackMover] ${this.node.name} 返回待机动画`);
+            // 清除监听器
+            this.skeleton.setCompleteListener(null);
+        });
+
+        // 这里可以添加更多效果：
+        // - 播放攻击音效
+        // - 播放粒子效果
+        // - 播放屏幕震动等
+    },
+
+    /**
+     * 播放简单的缩放动画（备用方案）
+     * @private
+     */
+    _playScaleAnimation() {
         // 计算缩放倍数（基于原始 scale，分别处理 X 和 Y 轴）
         const enlargedScaleX = this.originalScaleX * 1.2;
         const enlargedScaleY = this.originalScaleY * 1.2;
@@ -113,11 +212,6 @@ cc.Class({
             .to(this.attackDuration * 0.3, { scaleX: enlargedScaleX, scaleY: enlargedScaleY })
             .to(this.attackDuration * 0.7, { scaleX: this.originalScaleX, scaleY: this.originalScaleY })
             .start();
-
-        // 这里可以添加更多效果：
-        // - 播放攻击音效
-        // - 播放粒子效果
-        // - 播放 Spine 动画等
     },
 
     /**
@@ -126,11 +220,11 @@ cc.Class({
      */
     _onSequenceComplete() {
         this.isAttacking = false;
+        this.currentTarget = null; // 清除目标引用
 
-        // 强制更新攻击者的血条状态
-        const stats = this.node.getComponent("StatsComponent");
-        if (stats) {
-            stats.updateHealthBar();
+        // 确保返回待机动画
+        if (this.skeleton) {
+            this.skeleton.setAnimation(0, AnimationState.WAIT, true);
         }
 
         if (this.onAttackComplete) {
@@ -155,13 +249,15 @@ cc.Class({
         // 恢复原始 scale (分别恢复 X 和 Y 轴)
         this.node.scaleX = this.originalScaleX;
         this.node.scaleY = this.originalScaleY;
-        this.isAttacking = false;
 
-        // 强制更新血条状态
-        const stats = this.node.getComponent("StatsComponent");
-        if (stats) {
-            stats.updateHealthBar();
+        // 恢复待机动画
+        if (this.skeleton) {
+            this.skeleton.setCompleteListener(null); // 清除监听器
+            this.skeleton.setAnimation(0, AnimationState.WAIT, true);
         }
+
+        this.isAttacking = false;
+        this.currentTarget = null;
 
         if (this.onAttackComplete) {
             this.onAttackComplete();
@@ -169,3 +265,4 @@ cc.Class({
         }
     }
 });
+
