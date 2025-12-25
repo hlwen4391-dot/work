@@ -13,8 +13,8 @@ var BuffRegistry = {
             const stats = target.getComponent("StatsComponent");
             if (stats) {
                 stats.hp -= dmg;
-                // 更新血条显示
-                stats.updateHealthBar(dmg);
+                // 更新血条显示（燃烧伤害显示为普通伤害）
+                stats.updateHealthBar(dmg, 'normal');
                 log(`🔥 ${target.name} 受到燃烧效果，损失 ${dmg} 点HP`);
             }
         }

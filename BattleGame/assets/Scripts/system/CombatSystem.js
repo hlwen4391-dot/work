@@ -22,14 +22,18 @@ var CombatSystem = {
         if (Math.random() < missChance) {
             log(`${attacker.name} 对 ${target.name} 的攻击被闪避了！`);
             if (tgtCombat) tgtCombat.lastDamage = 0;
+            // 显示 MISS 飘字
+            tgtStats.updateHealthBar(0, 'miss');
             return;
         }
 
         // 2. 计算暴击
         let finalDamage = baseDamage;
+        let isCrit = false;
         const critChance = atkStats.crit || 0;
         if (Math.random() < critChance) {
             finalDamage *= 2;
+            isCrit = true;
             log(`⚡ 暴击！${attacker.name} 对 ${target.name} 造成双倍伤害`);
         }
 
@@ -46,8 +50,8 @@ var CombatSystem = {
         tgtStats.hp -= finalDamage;
         if (tgtCombat) tgtCombat.lastDamage = finalDamage;
 
-        // 6. 更新血条显示
-        tgtStats.updateHealthBar(finalDamage);
+        // 6. 更新血条显示（传递是否暴击）
+        tgtStats.updateHealthBar(finalDamage, isCrit ? 'crit' : 'normal');
 
         log(`${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点伤害 (剩余HP: ${tgtStats.hp})`);
     },
@@ -65,8 +69,8 @@ var CombatSystem = {
         tgtStats.hp -= finalDamage;
         if (tgtCombat) tgtCombat.lastDamage = finalDamage;
 
-        // 更新血条显示
-        tgtStats.updateHealthBar(finalDamage);
+        // 更新血条显示（真伤显示为普通伤害）
+        tgtStats.updateHealthBar(finalDamage, 'normal');
 
         log(`🔥 真伤！${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点真实伤害 (剩余HP: ${tgtStats.hp})`);
     }

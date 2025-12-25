@@ -2,6 +2,10 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
-        team: ""
+        team: {
+            default: "",
+            type: cc.String,
+            tooltip: "队伍名称（hero/monster）"
+        }
     }
 });

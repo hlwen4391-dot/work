@@ -1,8 +1,4 @@
-/**
- * Buff组件
- * 用于存储角色身上的各种增益/减益效果
- */
-var BuffComponent = cc.Class({
+cc.Class({
     extends: cc.Component,
 
     properties: {
@@ -16,10 +12,6 @@ var BuffComponent = cc.Class({
         status: { default: () => ({}), visible: false }
     },
 
-    /**
-     * 初始化Buff配置
-     * @param {Object} config - Buff配置对象
-     */
     init(config) {
         this.buffName = config.name;
         this.duration = config.duration;
@@ -33,5 +25,3 @@ var BuffComponent = cc.Class({
         this.status = config.status || {};
     }
 });
-
-module.exports = BuffComponent;

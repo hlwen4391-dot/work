@@ -3,11 +3,11 @@ var StatsComponent = require("StatsComponent");
 
 // 动画状态常量
 const AnimationState = {
-    ATTACK: "ack",
-    BY_ATK: "byatk",
-    DIE: "die",
-    SHI_HUA: "shihua",
-    WAIT: "wait",
+    ATTACK: "atk",      // 攻击动画
+    BY_ATK: "byatk",    // 受击动画
+    DIE: "die",         // 死亡动画
+    SHI_HUA: "shihua",  // 石化动画
+    WAIT: "wait",       // 待机动画
 };
 
 /**
