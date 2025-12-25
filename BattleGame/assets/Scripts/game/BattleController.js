@@ -248,15 +248,34 @@ cc.Class({
             return;
         }
 
-        // 初始化属性
-        stats.hp = data.hp;
-        stats.maxHp = data.hp; // 设置最大生命值
-        stats.attack = data.attack;
-        stats.defense = data.defense;
-        stats.speed = data.speed;
-        stats.crit = data.crit || 0;
-        stats.miss = data.miss || 0;
-        stats.immune = data.immune || 0;
+        // 初始化属性 - 优先使用编辑器中设置的值，如果为默认值则使用配置
+        // 只有当编辑器值为默认值(100)时，才使用代码配置的值
+        if (stats.hp === 100 && data.hp !== undefined) {
+            stats.hp = data.hp;
+            stats.maxHp = data.hp;
+        } else {
+            // 使用编辑器中设置的值
+            stats.maxHp = stats.hp;
+        }
+        
+        if (stats.attack === 1 && data.attack !== undefined) {
+            stats.attack = data.attack;
+        }
+        if (stats.defense === 1 && data.defense !== undefined) {
+            stats.defense = data.defense;
+        }
+        if (stats.speed === 1 && data.speed !== undefined) {
+            stats.speed = data.speed;
+        }
+        if (stats.crit === 0 && data.crit !== undefined) {
+            stats.crit = data.crit;
+        }
+        if (stats.miss === 0 && data.miss !== undefined) {
+            stats.miss = data.miss;
+        }
+        if (stats.immune === 0 && data.immune !== undefined) {
+            stats.immune = data.immune;
+        }
 
         // 初始化技能
         if (data.skills && data.skills.length > 0) {
@@ -271,7 +290,7 @@ cc.Class({
             stats.updateHealthBar();
         }
 
-        cc.log(`✅ [BattleController] ${node.name} 初始化成功 (${teamName})`);
+        cc.log(`✅ [BattleController] ${node.name} 初始化成功 (${teamName}) - HP:${stats.hp}, ATK:${stats.attack}, DEF:${stats.defense}, SPD:${stats.speed}`);
     },
 
     update() {
