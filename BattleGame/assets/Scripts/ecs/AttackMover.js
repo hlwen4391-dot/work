@@ -35,6 +35,18 @@ cc.Class({
         useSpineAnimation: {
             default: true,
             tooltip: "是否使用Spine动画，false则使用简单缩放动画"
+        },
+
+        // 是否是远程攻击（远程攻击不移动，只播放攻击动画）
+        isRanged: {
+            default: false,
+            tooltip: "是否是远程攻击，true则不移动只播放攻击动画"
+        },
+
+        // 受击动画延迟时间（秒）- 让受击动画在攻击动画之后延迟播放，使战斗更流畅
+        hitAnimationDelay: {
+            default: 0.15,
+            tooltip: "受击动画延迟时间（秒），建议0.1-0.3秒"
         }
     },
 
@@ -76,6 +88,12 @@ cc.Class({
             return;
         }
 
+        // 如果是远程攻击，只播放攻击动画，不移动
+        if (this.isRanged) {
+            this.playAttackAnimationOnly(target, onComplete);
+            return;
+        }
+
         this.isAttacking = true;
         this.onAttackComplete = onComplete;
         this.currentTarget = target; // 保存目标引用
@@ -92,6 +110,71 @@ cc.Class({
 
         // 3. 开始攻击序列
         this._performAttackSequence(attackPos);
+    },
+
+    /**
+     * 只播放攻击动画（不移动）- 用于远程攻击
+     * @param {cc.Node} target - 目标节点
+     * @param {Function} onComplete - 完成回调
+     */
+    playAttackAnimationOnly(target, onComplete) {
+        if (this.isAttacking) {
+            cc.warn(`${this.node.name} 正在攻击中，忽略新的攻击请求`);
+            return;
+        }
+
+        if (!target || !target.isValid) {
+            cc.error("攻击目标无效！");
+            if (onComplete) onComplete();
+            return;
+        }
+
+        this.isAttacking = true;
+        this.onAttackComplete = onComplete;
+        this.currentTarget = target;
+
+        // 保存原始 scale
+        this.originalScaleX = this.node.scaleX;
+        this.originalScaleY = this.node.scaleY;
+
+        cc.log(`[AttackMover] ${this.node.name} 远程攻击：只播放攻击动画，不移动`);
+
+        // 播放攻击动画
+        this._playAttackAnimation();
+
+        // 等待攻击动画完成
+        if (this.useSpineAnimation && this.skeleton) {
+            // 使用Spine动画的实际时长
+            this.skeleton.setCompleteListener(() => {
+                this.skeleton.setCompleteListener(null);
+                this._onRangedAttackComplete();
+            });
+        } else {
+            // 使用配置的时长
+            this.scheduleOnce(() => {
+                this._onRangedAttackComplete();
+            }, this.attackDuration);
+        }
+    },
+
+    /**
+     * 远程攻击完成回调
+     * @private
+     */
+    _onRangedAttackComplete() {
+        this.isAttacking = false;
+        this.currentTarget = null;
+
+        // 确保返回待机动画
+        if (this.skeleton) {
+            this.skeleton.setAnimation(0, AnimationState.WAIT, true);
+        }
+
+        if (this.onAttackComplete) {
+            const callback = this.onAttackComplete;
+            this.onAttackComplete = null;
+            callback();
+        }
     },
 
     /**
@@ -155,29 +238,34 @@ cc.Class({
         cc.log(`[AttackMover] ${this.node.name} 播放攻击动画`);
         this.skeleton.setAnimation(0, AnimationState.ATTACK, false);
 
-        // 2. 同时播放被攻击者的受击动画
+        // 2. 延迟播放被攻击者的受击动画（让战斗更流畅）
         if (this.currentTarget && this.currentTarget.isValid) {
             const targetSkeleton = this.currentTarget.getComponent(sp.Skeleton);
             if (targetSkeleton) {
-                cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画`);
-                // 播放受击动画（不循环）
-                targetSkeleton.setAnimation(0, AnimationState.BY_ATK, false);
+                // 延迟播放受击动画
+                this.scheduleOnce(() => {
+                    if (this.currentTarget && this.currentTarget.isValid && targetSkeleton) {
+                        cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画（延迟${this.hitAnimationDelay}秒）`);
+                        // 播放受击动画（不循环）
+                        targetSkeleton.setAnimation(0, AnimationState.BY_ATK, false);
 
-                // 受击动画播放完后返回待机状态
-                // 注意：死亡检测和死亡动画由 DeathSystem 处理
-                targetSkeleton.setCompleteListener(() => {
-                    // 检查目标是否还存活（可能已经被 DeathSystem 处理了）
-                    if (this.currentTarget && this.currentTarget.isValid) {
-                        const targetStats = this.currentTarget.getComponent("StatsComponent");
-                        // 只有存活的才返回待机动画
-                        if (targetStats && !targetStats.isDead()) {
-                            targetSkeleton.setAnimation(0, AnimationState.WAIT, true);
-                            cc.log(`[AttackMover] ${this.currentTarget.name} 返回待机动画`);
-                        }
+                        // 受击动画播放完后返回待机状态
+                        // 注意：死亡检测和死亡动画由 DeathSystem 处理
+                        targetSkeleton.setCompleteListener(() => {
+                            // 检查目标是否还存活（可能已经被 DeathSystem 处理了）
+                            if (this.currentTarget && this.currentTarget.isValid) {
+                                const targetStats = this.currentTarget.getComponent("StatsComponent");
+                                // 只有存活的才返回待机动画
+                                if (targetStats && !targetStats.isDead()) {
+                                    targetSkeleton.setAnimation(0, AnimationState.WAIT, true);
+                                    cc.log(`[AttackMover] ${this.currentTarget.name} 返回待机动画`);
+                                }
+                            }
+                            // 清除监听器，避免重复触发
+                            targetSkeleton.setCompleteListener(null);
+                        });
                     }
-                    // 清除监听器，避免重复触发
-                    targetSkeleton.setCompleteListener(null);
-                });
+                }, this.hitAnimationDelay);
             } else {
                 cc.warn(`[AttackMover] ${this.currentTarget.name} 没有 Spine 组件`);
             }

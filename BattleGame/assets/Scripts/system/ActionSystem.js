@@ -85,6 +85,8 @@ var ActionSystem = cc.Class({
 
         if (attackMover && !attackMover.isAttacking) {
             // 有动画组件：先播放动画，动画完成后执行伤害
+            // attackTarget 方法会自动判断是否是远程攻击（isRanged）
+            // 如果是远程攻击，只播放攻击动画不移动；如果是近战，执行完整的移动+攻击+返回序列
             attackMover.attackTarget(target, () => {
                 // 动画完成后执行技能效果
                 SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand);

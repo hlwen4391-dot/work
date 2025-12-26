@@ -46,10 +46,13 @@
       },
       {
         "__id__": 22
+      },
+      {
+        "__id__": 23
       }
     ],
     "_prefab": {
-      "__id__": 23
+      "__id__": 24
     },
     "_opacity": 255,
     "_color": {
@@ -680,6 +683,21 @@
       "__id__": 4
     },
     "damageDisplayTime": 1,
+    "_id": ""
+  },
+  {
+    "__type__": "6e9f9bKfAhGyaOmIK0RMZQ1",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "fireballPrefab": {
+      "__uuid__": "b6a7cd81-170e-442e-abac-f7378efa568f"
+    },
+    "explosionPrefab": null,
+    "effectDuration": 1,
     "_id": ""
   },
   {

@@ -12,6 +12,9 @@ var BuffSystem = {
             existing.elapsed = 0;
             existing.duration = buffComponent.duration;
             if (existing.onApply) existing.onApply(entity, logger);
+
+            // 更新Buff图标显示
+            this._updateBuffDisplay(entity);
             return;
         }
 
@@ -31,11 +34,15 @@ var BuffSystem = {
 
         if (newBuff.onApply)
             newBuff.onApply(entity, logger);
+
+        // 更新Buff图标显示
+        this._updateBuffDisplay(entity);
     },
 
     update(entity, dt, logger) {
         const buffs = entity.getComponents(BuffComponent);
         const stats = entity.getComponent("StatsComponent");
+        let buffRemoved = false;
 
         for (let buff of buffs) {
             buff.elapsed += dt;
@@ -59,13 +66,28 @@ var BuffSystem = {
                 }
 
                 entity.removeComponent(buff);
+                buffRemoved = true;
             }
         }
+
+        // 更新Buff图标显示
+        this._updateBuffDisplay(entity);
     },
 
     hasStatus(entity, statusKey) {
         return entity.getComponents(BuffComponent)
             .some(b => b.status && b.status[statusKey]);
+    },
+
+    /**
+     * 更新实体的Buff图标显示
+     * @param {cc.Node} entity - 实体节点
+     */
+    _updateBuffDisplay(entity) {
+        const buffDisplay = entity.getComponent("BuffIconDisplay");
+        if (buffDisplay && buffDisplay.updateBuffDisplay) {
+            buffDisplay.updateBuffDisplay();
+        }
     }
 };
 
