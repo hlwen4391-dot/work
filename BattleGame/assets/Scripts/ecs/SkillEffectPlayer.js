@@ -20,6 +20,13 @@ cc.Class({
             tooltip: "爆炸粒子预制体（可选）"
         },
 
+        // 兽化狂暴粒子预制体（可选）
+        beastRageParticlePrefab: {
+            default: null,
+            type: cc.Prefab,
+            tooltip: "兽化狂暴粒子预制体（可选）"
+        },
+
         // 特效持续时间
         effectDuration: {
             default: 1.0,
@@ -44,6 +51,9 @@ cc.Class({
             case "狂暴":
                 this._playRageEffect(caster);
                 break;
+            case "兽化狂暴":
+                this._playBeastRageEffect(caster);
+                break;
             case "战吼":
                 this._playWarCryEffect(caster);
                 break;
@@ -60,8 +70,8 @@ cc.Class({
      * 火球术特效 - 使用粒子系统实现飞行弹道 + 爆炸效果
      */
     _playFireballEffect(caster, target) {
-        cc.log(`[SkillEffectPlayer] ===== 开始播放火球术特效 =====`);
-        cc.log(`[SkillEffectPlayer] caster: ${caster ? caster.name : 'null'}, target: ${target ? target.name : 'null'}`);
+        // cc.log(`[SkillEffectPlayer] ===== 开始播放火球术特效 =====`);
+        // cc.log(`[SkillEffectPlayer] caster: ${caster ? caster.name : 'null'}, target: ${target ? target.name : 'null'}`);
 
         if (!caster || !target) {
             cc.error("[SkillEffectPlayer] 火球术：caster或target为空");
@@ -74,13 +84,13 @@ cc.Class({
             return;
         }
 
-        cc.log(`[SkillEffectPlayer] parent节点: ${parent.name}, 子节点数量: ${parent.children.length}`);
+        // cc.log(`[SkillEffectPlayer] parent节点: ${parent.name}, 子节点数量: ${parent.children.length}`);
 
         const startPos = caster.getPosition().add(cc.v2(0, 40)); // 起点释放位置
         const endPos = target.getPosition().add(cc.v2(0, 40)); // 终点位置
 
-        cc.log(`[SkillEffectPlayer] 起点位置: (${startPos.x.toFixed(1)}, ${startPos.y.toFixed(1)}), 终点位置: (${endPos.x.toFixed(1)}, ${endPos.y.toFixed(1)})`);
-        cc.log(`[SkillEffectPlayer] fireballPrefab: ${this.fireballPrefab ? '已绑定' : '未绑定'}`);
+        // cc.log(`[SkillEffectPlayer] 起点位置: (${startPos.x.toFixed(1)}, ${startPos.y.toFixed(1)}), 终点位置: (${endPos.x.toFixed(1)}, ${endPos.y.toFixed(1)})`);
+        // cc.log(`[SkillEffectPlayer] fireballPrefab: ${this.fireballPrefab ? '已绑定' : '未绑定'}`);
 
         let fireball = null;
 
@@ -88,7 +98,7 @@ cc.Class({
         if (this.fireballPrefab) {
             try {
                 fireball = cc.instantiate(this.fireballPrefab);
-                cc.log(`[SkillEffectPlayer] 实例化粒子预制体成功`);
+                // cc.log(`[SkillEffectPlayer] 实例化粒子预制体成功`);
 
                 // 确保节点激活
                 fireball.active = true;
@@ -96,13 +106,13 @@ cc.Class({
                 parent.addChild(fireball);
                 fireball.setPosition(startPos);
 
-                cc.log(`[SkillEffectPlayer] 火球节点已添加到场景，位置: (${startPos.x.toFixed(1)}, ${startPos.y.toFixed(1)})`);
-                cc.log(`[SkillEffectPlayer] 火球节点active: ${fireball.active}, 父节点: ${fireball.parent ? fireball.parent.name : 'null'}`);
+                // cc.log(`[SkillEffectPlayer] 火球节点已添加到场景，位置: (${startPos.x.toFixed(1)}, ${startPos.y.toFixed(1)})`);
+                // cc.log(`[SkillEffectPlayer] 火球节点active: ${fireball.active}, 父节点: ${fireball.parent ? fireball.parent.name : 'null'}`);
 
                 // 获取粒子系统组件并确保它正在播放
                 const particleSystem = fireball.getComponent(cc.ParticleSystem);
                 if (particleSystem) {
-                    cc.log(`[SkillEffectPlayer] 找到粒子系统组件，isPlaying: ${particleSystem.isPlaying}`);
+                    // cc.log(`[SkillEffectPlayer] 找到粒子系统组件，isPlaying: ${particleSystem.isPlaying}`);
 
                     // 确保粒子系统启用
                     particleSystem.enabled = true;
@@ -110,7 +120,7 @@ cc.Class({
                     // 如果粒子系统设置了自动播放，确保它正在运行
                     if (!particleSystem.isPlaying) {
                         particleSystem.resetSystem();
-                        cc.log(`[SkillEffectPlayer] 重置并启动粒子系统`);
+                        // cc.log(`[SkillEffectPlayer] 重置并启动粒子系统`);
                     }
 
                     // 设置粒子系统为跟随模式（这样粒子会跟随节点移动）
@@ -120,7 +130,7 @@ cc.Class({
                     particleSystem.enabled = false;
                     particleSystem.enabled = true;
 
-                    cc.log(`[SkillEffectPlayer] 粒子系统已配置，isPlaying: ${particleSystem.isPlaying}`);
+                    // cc.log(`[SkillEffectPlayer] 粒子系统已配置，isPlaying: ${particleSystem.isPlaying}`);
                 } else {
                     cc.warn(`[SkillEffectPlayer] 火球预制体中没有找到ParticleSystem组件`);
                 }
@@ -129,9 +139,9 @@ cc.Class({
                 let dir = endPos.sub(startPos);
                 let rad = Math.atan2(dir.y, dir.x);
                 fireball.angle = -(rad * 180 / Math.PI) + 90;
-                cc.log(`[SkillEffectPlayer] 火球角度: ${fireball.angle.toFixed(1)}度`);
+                // cc.log(`[SkillEffectPlayer] 火球角度: ${fireball.angle.toFixed(1)}度`);
 
-                cc.log("[SkillEffectPlayer] 使用粒子预制体播放火球术特效");
+                // cc.log("[SkillEffectPlayer] 使用粒子预制体播放火球术特效");
             } catch (e) {
                 cc.error(`[SkillEffectPlayer] 实例化粒子预制体失败: ${e.message}`);
                 fireball = null;
@@ -166,7 +176,7 @@ cc.Class({
             let rad = Math.atan2(dir.y, dir.x);
             fireball.angle = -(rad * 180 / Math.PI) + 90;
 
-            cc.log(`[SkillEffectPlayer] Graphics火球已创建并添加到场景`);
+            // cc.log(`[SkillEffectPlayer] Graphics火球已创建并添加到场景`);
         }
 
         // 飞行时间（速度越大，飞行时间越短）
@@ -176,11 +186,11 @@ cc.Class({
 
         // 飞行动画
         const flyTime = Math.max(0.1, distance / flySpeed); // 至少0.1秒，避免除零
-        cc.log(`[SkillEffectPlayer] 飞行时间: ${flyTime.toFixed(2)}秒, 距离: ${distance.toFixed(1)}像素`);
+        // cc.log(`[SkillEffectPlayer] 飞行时间: ${flyTime.toFixed(2)}秒, 距离: ${distance.toFixed(1)}像素`);
 
         // 确保节点在正确的层级（放在最上层）
         fireball.setSiblingIndex(parent.children.length - 1);
-        cc.log(`[SkillEffectPlayer] 火球节点层级: ${fireball.getSiblingIndex()}`);
+        // cc.log(`[SkillEffectPlayer] 火球节点层级: ${fireball.getSiblingIndex()}`);
 
         // 创建位置更新函数，用于在飞行过程中更新粒子位置
         let currentPos = startPos;
@@ -190,7 +200,7 @@ cc.Class({
             }
         };
 
-        cc.log(`[SkillEffectPlayer] 开始火球飞行动画`);
+        // cc.log(`[SkillEffectPlayer] 开始火球飞行动画`);
         cc.tween(fireball)
             .to(flyTime, { position: endPos }, {
                 easing: 'sineOut',
@@ -204,14 +214,14 @@ cc.Class({
                 }
             })
             .call(() => {
-                cc.log(`[SkillEffectPlayer] 火球到达目标位置`);
+                // cc.log(`[SkillEffectPlayer] 火球到达目标位置`);
                 // 到达目标后播放爆炸效果
                 this._playExplosionEffect(target);
 
                 // 延迟销毁火球节点（给粒子一些时间消失）
                 this.scheduleOnce(() => {
                     if (fireball && fireball.isValid) {
-                        cc.log(`[SkillEffectPlayer] 销毁火球节点`);
+                        // cc.log(`[SkillEffectPlayer] 销毁火球节点`);
                         // 停止粒子系统
                         const particleSystem = fireball.getComponent(cc.ParticleSystem);
                         if (particleSystem) {
@@ -228,8 +238,8 @@ cc.Class({
             .by(flyTime, { angle: 360 })
             .start();
 
-        cc.log(`[SkillEffectPlayer] ===== 火球术特效播放完成 =====`);
-        cc.log(`[SkillEffectPlayer] 火球术特效已播放：从 (${startPos.x.toFixed(0)}, ${startPos.y.toFixed(0)}) 到 (${endPos.x.toFixed(0)}, ${endPos.y.toFixed(0)})`);
+        // cc.log(`[SkillEffectPlayer] ===== 火球术特效播放完成 =====`);
+        // cc.log(`[SkillEffectPlayer] 火球术特效已播放：从 (${startPos.x.toFixed(0)}, ${startPos.y.toFixed(0)}) 到 (${endPos.x.toFixed(0)}, ${endPos.y.toFixed(0)})`);
     },
 
     /**
@@ -267,7 +277,7 @@ cc.Class({
                 }, 1.0);
             }
 
-            cc.log("[SkillEffectPlayer] 使用粒子系统播放爆炸特效");
+            // cc.log("[SkillEffectPlayer] 使用粒子系统播放爆炸特效");
         } else {
             // 回退方案：使用Graphics绘制爆炸效果
             const explosion = new cc.Node("Explosion");
@@ -288,7 +298,7 @@ cc.Class({
                 })
                 .start();
 
-            cc.log("[SkillEffectPlayer] 使用Graphics绘制爆炸特效");
+            // cc.log("[SkillEffectPlayer] 使用Graphics绘制爆炸特效");
         }
     },
 
@@ -352,31 +362,180 @@ cc.Class({
     },
 
     /**
-     * 战吼特效 - 扩散波纹
+     * 兽化狂暴特效 - 持续显示直到Buff结束
+     */
+    _playBeastRageEffect(caster) {
+        if (!caster || !caster.isValid) {
+            cc.error("[SkillEffectPlayer] 兽化狂暴：caster为空");
+            return;
+        }
+
+        // cc.log(`[SkillEffectPlayer] 播放兽化狂暴特效：${caster.name}`);
+
+        // 保存原始状态（如果还没有保存）
+        if (!caster._beastRageOriginalScaleX) {
+            caster._beastRageOriginalScaleX = caster.scaleX;
+            caster._beastRageOriginalScaleY = caster.scaleY;
+            caster._beastRageOriginalColor = caster.color.clone();
+        }
+
+        // 1. 怪物变大（持续显示）
+        const beastScale = 1.2; // 变大20%
+        cc.tween(caster)
+            .to(0.2, {
+                scaleX: caster._beastRageOriginalScaleX * beastScale,
+                scaleY: caster._beastRageOriginalScaleY * beastScale
+            }, { easing: 'backOut' })
+            .start();
+
+        // 2. 颜色变红（持续显示）
+        const rageColor = new cc.Color(255, 100, 100);
+        cc.tween(caster)
+            .to(0.2, { color: rageColor })
+            .start();
+
+        // 3. 初始脉冲效果（一次性）
+        this._playBeastRagePulse(caster);
+    },
+
+    /**
+     * 播放初始脉冲效果（一次性）
+     */
+    _playBeastRagePulse(caster) {
+        // 创建脉冲圆圈
+        const pulse = new cc.Node("BeastRagePulse");
+        pulse.setPosition(0, 0);
+
+        const graphics = pulse.addComponent(cc.Graphics);
+        graphics.circle(0, 0, 40);
+        graphics.strokeColor = cc.Color.RED;
+        graphics.lineWidth = 4;
+        graphics.stroke();
+
+        caster.addChild(pulse);
+
+        // 脉冲扩散动画（一次性）
+        pulse.scale = 0.5;
+        pulse.opacity = 255;
+        cc.tween(pulse)
+            .to(0.3, { scale: 1.5, opacity: 200 })
+            .to(0.2, { scale: 2.0, opacity: 0 })
+            .call(() => {
+                if (pulse && pulse.isValid) {
+                    pulse.destroy();
+                }
+            })
+            .start();
+    },
+
+    /**
+     * 移除兽化狂暴特效
+     */
+    stopBeastRageEffect(caster) {
+        if (!caster || !caster.isValid) return;
+
+        // cc.log(`[SkillEffectPlayer] 移除兽化狂暴特效：${caster.name}`);
+
+        // 恢复缩放
+        if (caster._beastRageOriginalScaleX) {
+            cc.tween(caster)
+                .to(0.3, {
+                    scaleX: caster._beastRageOriginalScaleX,
+                    scaleY: caster._beastRageOriginalScaleY
+                }, { easing: 'backIn' })
+                .start();
+        }
+
+        // 恢复颜色
+        if (caster._beastRageOriginalColor) {
+            cc.tween(caster)
+                .to(0.3, { color: caster._beastRageOriginalColor })
+                .start();
+        }
+    },
+
+
+    /**
+     * 战吼特效 - 扩散波纹（一次性）
      */
     _playWarCryEffect(caster) {
         for (let i = 0; i < 3; i++) {
             this.scheduleOnce(() => {
-                const wave = new cc.Node("WarCryWave");
-                wave.setPosition(caster.getPosition());
-
-                const graphics = wave.addComponent(cc.Graphics);
-                graphics.circle(0, 0, 30);
-                graphics.strokeColor = cc.Color.ORANGE;
-                graphics.lineWidth = 4;
-                graphics.stroke();
-
-                caster.parent.addChild(wave);
-
-                // 波纹扩散
-                cc.tween(wave)
-                    .to(1.0, { scale: 4, opacity: 0 })
-                    .call(() => {
-                        wave.destroy();
-                    })
-                    .start();
+                this._createWarCryWave(caster);
             }, i * 0.2);
         }
+    },
+
+    /**
+     * 创建单个战吼波纹
+     */
+    _createWarCryWave(caster) {
+        if (!caster || !caster.isValid || !caster.parent) return;
+
+        const wave = new cc.Node("WarCryWave");
+        wave.setPosition(caster.getPosition());
+
+        const graphics = wave.addComponent(cc.Graphics);
+        graphics.circle(0, 0, 30);
+        graphics.strokeColor = cc.Color.ORANGE;
+        graphics.lineWidth = 4;
+        graphics.stroke();
+
+        caster.parent.addChild(wave);
+
+        // 波纹扩散（范围调大：从scale: 4改为scale: 6）
+        wave.scale = 1;
+        cc.tween(wave)
+            .to(1.0, { scale: 6, opacity: 0 })
+            .call(() => {
+                if (wave && wave.isValid) {
+                    wave.destroy();
+                }
+            })
+            .start();
+    },
+
+    /**
+     * 启动战吼持续波纹效果
+     */
+    _startWarCryContinuousWaves(caster) {
+        if (!caster || !caster.isValid) {
+            cc.error("[SkillEffectPlayer] 战吼持续波纹：caster为空");
+            return;
+        }
+
+        // 如果已经在运行，先停止
+        this._stopWarCryContinuousWaves(caster);
+
+        // cc.log(`[SkillEffectPlayer] 启动战吼持续波纹：${caster.name}`);
+
+        // 标记正在运行
+        caster._warCryWavesActive = true;
+
+        // 立即播放一次波纹
+        this._createWarCryWave(caster);
+
+        // 每隔0.8秒播放一次波纹（持续3秒，共约4次）
+        const waveInterval = 0.8;
+        const scheduleWave = () => {
+            if (!caster || !caster.isValid || !caster._warCryWavesActive) {
+                return;
+            }
+            this._createWarCryWave(caster);
+            this.scheduleOnce(scheduleWave, waveInterval);
+        };
+
+        this.scheduleOnce(scheduleWave, waveInterval);
+    },
+
+    /**
+     * 停止战吼持续波纹效果
+     */
+    _stopWarCryContinuousWaves(caster) {
+        if (!caster || !caster.isValid) return;
+
+        // cc.log(`[SkillEffectPlayer] 停止战吼持续波纹：${caster.name}`);
+        caster._warCryWavesActive = false;
     },
 
     /**

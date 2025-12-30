@@ -11,7 +11,20 @@ var BuffSystem = {
         if (existing && !buffComponent.stackable) {
             existing.elapsed = 0;
             existing.duration = buffComponent.duration;
+            // 如果是护盾Buff，重置护盾值
+            if (buffComponent.shieldValue !== undefined && buffComponent.shieldValue !== null) {
+                existing.shieldValue = buffComponent.shieldValue;
+                cc.log(`[BuffSystem] 更新现有护盾Buff: shieldValue=${existing.shieldValue}`);
+            } else {
+                cc.warn(`[BuffSystem] buffComponent.shieldValue未定义: ${buffComponent.shieldValue}`);
+            }
             if (existing.onApply) existing.onApply(entity, logger);
+
+            // 如果是护盾Buff，更新血条显示
+            const stats = entity.getComponent("StatsComponent");
+            if (existing.buffName === "护盾" && stats) {
+                stats.updateHealthBar();
+            }
 
             // 更新Buff图标显示
             this._updateBuffDisplay(entity);
@@ -19,7 +32,10 @@ var BuffSystem = {
         }
 
         let newBuff = entity.addComponent("BuffComponent");
+        cc.log(`[BuffSystem] 添加新Buff: name=${buffComponent.name}, shieldValue=${buffComponent.shieldValue}, buffComponent=`, buffComponent);
+        cc.log(`[BuffSystem] 调用init前: newBuff.shieldValue=${newBuff.shieldValue}`);
         newBuff.init(buffComponent);
+        cc.log(`[BuffSystem] Buff初始化后: buffName=${newBuff.buffName}, shieldValue=${newBuff.shieldValue}, shieldValue类型=${typeof newBuff.shieldValue}`);
 
         const stats = entity.getComponent("StatsComponent");
 
@@ -34,6 +50,11 @@ var BuffSystem = {
 
         if (newBuff.onApply)
             newBuff.onApply(entity, logger);
+
+        // 如果是护盾Buff，更新血条显示
+        if (newBuff.buffName === "护盾" && stats) {
+            stats.updateHealthBar();
+        }
 
         // 更新Buff图标显示
         this._updateBuffDisplay(entity);
@@ -63,6 +84,11 @@ var BuffSystem = {
                         if (stats[k] !== undefined)
                             stats[k] -= buff.modifiers[k];
                     }
+                }
+
+                // 如果是护盾Buff，更新血条显示
+                if (buff.buffName === "护盾" && stats) {
+                    stats.updateHealthBar();
                 }
 
                 entity.removeComponent(buff);

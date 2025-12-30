@@ -46,6 +46,13 @@ cc.Class({
         useParentMode: {
             default: false,
             tooltip: "true: 从父节点获取子节点 | false: 使用heroNodes和monsterNodes"
+        },
+
+        // 游戏结束面板组件（可选）
+        gameOverPanel: {
+            default: null,
+            type: cc.Node,
+            tooltip: "游戏结束面板节点（需要挂载GameOverPanel组件）"
         }
     },
 
@@ -67,12 +74,18 @@ cc.Class({
         // 创建单位（这是初始化 ECS 组件的关键步骤）
         this.spawnUnits();
 
+        // 游戏结束回调函数
+        const onGameOver = (winner, winnerText) => {
+            this._onGameOver(winner, winnerText);
+        };
+
         // 创建战斗系统
         this.battleSystem = new BattleSystem(
             this.heros,
             this.monsters,
             this.logger,
-            this.rand
+            this.rand,
+            onGameOver
         );
 
         this.lastTime = Date.now();
@@ -160,14 +173,14 @@ cc.Class({
                     SkillConfig.fireball
                 ]
             },
-            "巨狼": {
+            "怪物": {
                 hp: 80,
                 attack: 10,
                 defense: 5,
                 speed: 15,
                 skills: [
                     SkillConfig.normalAttack,
-                    SkillConfig.rageSkill
+                    SkillConfig.beastRage
                 ]
             },
             "Boss": {
@@ -257,7 +270,7 @@ cc.Class({
             // 使用编辑器中设置的值
             stats.maxHp = stats.hp;
         }
-        
+
         if (stats.attack === 1 && data.attack !== undefined) {
             stats.attack = data.attack;
         }
@@ -301,5 +314,27 @@ cc.Class({
         this.lastTime = now;
 
         this.battleSystem.update(dt);
+    },
+
+    /**
+     * 游戏结束处理
+     * @param {string} winner - 胜利方（"hero" 或 "monster"）
+     * @param {string} winnerText - 胜利方文本（"英雄" 或 "怪物"）
+     * @private
+     */
+    _onGameOver(winner, winnerText) {
+        cc.log(`[BattleController] 游戏结束：${winnerText}胜利`);
+
+        // 显示游戏结束画面
+        if (this.gameOverPanel) {
+            const gameOverPanelComp = this.gameOverPanel.getComponent("GameOverPanel");
+            if (gameOverPanelComp) {
+                gameOverPanelComp.showGameOver(winner);
+            } else {
+                cc.warn("[BattleController] gameOverPanel节点未挂载GameOverPanel组件");
+            }
+        } else {
+            cc.warn("[BattleController] 未设置gameOverPanel节点");
+        }
     }
 });

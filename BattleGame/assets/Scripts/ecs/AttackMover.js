@@ -65,7 +65,7 @@ cc.Class({
 
         // 调试信息
         if (this.skeleton) {
-            cc.log(`[AttackMover] ${this.node.name} Spine 组件加载成功`);
+            // cc.log(`[AttackMover] ${this.node.name} Spine 组件加载成功`);
         } else {
             cc.warn(`[AttackMover] ${this.node.name} 没有 Spine 组件!`);
         }
@@ -137,7 +137,7 @@ cc.Class({
         this.originalScaleX = this.node.scaleX;
         this.originalScaleY = this.node.scaleY;
 
-        cc.log(`[AttackMover] ${this.node.name} 远程攻击：只播放攻击动画，不移动`);
+        // cc.log(`[AttackMover] ${this.node.name} 远程攻击：只播放攻击动画，不移动`);
 
         // 播放攻击动画
         this._playAttackAnimation();
@@ -235,7 +235,7 @@ cc.Class({
         }
 
         // 1. 播放攻击者的攻击动画
-        cc.log(`[AttackMover] ${this.node.name} 播放攻击动画`);
+        // cc.log(`[AttackMover] ${this.node.name} 播放攻击动画`);
         this.skeleton.setAnimation(0, AnimationState.ATTACK, false);
 
         // 2. 延迟播放被攻击者的受击动画（让战斗更流畅）
@@ -245,7 +245,7 @@ cc.Class({
                 // 延迟播放受击动画
                 this.scheduleOnce(() => {
                     if (this.currentTarget && this.currentTarget.isValid && targetSkeleton) {
-                        cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画（延迟${this.hitAnimationDelay}秒）`);
+                        // cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画（延迟${this.hitAnimationDelay}秒）`);
                         // 播放受击动画（不循环）
                         targetSkeleton.setAnimation(0, AnimationState.BY_ATK, false);
 
@@ -258,7 +258,7 @@ cc.Class({
                                 // 只有存活的才返回待机动画
                                 if (targetStats && !targetStats.isDead()) {
                                     targetSkeleton.setAnimation(0, AnimationState.WAIT, true);
-                                    cc.log(`[AttackMover] ${this.currentTarget.name} 返回待机动画`);
+                                    // cc.log(`[AttackMover] ${this.currentTarget.name} 返回待机动画`);
                                 }
                             }
                             // 清除监听器，避免重复触发
@@ -275,7 +275,7 @@ cc.Class({
         this.skeleton.setCompleteListener(() => {
             // 攻击动画完成后返回待机状态
             this.skeleton.setAnimation(0, AnimationState.WAIT, true);
-            cc.log(`[AttackMover] ${this.node.name} 返回待机动画`);
+            // cc.log(`[AttackMover] ${this.node.name} 返回待机动画`);
             // 清除监听器
             this.skeleton.setCompleteListener(null);
         });

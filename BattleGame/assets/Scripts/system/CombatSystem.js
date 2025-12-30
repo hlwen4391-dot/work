@@ -1,5 +1,6 @@
 var StatsComponent = require("StatsComponent");
 var CombatComponent = require("CombatComponent");
+var BuffComponent = require("BuffComponent");
 
 /**
  * 战斗计算系统（非组件，是普通工具模块）
@@ -7,7 +8,7 @@ var CombatComponent = require("CombatComponent");
 var CombatSystem = {
 
     /**
-     * 伤害结算（包含防御、闪避、暴击）
+     * 伤害结算（包含防御、闪避、暴击、护盾）
      */
     damage(attacker, target, baseDamage, log) {
 
@@ -46,14 +47,42 @@ var CombatSystem = {
 
         finalDamage = Math.floor(finalDamage);
 
-        // 5. 扣血
-        tgtStats.hp -= finalDamage;
-        if (tgtCombat) tgtCombat.lastDamage = finalDamage;
+        // 5. 护盾吸收伤害
+        const shieldBuff = target.getComponents(BuffComponent)
+            .find(b => b.buffName === "护盾");
+        if (shieldBuff && shieldBuff.shieldValue > 0) {
+            const absorb = Math.min(finalDamage, shieldBuff.shieldValue);
+            shieldBuff.shieldValue -= absorb;
+            finalDamage -= absorb;
+            log(`🛡️ ${target.name} 的护盾吸收了 ${absorb} 点伤害`);
 
-        // 6. 更新血条显示（传递是否暴击）
-        tgtStats.updateHealthBar(finalDamage, isCrit ? 'crit' : 'normal');
+            if (shieldBuff.shieldValue <= 0) {
+                if (shieldBuff.onExpire) {
+                    shieldBuff.onExpire(target, log);
+                }
+                target.removeComponent(shieldBuff);
+                log(`${target.name} 的护盾被击破了`);
+            }
+        }
 
-        log(`${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点伤害 (剩余HP: ${tgtStats.hp})`);
+        // 6. 扣血
+        if (finalDamage > 0) {
+            tgtStats.hp -= finalDamage;
+            if (tgtCombat) tgtCombat.lastDamage = finalDamage;
+
+            // 增加怒气值（根据受到的伤害）
+            // 怒气值 = 受到的伤害值（可以根据需要调整比例）
+            tgtStats.addRage(finalDamage);
+        } else {
+            if (tgtCombat) tgtCombat.lastDamage = 0;
+        }
+
+        // 7. 更新血条显示（传递是否暴击，会自动显示护盾值）
+        tgtStats.updateHealthBar(finalDamage > 0 ? finalDamage : 0, isCrit ? 'crit' : 'normal');
+
+        if (finalDamage > 0) {
+            log(`${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点伤害 (剩余HP: ${tgtStats.hp})`);
+        }
     },
 
     /**
@@ -68,6 +97,9 @@ var CombatSystem = {
         const finalDamage = Math.floor(baseDamage);
         tgtStats.hp -= finalDamage;
         if (tgtCombat) tgtCombat.lastDamage = finalDamage;
+
+        // 增加怒气值（根据受到的伤害）
+        tgtStats.addRage(finalDamage);
 
         // 更新血条显示（真伤显示为普通伤害）
         tgtStats.updateHealthBar(finalDamage, 'normal');

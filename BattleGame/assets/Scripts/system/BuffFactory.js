@@ -17,7 +17,7 @@ var BuffFactory = {
             return null;
         }
 
-        return {
+        const buffConfig = {
             name: data.name,
             duration: data.duration,
             interval: data.interval,
@@ -29,6 +29,10 @@ var BuffFactory = {
             stackable: data.stackable,
             shieldValue: data.shieldValue
         };
+        
+        cc.log(`[BuffFactory] 创建Buff: name=${buffConfig.name}, shieldValue=${buffConfig.shieldValue}, data.shieldValue=${data.shieldValue}`);
+        
+        return buffConfig;
     }
 };
 

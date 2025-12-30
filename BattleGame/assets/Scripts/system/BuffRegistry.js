@@ -6,7 +6,7 @@ var BuffRegistry = {
     // 燃烧Buff - 持续伤害
     burn: {
         name: "燃烧",
-        duration: 3,
+        duration: 2.3,//持续时间
         interval: 1, // 每秒执行一次
         onTick: (target, log) => {
             const dmg = 5;
@@ -27,9 +27,22 @@ var BuffRegistry = {
         status: { stun: true },
         onApply(target, log) {
             log(`😵 ${target.name} 被眩晕了！`);
+
+            // 显示眩晕标志
+            let stunIcon = target.getComponent("StunIcon");
+            if (!stunIcon) {
+                stunIcon = target.addComponent("StunIcon");
+            }
+            stunIcon.showStun();
         },
         onExpire(target, log) {
             log(`✨ ${target.name} 从眩晕中恢复`);
+
+            // 隐藏眩晕标志
+            const stunIcon = target.getComponent("StunIcon");
+            if (stunIcon) {
+                stunIcon.hideStun();
+            }
         }
     },
 
@@ -61,13 +74,22 @@ var BuffRegistry = {
         },
         onExpire(target, log) {
             log(`${target.name} 狂暴状态结束`);
+
+            // 移除兽化狂暴特效
+            const scene = cc.director.getScene();
+            if (scene) {
+                const effectPlayer = scene.getComponentInChildren("SkillEffectPlayer");
+                if (effectPlayer && effectPlayer.stopBeastRageEffect) {
+                    effectPlayer.stopBeastRageEffect(target);
+                }
+            }
         }
     },
 
     // 护盾Buff - 伤害吸收
     shield: {
         name: "护盾",
-        duration: 3,
+        duration: 2.5,//持续时间
         status: {},
         modifiers: {},
         shieldValue: 10, // 护盾值

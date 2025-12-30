@@ -164,3 +164,4 @@ at BattleController.initEntity
 现在去给你的角色节点添加这些组件吧！🚀
 
 
+

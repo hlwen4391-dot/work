@@ -10,8 +10,10 @@ var SkillEnum = {
     stunSkill: 2,     // 盾击
     fireball: 3,      // 火球术
     rageSkill: 4,     // 狂暴
+    beastRage: 7,     // 兽化狂暴
     warCry: 5,        // 战吼
-    shieldAllies: 6   // 群体护盾
+    shieldAllies: 6,  // 群体护盾
+    ultimateSkill: 8  // 大招（需要怒气值满）
 };
 
 /**
@@ -19,7 +21,7 @@ var SkillEnum = {
  * 包含所有技能的定义
  */
 var SkillConfig = {
-    
+
     // 普通攻击 - 基础攻击技能
     normalAttack: {
         name: "普通攻击",
@@ -28,21 +30,21 @@ var SkillConfig = {
         effect: (self, target, log, rand) => {
             const atk = self.getComponent("StatsComponent");
             const def = target.getComponent("StatsComponent");
-            
+
             if (!atk || !def) return [];
-            
+
             let dmg = Math.max(atk.attack - def.defense, 1);
-            
+
             // 暴击判定
             if (rand() < atk.crit) {
                 dmg *= 2;
                 log(`⚡ 暴击！${self.name} 造成双倍伤害`);
             }
-            
+
             // 免伤计算
             dmg *= (1 - def.immune);
             dmg = Math.floor(dmg);
-            
+
             return [
                 { type: "damage", value: dmg }
             ];
@@ -57,12 +59,12 @@ var SkillConfig = {
         effect: (self, target, log) => {
             const atk = self.getComponent("StatsComponent");
             const def = target.getComponent("StatsComponent");
-            
+
             if (!atk || !def) return [];
-            
+
             const dmg = Math.max(atk.attack - def.defense, 1);
             log(`🛡️ ${self.name} 使用盾击！`);
-            
+
             return [
                 { type: "damage", value: dmg },
                 { type: "applyBuff", buff: "stun" }
@@ -74,7 +76,7 @@ var SkillConfig = {
     fireball: {
         name: "火球术",
         id: SkillEnum.fireball,
-        cooldown: 3.0,
+        cooldown: 4.2,
         effect: (self, target, log) => {
             log(`🔥 ${self.name} 释放火球术！`);
             return [
@@ -85,33 +87,60 @@ var SkillConfig = {
     },
 
     // 狂暴 - 自身增益
-    rageSkill: {
-        name: "狂暴",
-        id: SkillEnum.rageSkill,
-        cooldown: 4.0,
+    // rageSkill: {
+    //     name: "狂暴",
+    //     id: SkillEnum.rageSkill,
+    //     cooldown: 4.0,
+    //     effect: (self, target, log) => {
+    //         log(`😡 ${self.name} 进入狂暴状态！`);
+    //         return [
+    //             { type: "applyBuffSelf", buff: "rage" }
+    //         ];
+    //     }
+    // },
+
+    // 兽化狂暴 - 更强的自身增益，带有酷炫特效
+    beastRage: {
+        name: "兽化狂暴",
+        id: SkillEnum.beastRage,
+        cooldown: 6.0,
         effect: (self, target, log) => {
-            log(`😡 ${self.name} 进入狂暴状态！`);
+            log(`🐺 ${self.name} 进入兽化狂暴状态！`);
             return [
                 { type: "applyBuffSelf", buff: "rage" }
             ];
         }
     },
 
-    // 战吼 - 群体增益
+    // 战吼 - 群体增益（可以作为大招）
     warCry: {
         name: "战吼",
         id: SkillEnum.warCry,
-        cooldown: 10.0,
+        cooldown: 9.0,
+        requireRage: 20,  // 设置为0表示普通技能，设置为100表示需要怒气值满才能释放（大招）
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
-            
-            const allies = teamComp.team === "hero" 
-                ? TeamRef.herosRef 
+
+            const allies = teamComp.team === "hero"
+                ? TeamRef.herosRef
                 : TeamRef.monstersRef;
-            
+
             log(`📢 ${self.name} 发出战吼，鼓舞队友！`);
-            
+
+            // 启动持续波纹效果（在施法者身上）
+            const scene = cc.director.getScene();
+            if (scene) {
+                const skillEffectPlayer = scene.getComponentInChildren("SkillEffectPlayer");
+                if (skillEffectPlayer) {
+                    skillEffectPlayer._startWarCryContinuousWaves(self);
+                    // 3秒后自动停止持续波纹（Buff持续时间）
+                    skillEffectPlayer.scheduleOnce(() => {
+                        skillEffectPlayer._stopWarCryContinuousWaves(self);
+                    }, 3.0);
+                }
+            }
+
             // 为所有队友添加战吼Buff
             for (let ally of allies) {
                 const buffComp = BuffFactory.create("warCry");
@@ -119,7 +148,7 @@ var SkillConfig = {
                     BuffSystem.addBuff(ally, buffComp, log);
                 }
             }
-            
+
             return [];
         }
     },
@@ -128,17 +157,18 @@ var SkillConfig = {
     shieldAllies: {
         name: "群体护盾",
         id: SkillEnum.shieldAllies,
-        cooldown: 9.0,
+        cooldown: 4,
+        requireRage: 20,
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
-            
-            const allies = teamComp.team === "hero" 
-                ? TeamRef.herosRef 
+
+            const allies = teamComp.team === "hero"
+                ? TeamRef.herosRef
                 : TeamRef.monstersRef;
-            
+
             log(`🛡️ ${self.name} 为队友施加护盾！`);
-            
+
             // 为所有队友添加护盾Buff
             for (let ally of allies) {
                 const buffComp = BuffFactory.create("shield");
@@ -146,7 +176,7 @@ var SkillConfig = {
                     BuffSystem.addBuff(ally, buffComp, log);
                 }
             }
-            
+
             return [];
         }
     }

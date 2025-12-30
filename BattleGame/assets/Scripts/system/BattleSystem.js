@@ -5,11 +5,12 @@ var ActionSystem = require("ActionSystem");
 var BattleSystem = cc.Class({
     name: "BattleSystem",
 
-    ctor(heros, monsters, logger, rand) {
+    ctor(heros, monsters, logger, rand, onGameOverCallback) {
         this.heros = heros;
         this.monsters = monsters;
         this.logger = logger;
         this.rand = rand;
+        this.onGameOverCallback = onGameOverCallback; // 游戏结束回调函数
 
         TeamRef.herosRef = this.heros;
         TeamRef.monstersRef = this.monsters;
@@ -23,7 +24,18 @@ var BattleSystem = cc.Class({
     },
 
     isFinished() {
-        return this.heros.length === 0 || this.monsters.length === 0;
+        // 检查是否有存活的英雄和怪物
+        const aliveHeros = this.heros.filter(e => {
+            const stats = e.getComponent("StatsComponent");
+            return stats && !stats.isDead();
+        });
+        const aliveMonsters = this.monsters.filter(e => {
+            const stats = e.getComponent("StatsComponent");
+            return stats && !stats.isDead();
+        });
+
+        // 如果一方全部死亡，游戏结束
+        return aliveHeros.length === 0 || aliveMonsters.length === 0;
     },
 
     getSortedUnits() {
@@ -51,11 +63,7 @@ var BattleSystem = cc.Class({
 
         // 检查战斗是否结束（在处理前检查）
         if (this.isFinished()) {
-            this.finished = true;
-            const winner = this.heros.length > 0 ? "英雄" : "怪物";
-            this.logger.log(`====战斗结束：${winner}胜利====`);
-            this.actionQueue = []; // 清空队列
-            this.isProcessingAction = false; // 重置标志
+            this._handleGameOver();
             return;
         }
 
@@ -66,11 +74,7 @@ var BattleSystem = cc.Class({
         this.actionSystem.performAction(unit, dt, () => {
             // 行动完成后，再次检查战斗是否结束
             if (this.isFinished()) {
-                this.finished = true;
-                const winner = this.heros.length > 0 ? "英雄" : "怪物";
-                this.logger.log(`====战斗结束：${winner}胜利====`);
-                this.actionQueue = []; // 清空队列
-                this.isProcessingAction = false;
+                this._handleGameOver();
                 return;
             }
 
@@ -86,11 +90,7 @@ var BattleSystem = cc.Class({
 
         // 检查战斗是否结束
         if (this.isFinished()) {
-            this.finished = true;
-            const winner = this.heros.length > 0 ? "英雄" : "怪物";
-            this.logger.log(`====战斗结束：${winner}胜利====`);
-            this.actionQueue = []; // 清空队列
-            this.isProcessingAction = false; // 重置标志
+            this._handleGameOver();
             return;
         }
 
@@ -109,6 +109,27 @@ var BattleSystem = cc.Class({
 
         // 开始处理队列
         this._processNextAction();
+    },
+
+    /**
+     * 处理游戏结束逻辑
+     * @private
+     */
+    _handleGameOver() {
+        if (this.finished) return; // 避免重复触发
+
+        this.finished = true;
+        const winner = this.heros.length > 0 ? "hero" : "monster";
+        const winnerText = this.heros.length > 0 ? "英雄" : "怪物";
+
+        this.logger.log(`====战斗结束：${winnerText}胜利====`);
+        this.actionQueue = []; // 清空队列
+        this.isProcessingAction = false; // 重置标志
+
+        // 调用游戏结束回调
+        if (this.onGameOverCallback && typeof this.onGameOverCallback === 'function') {
+            this.onGameOverCallback(winner, winnerText);
+        }
     }
 });
 
