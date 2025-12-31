@@ -49,11 +49,15 @@ cc.Class({
     },
 
     onLoad() {
-        // 初始隐藏面板
+        // 初始隐藏面板（确保完全隐藏）
         if (this.panelBg) {
             this.panelBg.active = false;
             this.panelBg.opacity = 0;
+            this.panelBg.scale = 0.5;
         }
+
+        // 标记是否已显示（防止重复显示）
+        this._isShown = false;
 
         // 绑定按钮事件
         if (this.restartButton) {
@@ -70,6 +74,12 @@ cc.Class({
      * @param {string} winner - 胜利方名称（"hero" 或 "monster"）
      */
     showGameOver(winner) {
+        // 防止重复显示
+        if (this._isShown) {
+            cc.log("[GameOverPanel] 游戏结束画面已显示，跳过重复调用");
+            return;
+        }
+
         if (!this.panelBg) {
             cc.error("[GameOverPanel] 未设置 panelBg 节点");
             return;
@@ -94,18 +104,29 @@ cc.Class({
             this.gameOverLabel.string = "游戏结束";
         }
 
+        // 标记已显示
+        this._isShown = true;
+
         // 显示面板（带动画）
         this.panelBg.active = true;
         this.panelBg.scale = 0.5;
         this.panelBg.opacity = 0;
 
-        // 淡入和缩放动画
+        // 确保面板在最上层（设置到场景最上层）
+        this.panelBg.setSiblingIndex(this.panelBg.parent.children.length - 1);
+
+        // 淡入和缩放动画（完成后保持显示，不会消失）
         cc.tween(this.panelBg)
             .to(this.showDuration, {
                 opacity: 255,
                 scale: 1.0
             }, {
                 easing: 'backOut'
+            })
+            .call(() => {
+                // 动画完成后，确保面板保持显示状态
+                this.panelBg.opacity = 255;
+                this.panelBg.scale = 1.0;
             })
             .start();
 

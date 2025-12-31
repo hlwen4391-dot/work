@@ -324,6 +324,7 @@ cc.Class({
      */
     _onGameOver(winner, winnerText) {
         cc.log(`[BattleController] 游戏结束：${winnerText}胜利`);
+        cc.log(`[BattleController] 当前英雄数量: ${this.heros.length}, 怪物数量: ${this.monsters.length}`);
 
         // 显示游戏结束画面
         if (this.gameOverPanel) {
@@ -331,10 +332,12 @@ cc.Class({
             if (gameOverPanelComp) {
                 gameOverPanelComp.showGameOver(winner);
             } else {
-                cc.warn("[BattleController] gameOverPanel节点未挂载GameOverPanel组件");
+                cc.error("[BattleController] gameOverPanel节点未挂载GameOverPanel组件！");
+                cc.error("   请在gameOverPanel节点上添加GameOverPanel组件");
             }
         } else {
-            cc.warn("[BattleController] 未设置gameOverPanel节点");
+            cc.error("[BattleController] 未设置gameOverPanel节点！");
+            cc.error("   请在BattleController的属性检查器中设置gameOverPanel属性");
         }
     }
 });

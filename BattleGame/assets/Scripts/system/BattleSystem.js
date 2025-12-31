@@ -24,12 +24,19 @@ var BattleSystem = cc.Class({
     },
 
     isFinished() {
+        // 如果数组为空，说明还没初始化完成，不算结束
+        if (this.heros.length === 0 && this.monsters.length === 0) {
+            return false;
+        }
+
         // 检查是否有存活的英雄和怪物
         const aliveHeros = this.heros.filter(e => {
+            if (!e || !e.isValid) return false;
             const stats = e.getComponent("StatsComponent");
             return stats && !stats.isDead();
         });
         const aliveMonsters = this.monsters.filter(e => {
+            if (!e || !e.isValid) return false;
             const stats = e.getComponent("StatsComponent");
             return stats && !stats.isDead();
         });
@@ -119,8 +126,20 @@ var BattleSystem = cc.Class({
         if (this.finished) return; // 避免重复触发
 
         this.finished = true;
-        const winner = this.heros.length > 0 ? "hero" : "monster";
-        const winnerText = this.heros.length > 0 ? "英雄" : "怪物";
+
+        // 检查存活的单位数量来确定胜利方
+        const aliveHeros = this.heros.filter(e => {
+            const stats = e.getComponent("StatsComponent");
+            return stats && !stats.isDead();
+        });
+        const aliveMonsters = this.monsters.filter(e => {
+            const stats = e.getComponent("StatsComponent");
+            return stats && !stats.isDead();
+        });
+
+        // 判断胜利方：如果英雄还有存活的，则英雄胜利；否则怪物胜利
+        const winner = aliveHeros.length > 0 ? "hero" : "monster";
+        const winnerText = aliveHeros.length > 0 ? "英雄" : "怪物";
 
         this.logger.log(`====战斗结束：${winnerText}胜利====`);
         this.actionQueue = []; // 清空队列
