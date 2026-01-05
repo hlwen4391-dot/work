@@ -9,8 +9,18 @@ var CombatSystem = {
 
     /**
      * 伤害结算（包含防御、闪避、暴击、护盾）
+     * @param {cc.Node} attacker - 攻击者
+     * @param {cc.Node} target - 目标
+     * @param {number} baseDamage - 基础伤害
+     * @param {Function} log - 日志函数
+     * @param {Object} recorder - 战斗记录器（可选）
+     * @param {Function} rand - 随机数生成函数（使用种子随机数）
      */
-    damage(attacker, target, baseDamage, log) {
+    damage(attacker, target, baseDamage, log, recorder, rand) {
+        // 如果没有传入 rand，使用 Math.random() 作为后备（向后兼容）
+        if (!rand) {
+            rand = Math.random;
+        }
 
         const atkStats = attacker.getComponent("StatsComponent");
         const tgtStats = target.getComponent("StatsComponent");
@@ -18,21 +28,26 @@ var CombatSystem = {
 
         if (!atkStats || !tgtStats) return;
 
-        // 1. 计算闪避
+        // 1. 计算闪避（使用种子随机数）
         const missChance = tgtStats.miss || 0;
-        if (Math.random() < missChance) {
+        const isMiss = rand() < missChance;
+        if (isMiss) {
             log(`${attacker.name} 对 ${target.name} 的攻击被闪避了！`);
             if (tgtCombat) tgtCombat.lastDamage = 0;
             // 显示 MISS 飘字
             tgtStats.updateHealthBar(0, 'miss');
+            // 记录闪避事件
+            if (recorder) {
+                recorder.recordDamage(attacker, target, 0, false, true, false);
+            }
             return;
         }
 
-        // 2. 计算暴击
+        // 2. 计算暴击（使用种子随机数）
         let finalDamage = baseDamage;
         let isCrit = false;
         const critChance = atkStats.crit || 0;
-        if (Math.random() < critChance) {
+        if (rand() < critChance) {
             finalDamage *= 2;
             isCrit = true;
             log(`⚡ 暴击！${attacker.name} 对 ${target.name} 造成双倍伤害`);
@@ -80,6 +95,11 @@ var CombatSystem = {
         // 7. 更新血条显示（传递是否暴击，会自动显示护盾值）
         tgtStats.updateHealthBar(finalDamage > 0 ? finalDamage : 0, isCrit ? 'crit' : 'normal');
 
+        // 记录伤害事件
+        if (recorder && finalDamage > 0) {
+            recorder.recordDamage(attacker, target, finalDamage, isCrit, false, false);
+        }
+
         if (finalDamage > 0) {
             log(`${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点伤害 (剩余HP: ${tgtStats.hp})`);
         }
@@ -87,8 +107,14 @@ var CombatSystem = {
 
     /**
      * 真伤：无视防御、免疫、闪避等
+     * @param {cc.Node} attacker - 攻击者
+     * @param {cc.Node} target - 目标
+     * @param {number} baseDamage - 基础伤害
+     * @param {Function} log - 日志函数
+     * @param {Object} recorder - 战斗记录器（可选）
+     * @param {Function} rand - 随机数生成函数（可选，真伤不需要随机判定，但为了保持API一致性）
      */
-    damageTrue(attacker, target, baseDamage, log) {
+    damageTrue(attacker, target, baseDamage, log, recorder, rand) {
 
         const tgtStats = target.getComponent("StatsComponent");
         const tgtCombat = target.getComponent("CombatComponent");
@@ -103,6 +129,11 @@ var CombatSystem = {
 
         // 更新血条显示（真伤显示为普通伤害）
         tgtStats.updateHealthBar(finalDamage, 'normal');
+
+        // 记录真实伤害事件
+        if (recorder) {
+            recorder.recordDamage(attacker, target, finalDamage, false, false, true);
+        }
 
         log(`🔥 真伤！${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点真实伤害 (剩余HP: ${tgtStats.hp})`);
     }

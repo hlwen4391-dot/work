@@ -4,7 +4,7 @@ var StatsComponent = require("StatsComponent");
 
 var BuffSystem = {
 
-    addBuff(entity, buffComponent, logger) {
+    addBuff(entity, buffComponent, logger, recorder) {
         const existing = entity.getComponents(BuffComponent)
             .find(b => b.buffName === buffComponent.buffName);
 
@@ -19,6 +19,11 @@ var BuffSystem = {
                 cc.warn(`[BuffSystem] buffComponent.shieldValue未定义: ${buffComponent.shieldValue}`);
             }
             if (existing.onApply) existing.onApply(entity, logger);
+
+            // 记录Buff应用事件（更新现有Buff也算应用）
+            if (recorder) {
+                recorder.recordBuffApply(entity, existing.buffName);
+            }
 
             // 如果是护盾Buff，更新血条显示
             const stats = entity.getComponent("StatsComponent");
@@ -60,7 +65,7 @@ var BuffSystem = {
         this._updateBuffDisplay(entity);
     },
 
-    update(entity, dt, logger) {
+    update(entity, dt, logger, recorder) {
         const buffs = entity.getComponents(BuffComponent);
         const stats = entity.getComponent("StatsComponent");
         let buffRemoved = false;
@@ -89,6 +94,11 @@ var BuffSystem = {
                 // 如果是护盾Buff，更新血条显示
                 if (buff.buffName === "护盾" && stats) {
                     stats.updateHealthBar();
+                }
+
+                // 记录Buff移除事件
+                if (recorder) {
+                    recorder.recordBuffRemove(entity, buff.buffName);
                 }
 
                 entity.removeComponent(buff);

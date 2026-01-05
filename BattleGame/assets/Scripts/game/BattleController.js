@@ -48,11 +48,36 @@ cc.Class({
             tooltip: "true: 从父节点获取子节点 | false: 使用heroNodes和monsterNodes"
         },
 
-        // 游戏结束面板组件（可选）
+        // 游戏结束面板组件（可选，如果使用场景跳转则不需要）
         gameOverPanel: {
             default: null,
             type: cc.Node,
-            tooltip: "游戏结束面板节点（需要挂载GameOverPanel组件）"
+            tooltip: "游戏结束面板节点（如果使用场景跳转则不需要）"
+        },
+
+        // 是否启用战斗记录
+        enableRecording: {
+            default: true,
+            tooltip: "是否启用战斗记录功能"
+        },
+
+        // 游戏结束场景名称
+        gameOverSceneName: {
+            default: "GameOverScene",
+            tooltip: "游戏结束场景名称（如果为空则使用当前场景的gameOverPanel）"
+        },
+
+        // 是否使用场景跳转（true: 跳转到新场景 | false: 在当前场景显示面板）
+        useSceneTransition: {
+            default: true,
+            tooltip: "是否使用场景跳转显示游戏结束画面"
+        },
+
+        // 回放控制器（可选）
+        replayController: {
+            default: null,
+            type: cc.Node,
+            tooltip: "回放控制器节点（挂载了ReplayController组件）"
         }
     },
 
@@ -71,6 +96,9 @@ cc.Class({
         this.heros = [];
         this.monsters = [];
 
+        // 是否正在回放（用于禁用BattleSystem的update）
+        this.isReplaying = false;
+
         // 创建单位（这是初始化 ECS 组件的关键步骤）
         this.spawnUnits();
 
@@ -79,16 +107,72 @@ cc.Class({
             this._onGameOver(winner, winnerText);
         };
 
+        // 创建战斗记录器（如果启用）
+        let recorder = null;
+        if (this.enableRecording) {
+            const BattleRecorder = require("BattleRecorder");
+            recorder = new BattleRecorder();//创建战斗记录器
+            this.battleRecorder = recorder; // 保存引用，用于后续访问记录
+        }
+
         // 创建战斗系统
         this.battleSystem = new BattleSystem(
             this.heros,
             this.monsters,
             this.logger,
             this.rand,
-            onGameOver
+            onGameOver,
+            recorder
         );
 
         this.lastTime = Date.now();
+
+        // 检查是否需要自动开始回放（从GameOverScene跳转回来时）
+        this.scheduleOnce(() => {
+            this._checkAutoReplay();
+        }, 0.1); // 延迟一小段时间，确保所有组件都已初始化
+    },
+
+    /**
+     * 检查是否需要自动开始回放
+     * @private
+     */
+    _checkAutoReplay() {
+        if (window.AutoStartReplay && window.AutoStartReplay.enabled) {
+            const recordKey = window.AutoStartReplay.recordKey;
+            cc.log(`[BattleController] 检测到自动回放标志，准备开始回放: ${recordKey}`);
+
+            // 获取ReplayController
+            let replayController = null;
+            if (this.replayController) {
+                replayController = this.replayController.getComponent("ReplayController");
+            } else {
+                // 尝试从场景中查找
+                const scene = cc.director.getScene();
+                if (scene) {
+                    const canvas = scene.getChildByName("Canvas");
+                    if (canvas) {
+                        const replayNode = canvas.getChildByName("ReplayController");
+                        if (replayNode) {
+                            replayController = replayNode.getComponent("ReplayController");
+                        }
+                    }
+                }
+            }
+
+            if (replayController && recordKey) {
+                // 开始回放
+                replayController.loadAndReplay(recordKey, this.heros, this.monsters);
+                cc.log(`[BattleController] 自动回放已启动`);
+
+                // 清除自动回放标志
+                window.AutoStartReplay = null;
+            } else {
+                cc.error(`[BattleController] 无法自动开始回放`);
+                cc.error(`   - ReplayController: ${replayController ? '找到' : '未找到'}`);
+                cc.error(`   - recordKey: ${recordKey ? recordKey : '不存在'}`);
+            }
+        }
     },
 
     /**
@@ -307,6 +391,11 @@ cc.Class({
     },
 
     update() {
+        // 如果正在回放，不执行BattleSystem的update（避免冲突）
+        if (this.isReplaying) {
+            return;
+        }
+
         if (!this.battleSystem || this.battleSystem.finished) return;
 
         const now = Date.now();
@@ -325,8 +414,85 @@ cc.Class({
     _onGameOver(winner, winnerText) {
         cc.log(`[BattleController] 游戏结束：${winnerText}胜利`);
         cc.log(`[BattleController] 当前英雄数量: ${this.heros.length}, 怪物数量: ${this.monsters.length}`);
+        cc.log(`[BattleController] useSceneTransition=${this.useSceneTransition}, gameOverSceneName="${this.gameOverSceneName}"`);
 
-        // 显示游戏结束画面
+        // 记录游戏结束事件并保存战斗记录
+        if (this.battleRecorder) {
+            this.battleRecorder.recordEvent("gameOver", { winner: winner, winnerText: winnerText });
+            this.battleRecorder.stopRecording();
+
+            // 保存战斗记录到本地存储
+            const recordKey = `battle_replay_${Date.now()}`;
+            this.battleRecorder.saveToLocalStorage(recordKey);
+            cc.log(`[BattleController] 战斗记录已保存: ${recordKey}`);
+
+            // 将记录键保存到全局，供GameOverPanel使用
+            window.LastBattleRecordKey = recordKey;
+        }
+
+        // 根据设置选择显示方式
+        if (this.useSceneTransition && this.gameOverSceneName) {
+            // 方式1: 跳转到游戏结束场景
+            cc.log(`[BattleController] 使用场景跳转方式`);
+            this._transitionToGameOverScene(winner, winnerText);
+        } else {
+            // 方式2: 在当前场景显示游戏结束面板
+            cc.log(`[BattleController] 使用当前场景面板方式`);
+            if (!this.useSceneTransition) {
+                cc.log(`[BattleController] useSceneTransition为false，使用面板方式`);
+            }
+            if (!this.gameOverSceneName) {
+                cc.log(`[BattleController] gameOverSceneName为空，使用面板方式`);
+            }
+            this._showGameOverPanel(winner);
+        }
+    },
+
+    /**
+     * 跳转到游戏结束场景
+     * @private
+     */
+    _transitionToGameOverScene(winner, winnerText) {
+        cc.log(`[BattleController] ===== 开始场景跳转流程 =====`);
+        cc.log(`[BattleController] 准备跳转到游戏结束场景: "${this.gameOverSceneName}"`);
+        cc.log(`[BattleController] 胜利方: ${winnerText} (${winner})`);
+
+        // 方法1: 使用全局对象传递数据（推荐）
+        window.BattleGameResult = {
+            winner: winner,
+            winnerText: winnerText
+        };
+        cc.log(`[BattleController] 已设置全局数据: window.BattleGameResult =`, window.BattleGameResult);
+
+        // 延迟一小段时间再跳转，确保所有战斗动画完成
+        cc.log(`[BattleController] 延迟0.5秒后跳转场景...`);
+        this.scheduleOnce(() => {
+            cc.log(`[BattleController] 开始加载场景: ${this.gameOverSceneName}`);
+            try {
+                cc.director.loadScene(this.gameOverSceneName, (error) => {
+                    if (error) {
+                        cc.error(`[BattleController] 场景加载失败: ${error}`);
+                        cc.error(`[BattleController] 请检查场景名称是否正确，场景文件是否存在`);
+                        // 如果场景加载失败，回退到面板显示方式
+                        this._showGameOverPanel(winner);
+                    } else {
+                        cc.log(`[BattleController] ✅ 场景加载成功: ${this.gameOverSceneName}`);
+                    }
+                });
+            } catch (e) {
+                cc.error(`[BattleController] 场景跳转异常: ${e.message}`);
+                cc.error(`[BattleController] 错误堆栈: ${e.stack}`);
+                // 如果发生异常，回退到面板显示方式
+                this._showGameOverPanel(winner);
+            }
+        }, 0.5); // 延迟0.5秒
+    },
+
+    /**
+     * 在当前场景显示游戏结束面板
+     * @private
+     */
+    _showGameOverPanel(winner) {
         if (this.gameOverPanel) {
             const gameOverPanelComp = this.gameOverPanel.getComponent("GameOverPanel");
             if (gameOverPanelComp) {

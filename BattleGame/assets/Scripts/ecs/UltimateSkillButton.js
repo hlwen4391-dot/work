@@ -41,6 +41,12 @@ cc.Class({
     onClick(event) {
         cc.log(`[UltimateSkillButton] ${this.node.name} 被点击，尝试释放大招`);
 
+        // 检查是否正在回放，如果是则禁用大招释放
+        if (this._isReplaying()) {
+            cc.log(`[UltimateSkillButton] ${this.node.name} 正在回放中，禁用大招释放`);
+            return;
+        }
+
         const SkillSystem = require("SkillSystem");
         const TeamRef = require("TeamRef");
         const TeamComponent = require("TeamComponent");
@@ -75,6 +81,50 @@ cc.Class({
         const log = (msg) => cc.log(msg);
         const rand = Math.random;
         SkillSystem.useUltimateSkill(this.node, target, log, rand);
+    },
+
+    /**
+     * 检查是否正在回放
+     * @private
+     * @returns {boolean} 是否正在回放
+     */
+    _isReplaying() {
+        // 方法1: 通过BattleController检查
+        const scene = cc.director.getScene();
+        if (scene) {
+            const canvas = scene.getChildByName("Canvas");
+            if (canvas) {
+                // 尝试在Canvas节点上查找BattleController
+                let battleController = canvas.getComponent("BattleController");
+                if (!battleController) {
+                    // 尝试在子节点中查找
+                    const battleControllerNode = canvas.getChildByName("BattleController");
+                    if (battleControllerNode) {
+                        battleController = battleControllerNode.getComponent("BattleController");
+                    }
+                }
+
+                if (battleController && battleController.isReplaying) {
+                    return true;
+                }
+            }
+        }
+
+        // 方法2: 通过ReplayController检查
+        if (scene) {
+            const canvas = scene.getChildByName("Canvas");
+            if (canvas) {
+                const replayNode = canvas.getChildByName("ReplayController");
+                if (replayNode) {
+                    const replayController = replayNode.getComponent("ReplayController");
+                    if (replayController && replayController.replayer && replayController.replayer.isReplaying) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 });
 

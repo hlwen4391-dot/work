@@ -172,7 +172,7 @@ var SkillSystem = {
         return true;
     },
 
-    useSkill(entity, target, skill, log, rand) {
+    useSkill(entity, target, skill, log, rand, recorder) {
         const stats = entity.getComponent("StatsComponent");
 
         // 检查是否需要怒气值（大招）
@@ -185,6 +185,11 @@ var SkillSystem = {
             stats.consumeRage(skill.requireRage);
         }
 
+        // 记录技能释放
+        if (recorder) {
+            recorder.recordSkillUse(entity, target, skill);
+        }
+
         // 播放技能特效
         this._playSkillEffect(entity, target, skill);
 
@@ -193,19 +198,19 @@ var SkillSystem = {
         for (let evt of events) {
             switch (evt.type) {
                 case "damage":
-                    CombatSystem.damage(entity, target, evt.value, log);
+                    CombatSystem.damage(entity, target, evt.value, log, recorder, rand);
                     break;
 
                 case "damageTrue":
-                    CombatSystem.damageTrue(entity, target, evt.value, log);
+                    CombatSystem.damageTrue(entity, target, evt.value, log, recorder, rand);
                     break;
 
                 case "applyBuff":
-                    BuffSystem.addBuff(target, BuffFactory.create(evt.buff), log);
+                    BuffSystem.addBuff(target, BuffFactory.create(evt.buff), log, recorder);
                     break;
 
                 case "applyBuffSelf":
-                    BuffSystem.addBuff(entity, BuffFactory.create(evt.buff), log);
+                    BuffSystem.addBuff(entity, BuffFactory.create(evt.buff), log, recorder);
                     break;
 
                 default:

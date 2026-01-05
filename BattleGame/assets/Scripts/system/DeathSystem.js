@@ -18,14 +18,19 @@ var DeathSystem = cc.Class({
 
     properties: {},
 
-    ctor(logger) {
+    ctor(logger, recorder) {
         this.logger = logger;
+        this.recorder = recorder; // 战斗记录器（可选）
     },
 
     /**
      * 检查目标是否死亡，若死亡执行处理逻辑。
+     * @param {cc.Node} entity - 实体节点
+     * @param {Object} recorder - 战斗记录器（可选）
      */
-    checkAndHandleDeath(entity) {
+    checkAndHandleDeath(entity, recorder) {
+        // 如果传入了recorder，使用传入的；否则使用实例的
+        const recordRecorder = recorder || this.recorder;
 
         const stats = entity.getComponent("StatsComponent");
         if (!stats) return false;
@@ -34,6 +39,11 @@ var DeathSystem = cc.Class({
 
         // 已经死了
         this.logger.log(`💀 ${entity.name} 已死亡`);
+
+        // 记录死亡事件
+        if (recordRecorder) {
+            recordRecorder.recordDeath(entity);
+        }
 
         // 播放死亡动画
         this._playDeathAnimation(entity);

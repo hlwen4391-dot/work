@@ -10,10 +10,11 @@ var ActionSystem = cc.Class({
 
     properties: {},
 
-    ctor(logger, rand) {
+    ctor(logger, rand, recorder) {
         this.logger = logger;
         this.rand = rand;
-        this.deathSystem = new DeathSystem(logger);
+        this.recorder = recorder; // 战斗记录器（可选）
+        this.deathSystem = new DeathSystem(logger, recorder);
         this.skillSystem = SkillSystem;
     },
 
@@ -29,7 +30,7 @@ var ActionSystem = cc.Class({
     },
 
     updateBuffEffects(entity, dt) {
-        BuffSystem.update(entity, dt, this.logger.log.bind(this.logger));
+        BuffSystem.update(entity, dt, this.logger.log.bind(this.logger), this.recorder);
 
         const stats = entity.getComponent("StatsComponent");
         if (!stats) return false;
@@ -80,6 +81,11 @@ var ActionSystem = cc.Class({
 
         this.logger.log(`${entity.name} 执行行动`);
 
+        // 记录行动开始
+        if (this.recorder) {
+            this.recorder.recordActionStart(entity);
+        }
+
         // 检查是否有攻击动画组件
         const attackMover = entity.getComponent("AttackMover");
 
@@ -89,14 +95,14 @@ var ActionSystem = cc.Class({
             // 如果是远程攻击，只播放攻击动画不移动；如果是近战，执行完整的移动+攻击+返回序列
             attackMover.attackTarget(target, () => {
                 // 动画完成后执行技能效果
-                SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand);
-                this.deathSystem.checkAndHandleDeath(target);
+                SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand, this.recorder);
+                this.deathSystem.checkAndHandleDeath(target, this.recorder);
                 if (callback) callback();
             });
         } else {
             // 没有动画组件：直接执行技能
-            SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand);
-            this.deathSystem.checkAndHandleDeath(target);
+            SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand, this.recorder);
+            this.deathSystem.checkAndHandleDeath(target, this.recorder);
             if (callback) callback();
         }
     }

@@ -5,22 +5,28 @@ var ActionSystem = require("ActionSystem");
 var BattleSystem = cc.Class({
     name: "BattleSystem",
 
-    ctor(heros, monsters, logger, rand, onGameOverCallback) {
+    ctor(heros, monsters, logger, rand, onGameOverCallback, recorder) {
         this.heros = heros;
         this.monsters = monsters;
         this.logger = logger;
         this.rand = rand;
         this.onGameOverCallback = onGameOverCallback; // 游戏结束回调函数
+        this.recorder = recorder; // 战斗记录器（可选）
 
         TeamRef.herosRef = this.heros;
         TeamRef.monstersRef = this.monsters;
 
-        this.actionSystem = new ActionSystem(logger, rand);
+        this.actionSystem = new ActionSystem(logger, rand, recorder);
         this.finished = false;
 
         // 行动队列系统（用于支持攻击动画的等待机制）
         this.isProcessingAction = false; // 是否正在处理行动
         this.actionQueue = []; // 行动队列
+
+        // 如果提供了记录器，开始记录
+        if (this.recorder) {
+            this.recorder.startRecording(heros, monsters);
+        }
     },
 
     isFinished() {
@@ -144,6 +150,11 @@ var BattleSystem = cc.Class({
         this.logger.log(`====战斗结束：${winnerText}胜利====`);
         this.actionQueue = []; // 清空队列
         this.isProcessingAction = false; // 重置标志
+
+        // 记录游戏结束事件
+        if (this.recorder) {
+            this.recorder.recordGameOver(winner);
+        }
 
         // 调用游戏结束回调
         if (this.onGameOverCallback && typeof this.onGameOverCallback === 'function') {
