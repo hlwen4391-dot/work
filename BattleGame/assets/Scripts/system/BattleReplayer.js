@@ -76,8 +76,8 @@ var BattleReplayer = cc.Class({
         this.onReplayComplete = onReplayComplete;
         this.deadUnits.clear(); // 清空已死亡单位集合
 
-        // 构建单位映射表
-        this._buildUnitMap(heros, monsters);
+        // 构建单位映射表（传入initialState以便补充缺失的单位）
+        this._buildUnitMap(heros, monsters, battleRecord.initialState);
 
         // 恢复初始状态
         this._restoreInitialState(battleRecord.initialState);
@@ -524,7 +524,7 @@ var BattleReplayer = cc.Class({
      * @private
      */
     _onDeath(data) {
-        const entity = this.unitMap[data.entityId];
+        const entity = this.unitMap[data.entityId];//通过id找到单位
         if (entity && entity.isValid) {
             // 标记为已死亡
             this.deadUnits.add(entity);
@@ -573,13 +573,85 @@ var BattleReplayer = cc.Class({
     /**
      * 构建单位映射表
      * @private
+     * @param {Array} heros - 英雄列表
+     * @param {Array} monsters - 怪物列表
+     * @param {Object} initialState - 初始状态（可选，用于补充缺失的单位）
      */
-    _buildUnitMap(heros, monsters) {
+    _buildUnitMap(heros, monsters, initialState) {
         this.unitMap = {};
 
+        // 首先添加传入的单位
         [...heros, ...monsters].forEach(unit => {
-            this.unitMap[unit.name] = unit;
+            if (unit && unit.isValid) {
+                this.unitMap[unit.name] = unit;
+            }
         });
+
+        // 如果提供了初始状态，从中提取所有单位名称，确保所有单位都在unitMap中
+        if (initialState) {
+            const allUnitNames = new Set();
+
+            // 从初始状态中提取所有单位名称
+            if (initialState.heros) {
+                initialState.heros.forEach(unit => {
+                    if (unit && unit.name) {
+                        allUnitNames.add(unit.name);
+                    }
+                });
+            }
+            if (initialState.monsters) {
+                initialState.monsters.forEach(unit => {
+                    if (unit && unit.name) {
+                        allUnitNames.add(unit.name);
+                    }
+                });
+            }
+
+            // 检查是否有单位缺失
+            const missingUnits = [];
+            allUnitNames.forEach(name => {
+                if (!this.unitMap[name]) {
+                    missingUnits.push(name);
+                }
+            });
+
+            if (missingUnits.length > 0) {
+                cc.warn(`[BattleReplayer] 检测到缺失的单位: ${missingUnits.join(', ')}`);
+                cc.warn(`[BattleReplayer] 当前unitMap中的单位: ${Object.keys(this.unitMap).join(', ')}`);
+                cc.warn(`[BattleReplayer] 尝试从场景中查找缺失的单位...`);
+
+                // 尝试从场景中查找缺失的单位
+                const scene = cc.director.getScene();
+                if (scene) {
+                    const findUnitByName = (node, name) => {
+                        if (node.name === name) {
+                            const stats = node.getComponent("StatsComponent");
+                            const team = node.getComponent("TeamComponent");
+                            if (stats && team) {
+                                return node;
+                            }
+                        }
+                        for (let child of node.children) {
+                            const result = findUnitByName(child, name);
+                            if (result) return result;
+                        }
+                        return null;
+                    };
+
+                    missingUnits.forEach(name => {
+                        const unit = findUnitByName(scene, name);
+                        if (unit && unit.isValid) {
+                            this.unitMap[name] = unit;
+                            cc.log(`[BattleReplayer] ✅ 从场景中找到缺失的单位: ${name}`);
+                        } else {
+                            cc.error(`[BattleReplayer] ❌ 无法从场景中找到单位: ${name}`);
+                        }
+                    });
+                }
+            }
+        }
+
+        cc.log(`[BattleReplayer] unitMap构建完成，共 ${Object.keys(this.unitMap).length} 个单位: ${Object.keys(this.unitMap).join(', ')}`);
     },
 
     /**
@@ -590,6 +662,38 @@ var BattleReplayer = cc.Class({
         // 清除所有单位的Buff和状态
         const BuffSystem = require("BuffSystem");
         const BuffComponent = require("BuffComponent");
+        const TeamRef = require("TeamRef");
+
+        // 重要：恢复 TeamRef，确保所有单位（包括已死亡的）都在队伍列表中
+        // 因为死亡时单位会从 TeamRef 中移除，但重新播放时需要所有单位都在
+        if (TeamRef.herosRef) {
+            TeamRef.herosRef.length = 0; // 清空数组
+        }
+        if (TeamRef.monstersRef) {
+            TeamRef.monstersRef.length = 0; // 清空数组
+        }
+
+        // 重新添加所有单位到 TeamRef（包括已死亡的，因为回放时需要它们）
+        Object.values(this.unitMap).forEach(unit => {
+            if (unit && unit.isValid) {
+                const team = unit.getComponent("TeamComponent");
+                if (team) {
+                    if (team.team === "hero" && TeamRef.herosRef) {
+                        // 如果不在数组中，则添加
+                        if (TeamRef.herosRef.indexOf(unit) === -1) {
+                            TeamRef.herosRef.push(unit);
+                        }
+                    } else if (team.team === "monster" && TeamRef.monstersRef) {
+                        // 如果不在数组中，则添加
+                        if (TeamRef.monstersRef.indexOf(unit) === -1) {
+                            TeamRef.monstersRef.push(unit);
+                        }
+                    }
+                }
+            }
+        });
+
+        cc.log(`[BattleReplayer] 已恢复TeamRef: 英雄${TeamRef.herosRef ? TeamRef.herosRef.length : 0}个, 怪物${TeamRef.monstersRef ? TeamRef.monstersRef.length : 0}个`);
 
         // 清除所有单位的Buff
         Object.values(this.unitMap).forEach(unit => {

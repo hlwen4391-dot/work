@@ -124,9 +124,9 @@ cc.Class({
 
         this.battleRecord = battleRecord;
 
-        // 保存单位列表，用于重新播放
-        this.savedHeros = heros;
-        this.savedMonsters = monsters;
+        // 保存单位列表，用于重新播放（创建副本，避免引用被修改）
+        this.savedHeros = [...heros]; // 创建数组副本
+        this.savedMonsters = [...monsters]; // 创建数组副本
         this.isReplayCompleted = false; // 重置完成标志
 
         // 创建回放器

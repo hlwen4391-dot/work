@@ -105,8 +105,8 @@ cc.Class({
 
         // 2. 计算目标位置（在目标前方停留）
         const targetPos = target.position;
-        const direction = targetPos.sub(this.originalPosition).normalize();
-        const attackPos = targetPos.sub(direction.mul(this.attackDistance));
+        const direction = targetPos.sub(this.originalPosition).normalize();//计算方向
+        const attackPos = targetPos.sub(direction.mul(this.attackDistance));//计算攻击位置
 
         // 3. 开始攻击序列
         this._performAttackSequence(attackPos);
@@ -318,7 +318,7 @@ cc.Class({
         if (this.onAttackComplete) {
             const callback = this.onAttackComplete;
             this.onAttackComplete = null;
-            callback();
+            callback();//执行完成回调
         }
     },
 

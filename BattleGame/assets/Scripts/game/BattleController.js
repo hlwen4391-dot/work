@@ -48,6 +48,81 @@ cc.Class({
             tooltip: "true: 从父节点获取子节点 | false: 使用heroNodes和monsterNodes"
         },
 
+        // 是否使用选择场景模式（自动创建节点和排兵布阵）
+        useSelectSceneMode: {
+            default: false,
+            tooltip: "true: 从SelectScene选择的数据自动创建节点 | false: 使用原有模式"
+        },
+
+        // 英雄Prefab（用于自动创建）
+        heroPrefab: {
+            default: null,
+            type: cc.Prefab,
+            tooltip: "英雄Prefab（使用选择场景模式时需要）"
+        },
+
+        // 怪物Prefab（用于自动创建）
+        monsterPrefab: {
+            default: null,
+            type: cc.Prefab,
+            tooltip: "怪物Prefab（使用选择场景模式时需要）"
+        },
+
+        // 英雄父节点（用于自动排兵布阵）
+        heroParent: {
+            default: null,
+            type: cc.Node,
+            tooltip: "英雄父节点（用于自动排兵布阵，英雄会放在左边）"
+        },
+
+        // 怪物父节点（用于自动排兵布阵）
+        monsterParent: {
+            default: null,
+            type: cc.Node,
+            tooltip: "怪物父节点（用于自动排兵布阵，怪物会放在右边）"
+        },
+
+        // 排兵布阵区域（英雄在左边，怪物在右边）
+        heroAreaLeft: {
+            default: -200,
+            tooltip: "英雄区域左边界（X坐标）"
+        },
+
+        heroAreaRight: {
+            default: 0,
+            tooltip: "英雄区域右边界（X坐标）"
+        },
+
+        heroAreaTop: {
+            default: 100,
+            tooltip: "英雄区域上边界（Y坐标）"
+        },
+
+        heroAreaBottom: {
+            default: -100,
+            tooltip: "英雄区域下边界（Y坐标）"
+        },
+
+        monsterAreaLeft: {
+            default: 0,
+            tooltip: "怪物区域左边界（X坐标）"
+        },
+
+        monsterAreaRight: {
+            default: 200,
+            tooltip: "怪物区域右边界（X坐标）"
+        },
+
+        monsterAreaTop: {
+            default: 100,
+            tooltip: "怪物区域上边界（Y坐标）"
+        },
+
+        monsterAreaBottom: {
+            default: -100,
+            tooltip: "怪物区域下边界（Y坐标）"
+        },
+
         // 游戏结束面板组件（可选，如果使用场景跳转则不需要）
         gameOverPanel: {
             default: null,
@@ -99,8 +174,18 @@ cc.Class({
         // 是否正在回放（用于禁用BattleSystem的update）
         this.isReplaying = false;
 
-        // 创建单位（这是初始化 ECS 组件的关键步骤）
-        this.spawnUnits();
+        // 检查是否使用选择场景模式
+        if (window.SelectedUnits && (window.SelectedUnits.heros.length > 0 || window.SelectedUnits.monsters.length > 0)) {
+            cc.log("[BattleController] 检测到选择场景数据，使用自动创建节点模式");
+            this.useSelectSceneMode = true;
+            // 创建单位（从选择场景的数据自动创建）
+            this.spawnUnitsFromSelection();
+            // 清除全局数据（避免下次进入时误用）
+            window.SelectedUnits = null;
+        } else {
+            // 创建单位（这是初始化 ECS 组件的关键步骤）
+            this.spawnUnits();
+        }
 
         // 游戏结束回调函数
         const onGameOver = (winner, winnerText) => {
@@ -193,6 +278,162 @@ cc.Class({
     },
 
     /**
+     * 从选择场景的数据自动创建节点并排兵布阵
+     * @private
+     */
+    spawnUnitsFromSelection() {
+        if (!window.SelectedUnits) {
+            cc.error("[BattleController] window.SelectedUnits 不存在，无法自动创建节点");
+            return;
+        }
+
+        const selectedUnits = window.SelectedUnits;
+        cc.log(`[BattleController] 开始自动创建节点 - 英雄: ${selectedUnits.heros.length}个, 怪物: ${selectedUnits.monsters.length}个`);
+
+        // 创建英雄节点
+        if (selectedUnits.heros && selectedUnits.heros.length > 0) {
+            if (!this.heroPrefab) {
+                cc.error("[BattleController] 未设置heroPrefab，无法创建英雄节点");
+            } else {
+                selectedUnits.heros.forEach((unitData, index) => {
+                    const heroNode = this._createUnitNode(unitData, "hero", index, selectedUnits.heros.length);
+                    if (heroNode) {
+                        this.heros.push(heroNode);
+                    }
+                });
+            }
+        }
+
+        // 创建怪物节点
+        if (selectedUnits.monsters && selectedUnits.monsters.length > 0) {
+            if (!this.monsterPrefab) {
+                cc.error("[BattleController] 未设置monsterPrefab，无法创建怪物节点");
+            } else {
+                selectedUnits.monsters.forEach((unitData, index) => {
+                    const monsterNode = this._createUnitNode(unitData, "monster", index, selectedUnits.monsters.length);
+                    if (monsterNode) {
+                        this.monsters.push(monsterNode);
+                    }
+                });
+            }
+        }
+
+        // 为所有角色初始化战斗数据和动画
+        this._initAllUnits();
+    },
+
+    /**
+     * 创建单位节点
+     * @private
+     * @param {Object} unitData - 单位数据
+     * @param {string} team - 队伍类型（"hero" 或 "monster"）
+     * @param {number} index - 索引
+     * @param {number} totalCount - 总数量
+     * @returns {cc.Node} 创建的单位节点
+     */
+    _createUnitNode(unitData, team, index, totalCount) {
+        const prefab = team === "hero" ? this.heroPrefab : this.monsterPrefab;
+        if (!prefab) {
+            cc.error(`[BattleController] ✗ 未设置${team}Prefab，无法创建${team}节点`);
+            cc.error(`[BattleController] 请在BattleController组件中绑定${team}Prefab`);
+            return null;
+        }
+
+        cc.log(`[BattleController] 开始创建${team}节点: ${unitData.name}`);
+
+        // 实例化Prefab
+        const unitNode = cc.instantiate(prefab);
+        unitNode.name = unitData.name;
+
+        // 确保节点可见
+        unitNode.active = true;
+        unitNode.opacity = 255;
+
+        // 设置父节点
+        const parent = team === "hero" ? this.heroParent : this.monsterParent;
+        if (parent) {
+            // 确保父节点可见
+            if (!parent.active) {
+                cc.warn(`[BattleController] ⚠️ ${team}Parent未激活，已自动激活`);
+                parent.active = true;
+            }
+            if (parent.opacity === 0) {
+                cc.warn(`[BattleController] ⚠️ ${team}Parent透明度为0，已设置为255`);
+                parent.opacity = 255;
+            }
+            parent.addChild(unitNode);
+            cc.log(`[BattleController] ${team}节点已添加到父节点: ${parent.name}, 父节点位置: (${parent.x}, ${parent.y})`);
+        } else {
+            // 如果没有父节点，添加到Canvas
+            const canvas = cc.find("Canvas");
+            if (canvas) {
+                canvas.addChild(unitNode);
+                cc.log(`[BattleController] ${team}节点已添加到Canvas`);
+            } else {
+                cc.error(`[BattleController] ✗ 未找到Canvas节点，无法添加${team}节点`);
+                return null;
+            }
+        }
+
+        // 自动排兵布阵（随机位置）
+        const position = this._calculateFormationPosition(team, index, totalCount);
+        unitNode.setPosition(position.x, position.y);
+
+        // 获取世界坐标（需要确保节点已添加到场景树）
+        let worldPos = null;
+        try {
+            if (unitNode.parent && unitNode.parent.isValid) {
+                worldPos = unitNode.getWorldPosition();
+            }
+        } catch (e) {
+            cc.warn(`[BattleController] 无法获取世界坐标: ${e.message}`);
+        }
+
+        cc.log(`[BattleController] ✓ 创建${team}节点: ${unitData.name}`);
+        cc.log(`[BattleController]   本地位置: (${position.x.toFixed(1)}, ${position.y.toFixed(1)})`);
+        if (worldPos) {
+            cc.log(`[BattleController]   世界位置: (${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
+        } else {
+            cc.log(`[BattleController]   世界位置: 无法获取（节点可能未完全初始化）`);
+        }
+        cc.log(`[BattleController]   节点active: ${unitNode.active}, opacity: ${unitNode.opacity}`);
+
+        // 保存单位数据到节点（用于后续初始化）
+        unitNode._unitData = unitData;
+        unitNode._team = team;
+
+        return unitNode;
+    },
+
+    /**
+     * 计算排兵布阵位置
+     * @private
+     * @param {string} team - 队伍类型
+     * @param {number} index - 索引
+     * @param {number} totalCount - 总数量
+     * @returns {cc.Vec2} 位置坐标
+     */
+    _calculateFormationPosition(team, index, totalCount) {
+        let x, y;
+
+        if (team === "hero") {
+            // 英雄在左边，随机位置
+            const rangeX = this.heroAreaRight - this.heroAreaLeft;
+            const rangeY = this.heroAreaTop - this.heroAreaBottom;
+            x = this.heroAreaLeft + Math.random() * rangeX;
+            y = this.heroAreaBottom + Math.random() * rangeY;
+        } else {
+            // 怪物在右边，随机位置
+            const rangeX = this.monsterAreaRight - this.monsterAreaLeft;
+            const rangeY = this.monsterAreaTop - this.monsterAreaBottom;
+            x = this.monsterAreaLeft + Math.random() * rangeX;
+            y = this.monsterAreaBottom + Math.random() * rangeY;
+        }
+
+        return cc.v2(x, y);
+    },
+
+    /**
      * 从父节点获取所有子节点作为战斗单位
      * @private
      */
@@ -281,7 +522,14 @@ cc.Class({
 
         // 初始化英雄
         for (let node of this.heros) {
-            const data = unitDataConfig[node.name] || this._getDefaultData();
+            // 如果是从选择场景创建的节点，使用保存的单位数据
+            let data;
+            if (node._unitData) {
+                data = node._unitData;
+                cc.log(`[BattleController] 使用选择场景的单位数据初始化: ${node.name}`);
+            } else {
+                data = unitDataConfig[node.name] || this._getDefaultData();
+            }
             this.initEntity(node, data, "hero");
 
             // 设置初始待机动画
@@ -295,7 +543,14 @@ cc.Class({
 
         // 初始化怪物
         for (let node of this.monsters) {
-            const data = unitDataConfig[node.name] || this._getDefaultData();
+            // 如果是从选择场景创建的节点，使用保存的单位数据
+            let data;
+            if (node._unitData) {
+                data = node._unitData;
+                cc.log(`[BattleController] 使用选择场景的单位数据初始化: ${node.name}`);
+            } else {
+                data = unitDataConfig[node.name] || this._getDefaultData();
+            }
             this.initEntity(node, data, "monster");
 
             // 设置初始待机动画

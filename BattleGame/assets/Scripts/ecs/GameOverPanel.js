@@ -207,8 +207,36 @@ cc.Class({
      */
     onMenuClick() {
         cc.log("[GameOverPanel] 返回主菜单");
-        // 这里可以加载主菜单场景
-        // cc.director.loadScene("MainMenu");
+
+        // 检查当前场景，如果在GameOverScene，则跳转到主菜单
+        const scene = cc.director.getScene();
+        const sceneName = scene ? scene.name : "";
+
+        if (sceneName === "GameOverScene") {
+            // 在GameOverScene中，跳转到主菜单场景
+            const menuSceneName = "MainMenu";
+            cc.log(`[GameOverPanel] 从GameOverScene跳转到主菜单场景: ${menuSceneName}`);
+            cc.director.loadScene(menuSceneName, (error) => {
+                if (error) {
+                    cc.error(`[GameOverPanel] 加载主菜单场景失败: ${error}`);
+                    cc.error(`[GameOverPanel] 请检查场景名称是否正确: ${menuSceneName}`);
+                } else {
+                    cc.log(`[GameOverPanel] 成功加载主菜单场景: ${menuSceneName}`);
+                }
+            });
+        } else {
+            // 在BattleScene中，也跳转到主菜单场景
+            const menuSceneName = "MainMenu";
+            cc.log(`[GameOverPanel] 从BattleScene跳转到主菜单场景: ${menuSceneName}`);
+            cc.director.loadScene(menuSceneName, (error) => {
+                if (error) {
+                    cc.error(`[GameOverPanel] 加载主菜单场景失败: ${error}`);
+                    cc.error(`[GameOverPanel] 请检查场景名称是否正确: ${menuSceneName}`);
+                } else {
+                    cc.log(`[GameOverPanel] 成功加载主菜单场景: ${menuSceneName}`);
+                }
+            });
+        }
     },
 
     /**
