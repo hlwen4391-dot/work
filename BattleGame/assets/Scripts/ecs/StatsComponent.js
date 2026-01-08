@@ -45,11 +45,11 @@ cc.Class({
             const BuffComponent = require("BuffComponent");
             const allBuffs = this.node.getComponents(BuffComponent);
             cc.log(`[StatsComponent] ${this.node.name} 查找护盾Buff，当前Buff数量: ${allBuffs.length}`);
-
+            
             for (let buff of allBuffs) {
                 cc.log(`[StatsComponent] Buff: name=${buff.buffName}, shieldValue=${buff.shieldValue}`);
             }
-
+            
             const shieldBuff = allBuffs.find(b => b.buffName === "护盾");
             if (shieldBuff) {
                 shieldValue = shieldBuff.shieldValue || 0;

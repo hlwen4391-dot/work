@@ -882,7 +882,7 @@
     "_enabled": true,
     "hp": 80,
     "maxHp": 150,
-    "attack": 29,
+    "attack": 19,
     "defense": 2,
     "speed": 4,
     "miss": 0.09,

@@ -109,8 +109,8 @@ cc.Class({
     /**
      * 开始回放
      * @param {Object} battleRecord - 战斗记录数据
-     * @param {Array} heros - 英雄列表
-     * @param {Array} monsters - 怪物列表
+     * @param {Array} heros - 英雄列表（可选，如果为空则从BattleController获取）
+     * @param {Array} monsters - 怪物列表（可选，如果为空则从BattleController获取）
      */
     startReplay(battleRecord, heros, monsters) {
         cc.log(`[ReplayController] ===== 开始回放 =====`);
@@ -124,10 +124,71 @@ cc.Class({
 
         this.battleRecord = battleRecord;
 
+        // 如果传入的单位列表为空或无效，从BattleController获取当前场景的单位列表
+        if (!heros || heros.length === 0 || !monsters || monsters.length === 0) {
+            cc.log(`[ReplayController] 传入的单位列表为空，尝试从BattleController获取当前场景的单位`);
+            const currentUnits = this._getCurrentSceneUnits();
+            cc.log(`[ReplayController] _getCurrentSceneUnits返回: 英雄${currentUnits.heros ? currentUnits.heros.length : 0}个, 怪物${currentUnits.monsters ? currentUnits.monsters.length : 0}个`);
+
+            if (currentUnits.heros && currentUnits.heros.length > 0) {
+                heros = currentUnits.heros;
+                cc.log(`[ReplayController] ✓ 从BattleController获取到 ${heros.length} 个英雄`);
+            } else {
+                cc.warn(`[ReplayController] ⚠️ 从BattleController获取的英雄列表为空`);
+            }
+            if (currentUnits.monsters && currentUnits.monsters.length > 0) {
+                monsters = currentUnits.monsters;
+                cc.log(`[ReplayController] ✓ 从BattleController获取到 ${monsters.length} 个怪物`);
+            } else {
+                cc.warn(`[ReplayController] ⚠️ 从BattleController获取的怪物列表为空`);
+            }
+
+            // 如果仍然为空，尝试延迟获取（可能单位还在创建中）
+            if ((!heros || heros.length === 0) && (!monsters || monsters.length === 0)) {
+                cc.warn(`[ReplayController] ⚠️ 单位列表仍为空，延迟200ms后重试`);
+                this.scheduleOnce(() => {
+                    const retryUnits = this._getCurrentSceneUnits();
+                    cc.log(`[ReplayController] 延迟获取结果: 英雄${retryUnits.heros ? retryUnits.heros.length : 0}个, 怪物${retryUnits.monsters ? retryUnits.monsters.length : 0}个`);
+
+                    let retryHeros = retryUnits.heros || [];
+                    let retryMonsters = retryUnits.monsters || [];
+
+                    if (retryHeros.length > 0) {
+                        cc.log(`[ReplayController] ✓ 延迟获取成功: ${retryHeros.length} 个英雄`);
+                    }
+                    if (retryMonsters.length > 0) {
+                        cc.log(`[ReplayController] ✓ 延迟获取成功: ${retryMonsters.length} 个怪物`);
+                    }
+
+                    // 如果延迟后获取到单位，重新开始回放
+                    if (retryHeros.length > 0 || retryMonsters.length > 0) {
+                        cc.log(`[ReplayController] 延迟获取到单位，重新开始回放`);
+                        this.startReplay(this.battleRecord, retryHeros, retryMonsters);
+                    } else {
+                        cc.error(`[ReplayController] ✗ 延迟获取后单位列表仍为空，回放无法继续`);
+                        cc.error(`[ReplayController] 请确保BattleController已正确初始化，且单位已创建`);
+                    }
+                }, 0.2);
+
+                // 如果延迟获取，先不继续执行，等待延迟回调
+                return;
+            }
+        }
+
+        // 验证单位列表
+        if (!heros || heros.length === 0) {
+            cc.warn(`[ReplayController] ⚠️ 英雄列表为空，回放可能无法正常工作`);
+        }
+        if (!monsters || monsters.length === 0) {
+            cc.warn(`[ReplayController] ⚠️ 怪物列表为空，回放可能无法正常工作`);
+        }
+
         // 保存单位列表，用于重新播放（创建副本，避免引用被修改）
-        this.savedHeros = [...heros]; // 创建数组副本
-        this.savedMonsters = [...monsters]; // 创建数组副本
+        this.savedHeros = heros ? [...heros] : []; // 创建数组副本
+        this.savedMonsters = monsters ? [...monsters] : []; // 创建数组副本
         this.isReplayCompleted = false; // 重置完成标志
+
+        cc.log(`[ReplayController] 使用单位列表 - 英雄: ${this.savedHeros.length}个, 怪物: ${this.savedMonsters.length}个`);
 
         // 创建回放器
         const BattleReplayer = require("BattleReplayer");
@@ -135,21 +196,82 @@ cc.Class({
 
         // 显示回放控制面板
         if (this.replayPanel) {
+            // 确保父节点也是激活的（向上遍历所有父节点）
+            let parent = this.replayPanel.parent;
+            while (parent) {
+                if (!parent.active) {
+                    cc.log(`[ReplayController] 激活父节点: ${parent.name}`);
+                    parent.active = true;
+                }
+                parent = parent.parent;
+            }
+
+            // 设置节点可见
             this.replayPanel.active = true;
-            cc.log(`[ReplayController] 回放控制面板已显示: ${this.replayPanel.active}`);
+            this.replayPanel.opacity = 255;
+
+            // 确保所有子节点也是可见的
+            const ensureChildrenVisible = (node) => {
+                if (!node.active) {
+                    node.active = true;
+                }
+                if (node.opacity === 0) {
+                    node.opacity = 255;
+                }
+                for (let child of node.children) {
+                    ensureChildrenVisible(child);
+                }
+            };
+            ensureChildrenVisible(this.replayPanel);
+
+            cc.log(`[ReplayController] ✓ 回放控制面板已显示`);
+            cc.log(`[ReplayController]   节点名称: ${this.replayPanel.name}`);
+            cc.log(`[ReplayController]   active: ${this.replayPanel.active}`);
+            cc.log(`[ReplayController]   opacity: ${this.replayPanel.opacity}`);
+            cc.log(`[ReplayController]   父节点: ${this.replayPanel.parent ? this.replayPanel.parent.name : '无'}`);
         } else {
-            cc.warn("[ReplayController] 未绑定replayPanel节点，回放控制面板不会显示");
+            cc.error("[ReplayController] ⚠️ 未绑定replayPanel节点，回放控制面板不会显示");
+            cc.error("[ReplayController] 请在ReplayController组件中绑定replayPanel节点");
+            cc.error("[ReplayController] 步骤：");
+            cc.error("[ReplayController]   1. 在BattleScene中创建回放控制面板节点");
+            cc.error("[ReplayController]   2. 在ReplayController组件中，将replayPanel属性绑定到该节点");
         }
 
         // 显示速度控制滑块（只在回放时显示）
         if (this.speedSlider) {
+            if (this.speedSlider.node.parent) {
+                this.speedSlider.node.parent.active = true;
+            }
             this.speedSlider.node.active = true;
+            this.speedSlider.node.opacity = 255;
             cc.log(`[ReplayController] 速度控制滑块已显示`);
         }
 
         // 显示速度显示标签（如果存在）
         if (this.speedLabel) {
+            if (this.speedLabel.node.parent) {
+                this.speedLabel.node.parent.active = true;
+            }
             this.speedLabel.node.active = true;
+            this.speedLabel.node.opacity = 255;
+        }
+
+        // 显示播放/暂停按钮（如果存在）
+        if (this.playPauseButton) {
+            if (this.playPauseButton.node.parent) {
+                this.playPauseButton.node.parent.active = true;
+            }
+            this.playPauseButton.node.active = true;
+            this.playPauseButton.node.opacity = 255;
+        }
+
+        // 显示停止按钮（如果存在）
+        if (this.stopButton) {
+            if (this.stopButton.node.parent) {
+                this.stopButton.node.parent.active = true;
+            }
+            this.stopButton.node.active = true;
+            this.stopButton.node.opacity = 255;
         }
 
         // 开始回放
@@ -372,6 +494,22 @@ cc.Class({
         cc.log(`[ReplayController] 记录键名: ${key}`);
         cc.log(`[ReplayController] 英雄数量: ${heros ? heros.length : 0}`);
         cc.log(`[ReplayController] 怪物数量: ${monsters ? monsters.length : 0}`);
+        cc.log(`[ReplayController] replayPanel绑定状态: ${this.replayPanel ? '已绑定' : '未绑定'}`);
+
+        // 详细检查UI节点状态
+        if (this.replayPanel) {
+            cc.log(`[ReplayController] replayPanel节点信息:`);
+            cc.log(`[ReplayController]   节点名称: ${this.replayPanel.name}`);
+            cc.log(`[ReplayController]   当前active: ${this.replayPanel.active}`);
+            cc.log(`[ReplayController]   当前opacity: ${this.replayPanel.opacity}`);
+            cc.log(`[ReplayController]   父节点: ${this.replayPanel.parent ? this.replayPanel.parent.name : '无'}`);
+            if (this.replayPanel.parent) {
+                cc.log(`[ReplayController]   父节点active: ${this.replayPanel.parent.active}`);
+            }
+        } else {
+            cc.error(`[ReplayController] ⚠️ replayPanel未绑定！`);
+            cc.error(`[ReplayController] 请在ReplayController组件中绑定replayPanel节点`);
+        }
 
         if (!key) {
             cc.error(`[ReplayController] 记录键名为空！`);
@@ -387,11 +525,137 @@ cc.Class({
 
         if (record) {
             cc.log(`[ReplayController] 成功加载战斗记录，事件数量: ${record.events ? record.events.length : 0}`);
+            // 确保在开始回放前UI已准备好
             this.startReplay(record, heros, monsters);
         } else {
             cc.error(`[ReplayController] 无法加载战斗记录: ${key}`);
             cc.error(`[ReplayController] 请检查记录键名是否正确，或战斗记录是否已保存`);
         }
+    },
+
+    /**
+     * 获取当前场景的单位列表
+     * @private
+     * @returns {Object} 包含heros和monsters的对象
+     */
+    _getCurrentSceneUnits() {
+        const scene = cc.director.getScene();
+        if (!scene) {
+            cc.warn("[ReplayController] 未找到场景");
+            return { heros: [], monsters: [] };
+        }
+
+        let battleController = null;
+
+        // 方法1: 如果已经保存了 battleController，直接使用
+        if (this.battleController && this.battleController.isValid) {
+            battleController = this.battleController;
+        } else {
+            // 方法2: 在 Canvas 的子节点中查找
+            const canvas = scene.getChildByName("Canvas");
+            if (canvas) {
+                // 先尝试在 Canvas 节点本身查找组件
+                battleController = canvas.getComponent("BattleController");
+
+                // 如果没找到，尝试在 Canvas 的子节点中查找名为 "BattleController" 的节点
+                if (!battleController) {
+                    const battleControllerNode = canvas.getChildByName("BattleController");
+                    if (battleControllerNode) {
+                        battleController = battleControllerNode.getComponent("BattleController");
+                    }
+                }
+            }
+
+            // 方法3: 如果还没找到，在场景根节点中查找
+            if (!battleController) {
+                const battleControllerNode = scene.getChildByName("BattleController");
+                if (battleControllerNode) {
+                    battleController = battleControllerNode.getComponent("BattleController");
+                }
+            }
+
+            // 方法4: 遍历场景所有节点查找（最后手段）
+            if (!battleController) {
+                const findBattleController = (node) => {
+                    const comp = node.getComponent("BattleController");
+                    if (comp) return comp;
+                    for (let child of node.children) {
+                        const result = findBattleController(child);
+                        if (result) return result;
+                    }
+                    return null;
+                };
+                battleController = findBattleController(scene);
+            }
+
+            // 保存引用供后续使用
+            if (battleController) {
+                this.battleController = battleController;
+            }
+        }
+
+        if (battleController) {
+            // 优先从BattleController.heros/monsters数组获取
+            let heros = battleController.heros || [];
+            let monsters = battleController.monsters || [];
+
+            cc.log(`[ReplayController] 找到BattleController，数组中的单位: 英雄${heros.length}个, 怪物${monsters.length}个`);
+
+            // 如果数组为空，尝试从场景节点中直接获取（从heroParent和monsterParent的子节点）
+            if (heros.length === 0 && battleController.heroParent) {
+                cc.log(`[ReplayController] 英雄数组为空，尝试从heroParent子节点获取`);
+                const heroParent = battleController.heroParent;
+                if (heroParent && heroParent.isValid) {
+                    heros = heroParent.children.filter(child => {
+                        // 只获取有效的、有StatsComponent的节点
+                        return child && child.isValid && child.getComponent("StatsComponent");
+                    });
+                    cc.log(`[ReplayController] 从heroParent获取到 ${heros.length} 个英雄节点`);
+                    if (heros.length > 0) {
+                        const heroNames = heros.map(h => h ? h.name : 'null').join(', ');
+                        cc.log(`[ReplayController] 英雄节点列表: [${heroNames}]`);
+                    }
+                }
+            }
+
+            if (monsters.length === 0 && battleController.monsterParent) {
+                cc.log(`[ReplayController] 怪物数组为空，尝试从monsterParent子节点获取`);
+                const monsterParent = battleController.monsterParent;
+                if (monsterParent && monsterParent.isValid) {
+                    monsters = monsterParent.children.filter(child => {
+                        // 只获取有效的、有StatsComponent的节点
+                        return child && child.isValid && child.getComponent("StatsComponent");
+                    });
+                    cc.log(`[ReplayController] 从monsterParent获取到 ${monsters.length} 个怪物节点`);
+                    if (monsters.length > 0) {
+                        const monsterNames = monsters.map(m => m ? m.name : 'null').join(', ');
+                        cc.log(`[ReplayController] 怪物节点列表: [${monsterNames}]`);
+                    }
+                }
+            }
+
+            // 详细日志：列出所有单位名称
+            if (heros.length > 0) {
+                const heroNames = heros.map(h => h ? h.name : 'null').join(', ');
+                cc.log(`[ReplayController] 最终英雄列表: [${heroNames}]`);
+            }
+            if (monsters.length > 0) {
+                const monsterNames = monsters.map(m => m ? m.name : 'null').join(', ');
+                cc.log(`[ReplayController] 最终怪物列表: [${monsterNames}]`);
+            }
+
+            return {
+                heros: heros,
+                monsters: monsters
+            };
+        }
+
+        cc.warn("[ReplayController] ✗ 未找到BattleController，无法获取单位列表");
+        cc.warn("[ReplayController] 可能的原因：");
+        cc.warn("[ReplayController]   1. BattleController组件未正确挂载");
+        cc.warn("[ReplayController]   2. 场景还未完全加载");
+        cc.warn("[ReplayController]   3. BattleController节点名称不正确");
+        return { heros: [], monsters: [] };
     },
 
     /**

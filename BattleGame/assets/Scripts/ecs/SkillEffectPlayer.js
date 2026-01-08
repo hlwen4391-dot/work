@@ -86,10 +86,21 @@ cc.Class({
 
         // cc.log(`[SkillEffectPlayer] parent节点: ${parent.name}, 子节点数量: ${parent.children.length}`);
 
-        const startPos = caster.getPosition().add(cc.v2(0, 40)); // 起点释放位置
-        const endPos = target.getPosition().add(cc.v2(0, 40)); // 终点位置
+        // 获取世界坐标，然后转换为父节点的本地坐标
+        // 起点：施法者的世界坐标
+        const casterWorldPos = caster.parent ? 
+            caster.parent.convertToWorldSpaceAR(caster.position) : 
+            caster.position;
+        const startPos = parent.convertToNodeSpaceAR(casterWorldPos).add(cc.v2(0, 40)); // 起点释放位置
+        
+        // 终点：目标的世界坐标
+        const targetWorldPos = target.parent ? 
+            target.parent.convertToWorldSpaceAR(target.position) : 
+            target.position;
+        const endPos = parent.convertToNodeSpaceAR(targetWorldPos).add(cc.v2(0, 40)); // 终点位置
 
         // cc.log(`[SkillEffectPlayer] 起点位置: (${startPos.x.toFixed(1)}, ${startPos.y.toFixed(1)}), 终点位置: (${endPos.x.toFixed(1)}, ${endPos.y.toFixed(1)})`);
+        // cc.log(`[SkillEffectPlayer] 施法者世界坐标: (${casterWorldPos.x.toFixed(1)}, ${casterWorldPos.y.toFixed(1)}), 目标世界坐标: (${targetWorldPos.x.toFixed(1)}, ${targetWorldPos.y.toFixed(1)})`);
         // cc.log(`[SkillEffectPlayer] fireballPrefab: ${this.fireballPrefab ? '已绑定' : '未绑定'}`);
 
         let fireball = null;

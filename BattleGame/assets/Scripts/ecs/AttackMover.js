@@ -98,15 +98,77 @@ cc.Class({
         this.onAttackComplete = onComplete;
         this.currentTarget = target; // 保存目标引用
 
+        // ========== 调试信息：攻击者和目标节点基本信息 ==========
+        // cc.log(`[AttackMover] ========== 开始攻击序列 ==========`);
+        // cc.log(`[AttackMover] 攻击者: ${this.node.name}`);
+        // cc.log(`[AttackMover]   本地位置: (${this.node.x.toFixed(2)}, ${this.node.y.toFixed(2)})`);
+        // cc.log(`[AttackMover]   父节点: ${this.node.parent ? this.node.parent.name : '无'}`);
+        // cc.log(`[AttackMover]   父节点位置: ${this.node.parent ? `(${this.node.parent.x.toFixed(2)}, ${this.node.parent.y.toFixed(2)})` : '无'}`);
+        // cc.log(`[AttackMover]   当前scaleX: ${this.node.scaleX.toFixed(2)}`);
+
+        // cc.log(`[AttackMover] 目标: ${target.name}`);
+        // cc.log(`[AttackMover]   本地位置: (${target.x.toFixed(2)}, ${target.y.toFixed(2)})`);
+        // cc.log(`[AttackMover]   父节点: ${target.parent ? target.parent.name : '无'}`);
+        // cc.log(`[AttackMover]   父节点位置: ${target.parent ? `(${target.parent.x.toFixed(2)}, ${target.parent.y.toFixed(2)})` : '无'}`);
+        // cc.log(`[AttackMover]   当前scaleX: ${target.scaleX.toFixed(2)}`);
+
         // 1. 保存原始位置和 scale (分别保存 X 和 Y 轴)
         this.originalPosition = this.node.position.clone();
         this.originalScaleX = this.node.scaleX;
         this.originalScaleY = this.node.scaleY;
 
         // 2. 计算目标位置（在目标前方停留）
-        const targetPos = target.position;
-        const direction = targetPos.sub(this.originalPosition).normalize();//计算方向
-        const attackPos = targetPos.sub(direction.mul(this.attackDistance));//计算攻击位置
+        // 简化：直接使用本地坐标进行计算和移动
+        // 将目标的世界坐标转换为攻击者父节点的本地坐标
+
+        // ========== 调试信息：坐标转换 ==========
+        // 获取目标的世界坐标
+        let targetWorldPos = target.parent ?
+            target.parent.convertToWorldSpaceAR(target.position) :
+            target.position;
+
+        // cc.log(`[AttackMover] 目标世界坐标: (${targetWorldPos.x.toFixed(2)}, ${targetWorldPos.y.toFixed(2)})`);
+
+        // 将目标世界坐标转换为攻击者父节点的本地坐标
+        let attackPos;
+        if (this.node.parent) {
+            // 转换为攻击者父节点的本地坐标
+            attackPos = this.node.parent.convertToNodeSpaceAR(targetWorldPos);
+            // cc.log(`[AttackMover] 转换为攻击者父节点(${this.node.parent.name})的本地坐标: (${attackPos.x.toFixed(2)}, ${attackPos.y.toFixed(2)})`);
+        } else {
+            // 如果没有父节点，直接使用世界坐标
+            attackPos = targetWorldPos;
+            // cc.log(`[AttackMover] 攻击者无父节点，使用世界坐标: (${attackPos.x.toFixed(2)}, ${attackPos.y.toFixed(2)})`);
+        }
+
+        // 计算方向（从攻击者当前位置指向目标位置）
+        const direction = attackPos.sub(this.originalPosition).normalize();
+        const distance = attackPos.sub(this.originalPosition).mag();
+
+        // cc.log(`[AttackMover] 计算方向和距离:`);
+        // cc.log(`[AttackMover]   攻击者本地位置: (${this.originalPosition.x.toFixed(2)}, ${this.originalPosition.y.toFixed(2)})`);
+        // cc.log(`[AttackMover]   方向向量: (${direction.x.toFixed(2)}, ${direction.y.toFixed(2)})`);
+        // cc.log(`[AttackMover]   距离: ${distance.toFixed(2)}`);
+
+        // 计算攻击位置（在目标前方停留，但保持在攻击者父节点的本地坐标系中）
+        attackPos = attackPos.sub(direction.mul(this.attackDistance));
+
+        // cc.log(`[AttackMover] 攻击位置计算:`);
+        // cc.log(`[AttackMover]   攻击距离设置: ${this.attackDistance}`);
+        // cc.log(`[AttackMover]   最终攻击位置（本地坐标）: (${attackPos.x.toFixed(2)}, ${attackPos.y.toFixed(2)})`);
+
+        // 设置面向方向（根据目标在左边还是右边）
+        if (attackPos.x < this.originalPosition.x) {
+            // 目标在左边，面向左边（scaleX为负）
+            this.node.scaleX = -Math.abs(this.originalScaleX);
+            // cc.log(`[AttackMover] 目标在左边，设置scaleX为负: ${this.node.scaleX.toFixed(2)}`);
+        } else {
+            // 目标在右边，面向右边（scaleX为正）
+            this.node.scaleX = Math.abs(this.originalScaleX);
+            // cc.log(`[AttackMover] 目标在右边，设置scaleX为正: ${this.node.scaleX.toFixed(2)}`);
+        }
+
+        // cc.log(`[AttackMover] ========== 攻击序列准备完成 ==========`);
 
         // 3. 开始攻击序列
         this._performAttackSequence(attackPos);
@@ -178,10 +240,47 @@ cc.Class({
     },
 
     /**
+     * 查找两个节点的共同父节点
+     * @private
+     * @param {cc.Node} node1 - 节点1
+     * @param {cc.Node} node2 - 节点2
+     * @returns {cc.Node} 共同父节点，如果没有则返回null
+     */
+    _findCommonParent(node1, node2) {
+        if (!node1 || !node2) return null;
+
+        // 如果两个节点是同一个父节点，直接返回
+        if (node1.parent === node2.parent) {
+            return node1.parent;
+        }
+
+        // 向上查找共同父节点
+        let parent1 = node1.parent;
+        while (parent1) {
+            let parent2 = node2.parent;
+            while (parent2) {
+                if (parent1 === parent2) {
+                    return parent1;
+                }
+                parent2 = parent2.parent;
+            }
+            parent1 = parent1.parent;
+        }
+
+        return null;
+    },
+
+    /**
      * 执行攻击动画序列（使用 cc.tween 新 API）
      * @private
      */
     _performAttackSequence(attackPos) {
+        // ========== 调试信息：移动序列 ==========
+        // cc.log(`[AttackMover] ========== 开始执行移动序列 ==========`);
+        // cc.log(`[AttackMover] 当前节点位置: (${this.node.x.toFixed(2)}, ${this.node.y.toFixed(2)})`);
+        // cc.log(`[AttackMover] 目标攻击位置: (${attackPos.x.toFixed(2)}, ${attackPos.y.toFixed(2)})`);
+        // cc.log(`[AttackMover] 原始位置: (${this.originalPosition.x.toFixed(2)}, ${this.originalPosition.y.toFixed(2)})`);
+
         // 计算移动时间
         const distanceToTarget = this.node.position.sub(attackPos).mag();
         const durationToTarget = distanceToTarget / this.moveSpeed;
@@ -189,22 +288,40 @@ cc.Class({
         const distanceBack = attackPos.sub(this.originalPosition).mag();
         const durationBack = distanceBack / this.moveSpeed;
 
+        // cc.log(`[AttackMover] 移动参数:`);
+        // cc.log(`[AttackMover]   移动到目标距离: ${distanceToTarget.toFixed(2)}`);
+        // cc.log(`[AttackMover]   移动速度: ${this.moveSpeed}`);
+        // cc.log(`[AttackMover]   移动到目标时间: ${durationToTarget.toFixed(2)}秒`);
+        // cc.log(`[AttackMover]   返回距离: ${distanceBack.toFixed(2)}`);
+        // cc.log(`[AttackMover]   返回时间: ${durationBack.toFixed(2)}秒`);
+
         // 使用 cc.tween 链式调用
         cc.tween(this.node)
             // 1. 移动到目标位置
             .to(durationToTarget, { position: attackPos }, { easing: 'sineInOut' })
+            // .call(() => {
+            //     cc.log(`[AttackMover] ✓ 已移动到攻击位置: (${this.node.x.toFixed(2)}, ${this.node.y.toFixed(2)})`);
+            // })
 
             // 2. 播放攻击动画
             .call(() => {
+                // cc.log(`[AttackMover] 开始播放攻击动画`);
                 this._playAttackAnimation();
             })
             .delay(this.attackDuration)
+            // .call(() => {
+            //     cc.log(`[AttackMover] ✓ 攻击动画播放完成`);
+            // })
 
             // 3. 返回原位置
             .to(durationBack, { position: this.originalPosition }, { easing: 'sineInOut' })
+            // .call(() => {
+            //     cc.log(`[AttackMover] ✓ 已返回原位置: (${this.node.x.toFixed(2)}, ${this.node.y.toFixed(2)})`);
+            // })
 
             // 4. 完成回调
             .call(() => {
+                // cc.log(`[AttackMover] ========== 攻击序列完成 ==========`);
                 this._onSequenceComplete();
             })
             .start();

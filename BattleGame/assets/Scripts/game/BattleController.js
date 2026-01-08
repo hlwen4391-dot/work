@@ -123,6 +123,12 @@ cc.Class({
             tooltip: "怪物区域下边界（Y坐标）"
         },
 
+        // 固定单位大小（所有单位使用相同大小）
+        unitScale: {
+            default: 1.0,
+            tooltip: "单位固定缩放大小（所有单位统一使用此大小）"
+        },
+
         // 游戏结束面板组件（可选，如果使用场景跳转则不需要）
         gameOverPanel: {
             default: null,
@@ -213,9 +219,10 @@ cc.Class({
         this.lastTime = Date.now();
 
         // 检查是否需要自动开始回放（从GameOverScene跳转回来时）
+        // 增加延迟时间，确保单位创建完成（特别是从SelectScene选择的人物）
         this.scheduleOnce(() => {
             this._checkAutoReplay();
-        }, 0.1); // 延迟一小段时间，确保所有组件都已初始化
+        }, 0.5); // 延迟0.5秒，确保所有单位都已创建完成
     },
 
     /**
@@ -246,8 +253,13 @@ cc.Class({
             }
 
             if (replayController && recordKey) {
-                // 开始回放
-                replayController.loadAndReplay(recordKey, this.heros, this.monsters);
+                // 确保使用当前场景的单位列表（从SelectScene选择的人物）
+                const currentHeros = this.heros || [];
+                const currentMonsters = this.monsters || [];
+                cc.log(`[BattleController] 开始回放，使用当前场景的单位列表 - 英雄: ${currentHeros.length}个, 怪物: ${currentMonsters.length}个`);
+
+                // 开始回放（传入当前场景的单位列表）
+                replayController.loadAndReplay(recordKey, currentHeros, currentMonsters);
                 cc.log(`[BattleController] 自动回放已启动`);
 
                 // 清除自动回放标志
@@ -332,14 +344,31 @@ cc.Class({
      * @returns {cc.Node} 创建的单位节点
      */
     _createUnitNode(unitData, team, index, totalCount) {
-        const prefab = team === "hero" ? this.heroPrefab : this.monsterPrefab;
+        // 优先使用unitData中的prefab（这是完整的角色Prefab，包含所有组件）
+        // 如果没有，再使用通用的heroPrefab/monsterPrefab作为后备
+        let prefab = unitData.prefab;
+        let prefabSource = "unitData.prefab";
+
         if (!prefab) {
-            cc.error(`[BattleController] ✗ 未设置${team}Prefab，无法创建${team}节点`);
-            cc.error(`[BattleController] 请在BattleController组件中绑定${team}Prefab`);
-            return null;
+            // 后备方案：使用通用的Prefab
+            prefab = team === "hero" ? this.heroPrefab : this.monsterPrefab;
+            prefabSource = `${team}Prefab`;
+
+            if (!prefab) {
+                cc.error(`[BattleController] ✗ 未设置${team}Prefab，且unitData.prefab也为空，无法创建${team}节点`);
+                cc.error(`[BattleController] 请选择以下方案之一：`);
+                cc.error(`[BattleController]   1. 在UnitDataConfig中为"${unitData.name}"设置prefab（推荐）`);
+                cc.error(`[BattleController]   2. 在BattleController组件中绑定${team}Prefab`);
+                return null;
+            } else {
+                cc.warn(`[BattleController] ⚠️ unitData.prefab为空，使用通用${team}Prefab: ${unitData.name}`);
+                cc.warn(`[BattleController]   建议：将场景中完整的"${unitData.name}"节点保存为Prefab，并在UnitDataConfig中绑定`);
+            }
+        } else {
+            cc.log(`[BattleController] ✓ 使用unitData.prefab创建节点: ${unitData.name}`);
         }
 
-        cc.log(`[BattleController] 开始创建${team}节点: ${unitData.name}`);
+        cc.log(`[BattleController] 开始创建${team}节点: ${unitData.name} (使用${prefabSource})`);
 
         // 实例化Prefab
         const unitNode = cc.instantiate(prefab);
@@ -375,32 +404,106 @@ cc.Class({
             }
         }
 
-        // 自动排兵布阵（随机位置）
-        const position = this._calculateFormationPosition(team, index, totalCount);
+        // 自动排兵布阵（优先使用unitData中的位置，否则使用随机位置）
+        let position;
+        if (unitData.position && unitData.position.x !== undefined && unitData.position.y !== undefined) {
+            // 使用保存的位置（从战斗记录恢复的）
+            position = cc.v2(unitData.position.x, unitData.position.y);
+            cc.log(`[BattleController] 使用保存的位置: (${position.x.toFixed(1)}, ${position.y.toFixed(1)})`);
+        } else {
+            // 使用随机位置（新创建的单位）
+            position = this._calculateFormationPosition(team, index, totalCount);
+            cc.log(`[BattleController] 使用随机位置: (${position.x.toFixed(1)}, ${position.y.toFixed(1)})`);
+        }
         unitNode.setPosition(position.x, position.y);
 
-        // 获取世界坐标（需要确保节点已添加到场景树）
-        let worldPos = null;
-        try {
-            if (unitNode.parent && unitNode.parent.isValid) {
-                worldPos = unitNode.getWorldPosition();
-            }
-        } catch (e) {
-            cc.warn(`[BattleController] 无法获取世界坐标: ${e.message}`);
-        }
+        // 设置固定大小
+        unitNode.setScale(this.unitScale, this.unitScale, 1.0);
+        cc.log(`[BattleController] 设置${team}节点固定大小: ${this.unitScale}x${this.unitScale}`);
 
-        cc.log(`[BattleController] ✓ 创建${team}节点: ${unitData.name}`);
-        cc.log(`[BattleController]   本地位置: (${position.x.toFixed(1)}, ${position.y.toFixed(1)})`);
-        if (worldPos) {
-            cc.log(`[BattleController]   世界位置: (${worldPos.x.toFixed(1)}, ${worldPos.y.toFixed(1)})`);
+        // 设置初始面向方向
+        // 英雄面向右边（正scaleX），怪物面向左边（负scaleX）
+        if (team === "hero") {
+            unitNode.scaleX = Math.abs(unitNode.scaleX); // 确保为正（面向右边）
         } else {
-            cc.log(`[BattleController]   世界位置: 无法获取（节点可能未完全初始化）`);
+            unitNode.scaleX = -Math.abs(unitNode.scaleX); // 确保为负（面向左边）
         }
-        cc.log(`[BattleController]   节点active: ${unitNode.active}, opacity: ${unitNode.opacity}`);
+        cc.log(`[BattleController] 设置${team}节点初始面向: scaleX=${unitNode.scaleX}`);
 
         // 保存单位数据到节点（用于后续初始化）
         unitNode._unitData = unitData;
         unitNode._team = team;
+
+        // 检查节点是否有必需的组件
+        const stats = unitNode.getComponent("StatsComponent");
+        const teamComp = unitNode.getComponent("TeamComponent");
+        const skills = unitNode.getComponent("SkillComponent");
+        const skeleton = unitNode.getComponent(sp.Skeleton);
+
+        cc.log(`[BattleController] ${team}节点组件检查: ${unitData.name}`);
+        cc.log(`[BattleController]   StatsComponent: ${stats ? '✓' : '✗'}`);
+        cc.log(`[BattleController]   TeamComponent: ${teamComp ? '✓' : '✗'}`);
+        cc.log(`[BattleController]   SkillComponent: ${skills ? '✓' : '✗'}`);
+        cc.log(`[BattleController]   Spine Skeleton: ${skeleton ? '✓' : '✗'}`);
+
+        if (!stats) {
+            cc.error(`[BattleController] ✗ ${team}节点缺少StatsComponent组件: ${unitData.name}`);
+            cc.error(`[BattleController]   请在Prefab "${prefab.name}" 的根节点上添加StatsComponent组件`);
+        }
+        if (!teamComp) {
+            cc.error(`[BattleController] ✗ ${team}节点缺少TeamComponent组件: ${unitData.name}`);
+            cc.error(`[BattleController]   请在Prefab "${prefab.name}" 的根节点上添加TeamComponent组件`);
+        }
+        if (!skills) {
+            cc.error(`[BattleController] ✗ ${team}节点缺少SkillComponent组件: ${unitData.name}`);
+            cc.error(`[BattleController]   请在Prefab "${prefab.name}" 的根节点上添加SkillComponent组件`);
+        }
+        if (!skeleton) {
+            cc.warn(`[BattleController] ⚠️ ${team}节点缺少Spine Skeleton组件: ${unitData.name}`);
+            cc.warn(`[BattleController]   节点可能没有动画显示，请在Prefab "${prefab.name}" 上添加sp.Skeleton组件`);
+        } else {
+            // 检查Spine资源是否加载
+            if (!skeleton.skeletonData) {
+                cc.warn(`[BattleController] ⚠️ ${team}节点的Spine Skeleton组件没有skeletonData: ${unitData.name}`);
+            } else {
+                cc.log(`[BattleController]   Spine资源: ${skeleton.skeletonData.name || '已加载'}`);
+            }
+        }
+
+        // 检查节点内容大小
+        const contentSize = unitNode.getContentSize();
+        if (contentSize.width === 0 && contentSize.height === 0) {
+            cc.warn(`[BattleController] ⚠️ ${team}节点内容大小为0: ${unitData.name}`);
+            cc.warn(`[BattleController]   这通常意味着节点没有视觉内容（如Sprite或Spine）`);
+            cc.warn(`[BattleController]   请检查Prefab "${prefab.name}" 是否有Sprite或Spine子节点`);
+
+            // 尝试从子节点获取大小
+            const children = unitNode.children;
+            if (children && children.length > 0) {
+                let maxWidth = 0, maxHeight = 0;
+                children.forEach(child => {
+                    const childSize = child.getContentSize();
+                    const childLocalPos = child.getPosition();
+                    if (childSize.width > maxWidth) maxWidth = childSize.width;
+                    if (childSize.height > maxHeight) maxHeight = childSize.height;
+                    cc.log(`[BattleController]   子节点: ${child.name}, 大小: ${childSize.width}x${childSize.height}, 位置: (${childLocalPos.x}, ${childLocalPos.y})`);
+                });
+                if (maxWidth > 0 || maxHeight > 0) {
+                    cc.log(`[BattleController]   建议设置节点内容大小: ${maxWidth}x${maxHeight}`);
+                }
+            } else {
+                cc.warn(`[BattleController]   Prefab "${prefab.name}" 没有任何子节点`);
+            }
+        }
+
+        // 最终日志输出
+        cc.log(`[BattleController] ✓ 创建${team}节点完成: ${unitData.name}`);
+        cc.log(`[BattleController]   本地位置: (${position.x.toFixed(1)}, ${position.y.toFixed(1)})`);
+        cc.log(`[BattleController]   节点大小: ${contentSize.width.toFixed(1)}x${contentSize.height.toFixed(1)}`);
+        cc.log(`[BattleController]   节点active: ${unitNode.active}, opacity: ${unitNode.opacity}`);
+        if (unitNode.parent) {
+            cc.log(`[BattleController]   父节点: ${unitNode.parent.name}, 父节点位置: (${unitNode.parent.x}, ${unitNode.parent.y})`);
+        }
 
         return unitNode;
     },
@@ -420,14 +523,36 @@ cc.Class({
             // 英雄在左边，随机位置
             const rangeX = this.heroAreaRight - this.heroAreaLeft;
             const rangeY = this.heroAreaTop - this.heroAreaBottom;
-            x = this.heroAreaLeft + Math.random() * rangeX;
-            y = this.heroAreaBottom + Math.random() * rangeY;
+
+            // 检查区域设置是否合理
+            if (rangeX <= 0 || rangeY <= 0) {
+                cc.warn(`[BattleController] ⚠️ 英雄区域设置不合理: Left=${this.heroAreaLeft}, Right=${this.heroAreaRight}, Top=${this.heroAreaTop}, Bottom=${this.heroAreaBottom}`);
+                // 使用默认值（屏幕左侧）
+                x = -200;
+                y = 0;
+            } else {
+                x = this.heroAreaLeft + Math.random() * rangeX;
+                y = this.heroAreaBottom + Math.random() * rangeY;
+            }
+
+            cc.log(`[BattleController] 英雄位置计算: 区域[${this.heroAreaLeft}, ${this.heroAreaRight}]x[${this.heroAreaBottom}, ${this.heroAreaTop}], 结果: (${x.toFixed(1)}, ${y.toFixed(1)})`);
         } else {
             // 怪物在右边，随机位置
             const rangeX = this.monsterAreaRight - this.monsterAreaLeft;
             const rangeY = this.monsterAreaTop - this.monsterAreaBottom;
-            x = this.monsterAreaLeft + Math.random() * rangeX;
-            y = this.monsterAreaBottom + Math.random() * rangeY;
+
+            // 检查区域设置是否合理
+            if (rangeX <= 0 || rangeY <= 0) {
+                cc.warn(`[BattleController] ⚠️ 怪物区域设置不合理: Left=${this.monsterAreaLeft}, Right=${this.monsterAreaRight}, Top=${this.monsterAreaTop}, Bottom=${this.monsterAreaBottom}`);
+                // 使用默认值（屏幕右侧）
+                x = 200;
+                y = 0;
+            } else {
+                x = this.monsterAreaLeft + Math.random() * rangeX;
+                y = this.monsterAreaBottom + Math.random() * rangeY;
+            }
+
+            cc.log(`[BattleController] 怪物位置计算: 区域[${this.monsterAreaLeft}, ${this.monsterAreaRight}]x[${this.monsterAreaBottom}, ${this.monsterAreaTop}], 结果: (${x.toFixed(1)}, ${y.toFixed(1)})`);
         }
 
         return cc.v2(x, y);

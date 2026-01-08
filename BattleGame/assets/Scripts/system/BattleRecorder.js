@@ -26,16 +26,25 @@ var BattleRecorder = cc.Class({
      */
     startRecording(heros, monsters) {
         this.isRecording = true;
+
+        // 先序列化初始状态（包含位置信息）
+        const initialState = {
+            heros: this._serializeUnits(heros),
+            monsters: this._serializeUnits(monsters)
+        };
+
         this.battleRecord = {
             version: "1.0", // 记录版本号
             startTime: Date.now(),
-            initialState: {
-                heros: this._serializeUnits(heros),
-                monsters: this._serializeUnits(monsters)
-            },
-            events: [] // 事件列表
+            initialState: initialState,
+            events: [], // 事件列表
+            // 保存SelectedUnits数据（用于回放时重新创建单位，包含位置信息）
+            selectedUnits: this._serializeSelectedUnits(window.SelectedUnits, initialState)
         };
         cc.log("[BattleRecorder] 开始记录战斗");
+        if (this.battleRecord.selectedUnits) {
+            cc.log(`[BattleRecorder] 已保存SelectedUnits数据 - 英雄: ${this.battleRecord.selectedUnits.heros ? this.battleRecord.selectedUnits.heros.length : 0}个, 怪物: ${this.battleRecord.selectedUnits.monsters ? this.battleRecord.selectedUnits.monsters.length : 0}个`);
+        }
     },
 
     /**
@@ -227,6 +236,8 @@ var BattleRecorder = cc.Class({
         return units.map(unit => {
             const stats = unit.getComponent("StatsComponent");
             const team = unit.getComponent("TeamComponent");
+            // 保存单位的位置信息（用于回放时恢复位置）
+            const position = unit.getPosition();
             return {
                 name: unit.name,
                 id: this._getEntityId(unit),
@@ -235,7 +246,12 @@ var BattleRecorder = cc.Class({
                 attack: stats ? stats.attack : 0,
                 defense: stats ? stats.defense : 0,
                 speed: stats ? stats.speed : 0,
-                team: team ? team.team : "unknown"
+                team: team ? team.team : "unknown",
+                // 保存位置信息
+                position: {
+                    x: position.x || 0,
+                    y: position.y || 0
+                }
             };
         });
     },
@@ -247,6 +263,60 @@ var BattleRecorder = cc.Class({
     _getEntityId(entity) {
         // 使用单位名称作为ID（如果单位有唯一ID，可以使用）
         return entity.name;
+    },
+
+    /**
+     * 序列化SelectedUnits数据（用于回放时重新创建单位）
+     * @private
+     * @param {Object} selectedUnits - SelectedUnits对象
+     * @param {Object} initialState - 初始状态（包含位置信息）
+     * @returns {Object|null} 序列化后的数据
+     */
+    _serializeSelectedUnits(selectedUnits, initialState) {
+        if (!selectedUnits) return null;
+
+        // 创建一个位置映射表（根据单位名称查找位置）
+        const positionMap = {};
+        if (initialState) {
+            [...(initialState.heros || []), ...(initialState.monsters || [])].forEach(unitData => {
+                if (unitData.name && unitData.position) {
+                    positionMap[unitData.name] = unitData.position;
+                }
+            });
+        }
+
+        // 只保存单位数据配置（不保存prefab引用，因为prefab引用无法序列化）
+        // prefab会在回放时从UnitDataConfig中重新获取
+        const serializeUnitData = (unitData) => {
+            if (!unitData) return null;
+            const result = {
+                name: unitData.name,
+                displayName: unitData.displayName,
+                avatarPosition: unitData.avatarPosition,
+                hp: unitData.hp,
+                attack: unitData.attack,
+                defense: unitData.defense,
+                speed: unitData.speed,
+                crit: unitData.crit,
+                miss: unitData.miss,
+                skills: unitData.skills ? unitData.skills.map(skill => ({
+                    id: skill.id,
+                    skillName: skill.skillName || skill.name
+                })) : []
+            };
+
+            // 如果有位置信息，保存位置
+            if (positionMap[unitData.name]) {
+                result.position = positionMap[unitData.name];
+            }
+
+            return result;
+        };
+
+        return {
+            heros: selectedUnits.heros ? selectedUnits.heros.map(serializeUnitData).filter(u => u !== null) : [],
+            monsters: selectedUnits.monsters ? selectedUnits.monsters.map(serializeUnitData).filter(u => u !== null) : []
+        };
     }
 });
 

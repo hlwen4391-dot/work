@@ -265,6 +265,154 @@ cc.Class({
         if (currentSceneName === "GameOverScene" || currentSceneName.includes("GameOver")) {
             cc.log(`[GameOverPanel] 检测到在GameOverScene，准备跳转回BattleScene并开始回放`);
 
+            // 从战斗记录中恢复SelectedUnits数据（用于重新创建单位）
+            const BattleRecorder = require("BattleRecorder");
+            const recorder = new BattleRecorder();
+            const record = recorder.loadFromLocalStorage(recordKey);
+
+            if (record && record.selectedUnits) {
+                // 恢复SelectedUnits数据（需要重新获取prefab引用）
+                const UnitDataConfig = require("UnitDataConfig");
+                const restoreSelectedUnits = () => {
+                    const restored = {
+                        heros: [],
+                        monsters: []
+                    };
+
+                    // 恢复英雄数据
+                    if (record.selectedUnits.heros && record.selectedUnits.heros.length > 0) {
+                        record.selectedUnits.heros.forEach(savedData => {
+                            // 从UnitDataConfig中查找对应的单位数据
+                            const unitData = UnitDataConfig.heros.find(h => h.name === savedData.name);
+                            if (unitData) {
+                                // 合并保存的数据和配置数据（优先使用保存的数据，包括位置信息）
+                                restored.heros.push({
+                                    ...unitData,
+                                    ...savedData,
+                                    prefab: unitData.prefab, // 使用配置中的prefab
+                                    icon: unitData.icon, // 使用配置中的icon
+                                    // 保留位置信息（如果存在）
+                                    position: savedData.position || null
+                                });
+                                if (savedData.position) {
+                                    cc.log(`[GameOverPanel] 恢复英雄位置: ${savedData.name} -> (${savedData.position.x}, ${savedData.position.y})`);
+                                }
+                            } else {
+                                cc.warn(`[GameOverPanel] 未找到英雄配置: ${savedData.name}`);
+                            }
+                        });
+                    }
+
+                    // 恢复怪物数据
+                    if (record.selectedUnits.monsters && record.selectedUnits.monsters.length > 0) {
+                        record.selectedUnits.monsters.forEach(savedData => {
+                            // 从UnitDataConfig中查找对应的单位数据
+                            const unitData = UnitDataConfig.monsters.find(m => m.name === savedData.name);
+                            if (unitData) {
+                                // 合并保存的数据和配置数据（优先使用保存的数据，包括位置信息）
+                                restored.monsters.push({
+                                    ...unitData,
+                                    ...savedData,
+                                    prefab: unitData.prefab, // 使用配置中的prefab
+                                    icon: unitData.icon, // 使用配置中的icon
+                                    // 保留位置信息（如果存在）
+                                    position: savedData.position || null
+                                });
+                                if (savedData.position) {
+                                    cc.log(`[GameOverPanel] 恢复怪物位置: ${savedData.name} -> (${savedData.position.x}, ${savedData.position.y})`);
+                                }
+                            } else {
+                                cc.warn(`[GameOverPanel] 未找到怪物配置: ${savedData.name}`);
+                            }
+                        });
+                    }
+
+                    return restored;
+                };
+
+                const restoredUnits = restoreSelectedUnits();
+                if (restoredUnits.heros.length > 0 || restoredUnits.monsters.length > 0) {
+                    window.SelectedUnits = restoredUnits;
+                    cc.log(`[GameOverPanel] ✓ 已从战斗记录恢复SelectedUnits - 英雄: ${restoredUnits.heros.length}个, 怪物: ${restoredUnits.monsters.length}个`);
+                } else {
+                    cc.warn(`[GameOverPanel] ⚠️ 恢复的SelectedUnits为空`);
+                }
+            } else {
+                cc.warn(`[GameOverPanel] ⚠️ 战斗记录中没有selectedUnits数据，尝试从initialState恢复（兼容旧版本）`);
+
+                // 兼容旧版本：从initialState恢复单位数据
+                if (record && record.initialState) {
+                    const UnitDataConfig = require("UnitDataConfig");
+                    const restored = {
+                        heros: [],
+                        monsters: []
+                    };
+
+                    // 从initialState恢复英雄数据
+                    if (record.initialState.heros && record.initialState.heros.length > 0) {
+                        record.initialState.heros.forEach(initialData => {
+                            const unitData = UnitDataConfig.heros.find(h => h.name === initialData.name);
+                            if (unitData) {
+                                restored.heros.push({
+                                    ...unitData,
+                                    hp: initialData.hp || unitData.hp,
+                                    maxHp: initialData.maxHp || unitData.hp,
+                                    attack: initialData.attack || unitData.attack,
+                                    defense: initialData.defense || unitData.defense,
+                                    speed: initialData.speed || unitData.speed,
+                                    // 保留位置信息（如果存在）
+                                    position: initialData.position || null
+                                });
+                                if (initialData.position) {
+                                    cc.log(`[GameOverPanel] 从initialState恢复英雄: ${initialData.name}, 位置: (${initialData.position.x}, ${initialData.position.y})`);
+                                } else {
+                                    cc.log(`[GameOverPanel] 从initialState恢复英雄: ${initialData.name} (无位置信息)`);
+                                }
+                            } else {
+                                cc.warn(`[GameOverPanel] 未找到英雄配置: ${initialData.name}`);
+                            }
+                        });
+                    }
+
+                    // 从initialState恢复怪物数据
+                    if (record.initialState.monsters && record.initialState.monsters.length > 0) {
+                        record.initialState.monsters.forEach(initialData => {
+                            const unitData = UnitDataConfig.monsters.find(m => m.name === initialData.name);
+                            if (unitData) {
+                                restored.monsters.push({
+                                    ...unitData,
+                                    hp: initialData.hp || unitData.hp,
+                                    maxHp: initialData.maxHp || unitData.hp,
+                                    attack: initialData.attack || unitData.attack,
+                                    defense: initialData.defense || unitData.defense,
+                                    speed: initialData.speed || unitData.speed,
+                                    // 保留位置信息（如果存在）
+                                    position: initialData.position || null
+                                });
+                                if (initialData.position) {
+                                    cc.log(`[GameOverPanel] 从initialState恢复怪物: ${initialData.name}, 位置: (${initialData.position.x}, ${initialData.position.y})`);
+                                } else {
+                                    cc.log(`[GameOverPanel] 从initialState恢复怪物: ${initialData.name} (无位置信息)`);
+                                }
+                            } else {
+                                cc.warn(`[GameOverPanel] 未找到怪物配置: ${initialData.name}`);
+                            }
+                        });
+                    }
+
+                    if (restored.heros.length > 0 || restored.monsters.length > 0) {
+                        window.SelectedUnits = restored;
+                        cc.log(`[GameOverPanel] ✓ 已从initialState恢复SelectedUnits - 英雄: ${restored.heros.length}个, 怪物: ${restored.monsters.length}个`);
+                    } else {
+                        cc.warn(`[GameOverPanel] ⚠️ 从initialState恢复的SelectedUnits也为空`);
+                        cc.warn(`[GameOverPanel] 请重新打一场战斗，新的战斗记录会包含selectedUnits数据`);
+                    }
+                } else {
+                    cc.warn(`[GameOverPanel] ⚠️ 战斗记录中也没有initialState数据，无法恢复单位选择`);
+                    cc.warn(`[GameOverPanel] 请重新打一场战斗，新的战斗记录会包含selectedUnits数据`);
+                }
+            }
+
             // 设置全局标志，告诉BattleScene需要自动开始回放
             window.AutoStartReplay = {
                 recordKey: recordKey,

@@ -27,10 +27,10 @@ cc.Class({
             tooltip: "重新开始按钮（可选）"
         },
 
-        // 战斗场景名称
-        battleSceneName: {
-            default: "BattleScene",
-            tooltip: "战斗场景名称（重新开始时跳转的场景）"
+        // 选择场景名称（重新开始时跳转的场景）
+        selectSceneName: {
+            default: "SelectScene",
+            tooltip: "选择场景名称（重新开始时跳转的场景）"
         },
 
         // 主菜单场景名称
@@ -136,18 +136,18 @@ cc.Class({
      * 重新开始
      */
     onRestartClick() {
-        cc.log(`[GameOverScene] 重新开始游戏，场景名称: ${this.battleSceneName}`);
-        if (this.battleSceneName) {
-            cc.director.loadScene(this.battleSceneName, (error) => {
+        cc.log(`[GameOverScene] 重新开始游戏，跳转到选择场景: ${this.selectSceneName}`);
+        if (this.selectSceneName) {
+            cc.director.loadScene(this.selectSceneName, (error) => {
                 if (error) {
-                    cc.error(`[GameOverScene] 加载战斗场景失败: ${error}`);
-                    cc.error(`[GameOverScene] 请检查场景名称是否正确: ${this.battleSceneName}`);
+                    cc.error(`[GameOverScene] 加载选择场景失败: ${error}`);
+                    cc.error(`[GameOverScene] 请检查场景名称是否正确: ${this.selectSceneName}`);
                 } else {
-                    cc.log(`[GameOverScene] 成功加载战斗场景: ${this.battleSceneName}`);
+                    cc.log(`[GameOverScene] 成功加载选择场景: ${this.selectSceneName}`);
                 }
             });
         } else {
-            cc.warn("[GameOverScene] 未设置battleSceneName，无法重新开始");
+            cc.warn("[GameOverScene] 未设置selectSceneName，无法重新开始");
         }
     }
 });

@@ -1879,14 +1879,15 @@
     "monsterPrefab": {
       "__uuid__": "e0d38923-0f03-42f9-b9c4-c30049dd181b"
     },
-    "heroAreaLeft": -200,
-    "heroAreaRight": 0,
+    "heroAreaLeft": -10,
+    "heroAreaRight": 170,
     "heroAreaTop": 100,
-    "heroAreaBottom": -100,
-    "monsterAreaLeft": 0,
-    "monsterAreaRight": 200,
+    "heroAreaBottom": -190,
+    "monsterAreaLeft": -40,
+    "monsterAreaRight": 160,
     "monsterAreaTop": 100,
-    "monsterAreaBottom": -100,
+    "monsterAreaBottom": -190,
+    "unitScale": 0.7,
     "gameOverPanel": null,
     "enableRecording": true,
     "gameOverSceneName": "GameOverScene",
@@ -2041,7 +2042,7 @@
   {
     "__type__": "cc.Node",
     "_name": "战士",
-    "_objFlags": 512,
+    "_objFlags": 0,
     "_parent": {
       "__id__": 1
     },
@@ -2056,7 +2057,7 @@
         "__id__": 53
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 60
@@ -2992,7 +2993,7 @@
         "__id__": 89
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 96
@@ -4026,7 +4027,7 @@
         "__id__": 125
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 132
@@ -5038,7 +5039,7 @@
   {
     "__type__": "cc.Node",
     "_name": "Boss",
-    "_objFlags": 512,
+    "_objFlags": 0,
     "_parent": {
       "__id__": 1
     },
@@ -5050,7 +5051,7 @@
         "__id__": 154
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 159
