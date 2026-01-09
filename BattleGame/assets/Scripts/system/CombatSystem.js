@@ -136,6 +136,46 @@ var CombatSystem = {
         }
 
         log(`🔥 真伤！${attacker.name} 对 ${target.name} 造成 ${finalDamage} 点真实伤害 (剩余HP: ${tgtStats.hp})`);
+    },
+
+    /**
+     * 治疗（恢复生命值）
+     * @param {cc.Node} caster - 施法者
+     * @param {cc.Node} target - 目标
+     * @param {number} healAmount - 治疗量
+     * @param {Function} log - 日志函数
+     * @param {Object} recorder - 战斗记录器（可选）
+     */
+    heal(caster, target, healAmount, log, recorder) {
+        const tgtStats = target.getComponent("StatsComponent");
+        if (!tgtStats) return;
+
+        // 如果目标已死亡，无法治疗
+        if (tgtStats.isDead()) {
+            log(`💚 ${target.name} 已死亡，无法治疗`);
+            return;
+        }
+
+        // 计算实际恢复量（不能超过最大HP）
+        const actualHeal = Math.min(healAmount, tgtStats.maxHp - tgtStats.hp);
+
+        if (actualHeal > 0) {
+            // 恢复HP
+            tgtStats.hp += actualHeal;
+            tgtStats.hp = Math.min(tgtStats.hp, tgtStats.maxHp);  // 确保不超过最大HP
+
+            // 更新血条显示（使用'heal'类型）
+            tgtStats.updateHealthBar(actualHeal, 'heal');
+
+            log(`💚 ${caster.name} 对 ${target.name} 恢复了 ${actualHeal} 点生命值 (当前HP: ${tgtStats.hp}/${tgtStats.maxHp})`);
+
+            // 记录治疗事件
+            if (recorder) {
+                recorder.recordHeal(caster, target, actualHeal);
+            }
+        } else {
+            log(`💚 ${target.name} 生命值已满，无法治疗`);
+        }
     }
 };
 

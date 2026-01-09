@@ -1432,6 +1432,9 @@
       },
       {
         "__uuid__": "dd85998a-85df-407b-967b-058015ec59aa"
+      },
+      {
+        "__uuid__": "c192af6d-56d1-4cac-ace6-b926286250c7"
       }
     ],
     "monsterIcons": [
@@ -1448,6 +1451,9 @@
       },
       {
         "__uuid__": "34d9aa7b-7f66-4afa-a980-1f64ca257325"
+      },
+      {
+        "__uuid__": "6521ded3-d98b-4751-ba75-51bb992325ae"
       }
     ],
     "monsterPrefabs": [

@@ -149,6 +149,25 @@ var BattleRecorder = cc.Class({
     },
 
     /**
+     * 记录治疗事件
+     * @param {cc.Node} caster - 施法者
+     * @param {cc.Node} target - 目标
+     * @param {number} healAmount - 治疗量
+     */
+    recordHeal(caster, target, healAmount) {
+        const targetStats = target.getComponent("StatsComponent");
+        this.recordEvent("heal", {
+            casterName: caster.name,
+            casterId: this._getEntityId(caster),
+            targetName: target.name,
+            targetId: this._getEntityId(target),
+            healAmount: healAmount,
+            targetHp: targetStats ? targetStats.hp : 0,
+            targetMaxHp: targetStats ? targetStats.maxHp : 0
+        });
+    },
+
+    /**
      * 记录Buff移除事件
      * @param {cc.Node} target - 目标
      * @param {string} buffName - Buff名称

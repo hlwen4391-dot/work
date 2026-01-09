@@ -245,6 +245,9 @@ var BattleReplayer = cc.Class({
             case "damage":
                 this._onDamage(data);
                 break;
+            case "heal":
+                this._onHeal(data);
+                break;
             case "buffApply":
                 this._onBuffApply(data);
                 break;
@@ -431,6 +434,35 @@ var BattleReplayer = cc.Class({
                         cc.log(`[BattleReplayer] ${data.attackerName} 对 ${data.targetName} 造成 ${data.damage} 点伤害${data.isCrit ? ' (暴击)' : ''}，剩余HP: ${stats.hp}`);
                     }
                 }
+            }
+        }
+    },
+
+    /**
+     * 处理治疗事件
+     * @private
+     */
+    _onHeal(data) {
+        const caster = this.unitMap[data.casterId];
+        const target = this.unitMap[data.targetId];
+
+        // 如果目标已死亡，跳过处理
+        if (target && this.deadUnits.has(target)) {
+            cc.log(`[BattleReplayer] 跳过已死亡单位 ${data.targetName} 的治疗事件`);
+            return;
+        }
+
+        if (target && target.isValid) {
+            const stats = target.getComponent("StatsComponent");
+            if (stats) {
+                // 恢复HP到记录时的状态
+                stats.hp = data.targetHp;
+                stats.maxHp = data.targetMaxHp;
+
+                // 更新血条显示（使用'heal'类型）
+                stats.updateHealthBar(data.healAmount, 'heal');
+
+                cc.log(`[BattleReplayer] ${data.casterName} 对 ${data.targetName} 恢复了 ${data.healAmount} 点生命值，当前HP: ${stats.hp}/${stats.maxHp}`);
             }
         }
     },

@@ -27,6 +27,13 @@ cc.Class({
             tooltip: "兽化狂暴粒子预制体（可选）"
         },
 
+        // 治疗术粒子预制体（可选）
+        healParticlePrefab: {
+            default: null,
+            type: cc.Prefab,
+            tooltip: "治疗术粒子预制体（修女释放治疗术时显示）"
+        },
+
         // 特效持续时间
         effectDuration: {
             default: 1.0,
@@ -60,6 +67,9 @@ cc.Class({
             case "群体护盾":
                 this._playShieldEffect(caster);
                 break;
+            case "治疗术":
+                this._playHealEffect(caster);
+                break;
             default:
                 // 默认特效
                 this._playDefaultEffect(caster, target);
@@ -88,14 +98,14 @@ cc.Class({
 
         // 获取世界坐标，然后转换为父节点的本地坐标
         // 起点：施法者的世界坐标
-        const casterWorldPos = caster.parent ? 
-            caster.parent.convertToWorldSpaceAR(caster.position) : 
+        const casterWorldPos = caster.parent ?
+            caster.parent.convertToWorldSpaceAR(caster.position) :
             caster.position;
         const startPos = parent.convertToNodeSpaceAR(casterWorldPos).add(cc.v2(0, 40)); // 起点释放位置
-        
+
         // 终点：目标的世界坐标
-        const targetWorldPos = target.parent ? 
-            target.parent.convertToWorldSpaceAR(target.position) : 
+        const targetWorldPos = target.parent ?
+            target.parent.convertToWorldSpaceAR(target.position) :
             target.position;
         const endPos = parent.convertToNodeSpaceAR(targetWorldPos).add(cc.v2(0, 40)); // 终点位置
 
@@ -577,6 +587,82 @@ cc.Class({
                 shield.destroy();
             })
             .start();
+    },
+
+    /**
+     * 治疗术特效 - 使用粒子系统
+     * 持续时间跟随Buff持续时间（3秒）
+     */
+    _playHealEffect(caster) {
+        if (!caster || !caster.isValid) {
+            cc.error("[SkillEffectPlayer] 治疗术：caster为空");
+            return;
+        }
+
+        // 检查是否有粒子预制体
+        if (!this.healParticlePrefab) {
+            cc.warn("[SkillEffectPlayer] 未找到治疗术粒子预制体，请绑定 Heal Particle Prefab");
+            return;
+        }
+
+        // 获取Buff持续时间（从BuffRegistry获取healOverTime的duration）
+        const BuffRegistry = require("BuffRegistry");
+        const healBuffDuration = BuffRegistry.healOverTime ? BuffRegistry.healOverTime.duration : 3.0;  // 默认3秒
+
+        try {
+            const healParticle = cc.instantiate(this.healParticlePrefab);
+
+            if (!healParticle) {
+                cc.error("[SkillEffectPlayer] 实例化治疗术粒子预制体失败");
+                return;
+            }
+
+            // 将粒子特效添加到施法者节点上（跟随施法者）
+            healParticle.setPosition(0, 0);  // 相对于施法者的位置（中心）
+            caster.addChild(healParticle);
+
+            // 获取粒子系统组件并确保它正在播放
+            const particleSystem = healParticle.getComponent(cc.ParticleSystem);
+            if (particleSystem) {
+                // 确保粒子系统启用
+                particleSystem.enabled = true;
+
+                // 如果粒子系统设置了自动播放，确保它正在运行
+                if (!particleSystem.isPlaying) {
+                    particleSystem.resetSystem();
+                }
+
+                // 设置粒子系统为跟随模式（这样粒子会跟随节点移动）
+                particleSystem.positionType = cc.ParticleSystem.PositionType.RELATIVE;
+
+                // 强制刷新粒子系统
+                particleSystem.enabled = false;
+                particleSystem.enabled = true;
+
+                cc.log(`[SkillEffectPlayer] 使用粒子系统播放治疗术特效，持续时间: ${healBuffDuration}秒`);
+            } else {
+                cc.warn(`[SkillEffectPlayer] 治疗术预制体中没有找到ParticleSystem组件`);
+            }
+
+            // 延迟销毁粒子节点（持续时间跟随Buff持续时间）
+            this.scheduleOnce(() => {
+                if (healParticle && healParticle.isValid) {
+                    // 停止粒子系统
+                    const particleSystem = healParticle.getComponent(cc.ParticleSystem);
+                    if (particleSystem) {
+                        particleSystem.stopSystem();
+                    }
+                    // 延迟销毁，让粒子自然消失
+                    this.scheduleOnce(() => {
+                        if (healParticle && healParticle.isValid) {
+                            healParticle.destroy();
+                        }
+                    }, 0.5);
+                }
+            }, healBuffDuration);  // 使用Buff持续时间（3秒）
+        } catch (e) {
+            cc.error(`[SkillEffectPlayer] 实例化治疗术粒子预制体失败: ${e.message}`);
+        }
     },
 
     /**

@@ -99,6 +99,39 @@ var BuffRegistry = {
         onExpire(target, log) {
             log(`${target.name} 护盾效果结束`);
         }
+    },
+
+    // 持续恢复Buff - 持续恢复生命值
+    healOverTime: {
+        name: "持续恢复",
+        duration: 3.0,  // 持续3秒
+        interval: 1.0,  // 每秒执行一次
+        healPerTick: 10, // 每次恢复10点HP
+        onTick: (target, log) => {
+            const stats = target.getComponent("StatsComponent");
+            if (stats && !stats.isDead()) {
+                const healAmount = 10;
+                // 计算实际恢复量（不能超过最大HP）
+                const actualHeal = Math.min(healAmount, stats.maxHp - stats.hp);
+
+                if (actualHeal > 0) {
+                    // 恢复HP
+                    stats.hp += actualHeal;
+                    stats.hp = Math.min(stats.hp, stats.maxHp);  // 确保不超过最大HP
+
+                    // 更新血条显示（使用'heal'类型）
+                    stats.updateHealthBar(actualHeal, 'heal');
+
+                    log(`💚 ${target.name} 持续恢复 ${actualHeal} 点生命值 (当前HP: ${stats.hp}/${stats.maxHp})`);
+                }
+            }
+        },
+        onApply(target, log) {
+            log(`💚 ${target.name} 开始持续恢复生命值（每秒恢复10点，持续3秒）`);
+        },
+        onExpire(target, log) {
+            log(`💚 ${target.name} 持续恢复效果结束`);
+        }
     }
 };
 

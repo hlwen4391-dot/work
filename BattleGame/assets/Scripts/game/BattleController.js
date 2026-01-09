@@ -129,6 +129,12 @@ cc.Class({
             tooltip: "单位固定缩放大小（所有单位统一使用此大小）"
         },
 
+        // 单位之间的最小间隔距离（防止重叠和误触）
+        minUnitSpacing: {
+            default: 80,
+            tooltip: "单位之间的最小间隔距离（像素），防止重叠和点击误触"
+        },
+
         // 游戏结束面板组件（可选，如果使用场景跳转则不需要）
         gameOverPanel: {
             default: null,
@@ -176,6 +182,12 @@ cc.Class({
 
         this.heros = [];
         this.monsters = [];
+
+        // 初始化已生成位置记录（用于防止单位重叠）
+        this._generatedPositions = {
+            hero: [],
+            monster: []
+        };
 
         // 是否正在回放（用于禁用BattleSystem的update）
         this.isReplaying = false;
@@ -509,7 +521,7 @@ cc.Class({
     },
 
     /**
-     * 计算排兵布阵位置
+     * 计算排兵布阵位置（带间隔检查，防止重叠）
      * @private
      * @param {string} team - 队伍类型
      * @param {number} index - 索引
@@ -518,44 +530,148 @@ cc.Class({
      */
     _calculateFormationPosition(team, index, totalCount) {
         let x, y;
+        let rangeX, rangeY;
+        let areaLeft, areaRight, areaTop, areaBottom;
 
+        // 根据队伍类型确定区域范围
         if (team === "hero") {
-            // 英雄在左边，随机位置
-            const rangeX = this.heroAreaRight - this.heroAreaLeft;
-            const rangeY = this.heroAreaTop - this.heroAreaBottom;
+            areaLeft = this.heroAreaLeft;
+            areaRight = this.heroAreaRight;
+            areaTop = this.heroAreaTop;
+            areaBottom = this.heroAreaBottom;
+        } else {
+            areaLeft = this.monsterAreaLeft;
+            areaRight = this.monsterAreaRight;
+            areaTop = this.monsterAreaTop;
+            areaBottom = this.monsterAreaBottom;
+        }
 
-            // 检查区域设置是否合理
-            if (rangeX <= 0 || rangeY <= 0) {
-                cc.warn(`[BattleController] ⚠️ 英雄区域设置不合理: Left=${this.heroAreaLeft}, Right=${this.heroAreaRight}, Top=${this.heroAreaTop}, Bottom=${this.heroAreaBottom}`);
-                // 使用默认值（屏幕左侧）
+        rangeX = areaRight - areaLeft;
+        rangeY = areaTop - areaBottom;
+
+        // 检查区域设置是否合理
+        if (rangeX <= 0 || rangeY <= 0) {
+            cc.warn(`[BattleController] ⚠️ ${team}区域设置不合理: Left=${areaLeft}, Right=${areaRight}, Top=${areaTop}, Bottom=${areaBottom}`);
+            // 使用默认值
+            if (team === "hero") {
                 x = -200;
                 y = 0;
             } else {
-                x = this.heroAreaLeft + Math.random() * rangeX;
-                y = this.heroAreaBottom + Math.random() * rangeY;
-            }
-
-            cc.log(`[BattleController] 英雄位置计算: 区域[${this.heroAreaLeft}, ${this.heroAreaRight}]x[${this.heroAreaBottom}, ${this.heroAreaTop}], 结果: (${x.toFixed(1)}, ${y.toFixed(1)})`);
-        } else {
-            // 怪物在右边，随机位置
-            const rangeX = this.monsterAreaRight - this.monsterAreaLeft;
-            const rangeY = this.monsterAreaTop - this.monsterAreaBottom;
-
-            // 检查区域设置是否合理
-            if (rangeX <= 0 || rangeY <= 0) {
-                cc.warn(`[BattleController] ⚠️ 怪物区域设置不合理: Left=${this.monsterAreaLeft}, Right=${this.monsterAreaRight}, Top=${this.monsterAreaTop}, Bottom=${this.monsterAreaBottom}`);
-                // 使用默认值（屏幕右侧）
                 x = 200;
                 y = 0;
-            } else {
-                x = this.monsterAreaLeft + Math.random() * rangeX;
-                y = this.monsterAreaBottom + Math.random() * rangeY;
             }
-
-            cc.log(`[BattleController] 怪物位置计算: 区域[${this.monsterAreaLeft}, ${this.monsterAreaRight}]x[${this.monsterAreaBottom}, ${this.monsterAreaTop}], 结果: (${x.toFixed(1)}, ${y.toFixed(1)})`);
+            return cc.v2(x, y);
         }
 
-        return cc.v2(x, y);
+        // 获取该队伍已生成的位置列表
+        const existingPositions = this._generatedPositions[team] || [];
+        const minSpacing = this.minUnitSpacing || 100;  // 最小间隔距离
+        const maxAttempts = 100;  // 最多尝试次数（增加尝试次数，提高随机分布成功率）
+
+        // 尝试生成一个不与已有位置重叠的位置
+        let attempts = 0;
+        let validPosition = false;
+
+        while (!validPosition && attempts < maxAttempts) {
+            // 生成随机位置（保持原有的随机分布逻辑）
+            x = areaLeft + Math.random() * rangeX;
+            y = areaBottom + Math.random() * rangeY;
+
+            // 检查是否与已有位置太近
+            validPosition = true;
+            for (let i = 0; i < existingPositions.length; i++) {
+                const existingPos = existingPositions[i];
+                const distance = Math.sqrt(
+                    Math.pow(x - existingPos.x, 2) + Math.pow(y - existingPos.y, 2)
+                );
+
+                if (distance < minSpacing) {
+                    validPosition = false;
+                    break;
+                }
+            }
+
+            attempts++;
+        }
+
+        // 如果尝试多次后仍然找不到合适位置，使用改进的后备方案（保持随机分布风格）
+        if (!validPosition) {
+            cc.warn(`[BattleController] ⚠️ ${team}单位${index}无法找到合适位置（尝试${attempts}次），使用改进的后备方案`);
+
+            // 改进的后备方案：在已有位置周围寻找空隙，保持随机分布的感觉
+            // 如果区域足够大，尝试在已有位置周围寻找空隙
+            let foundGap = false;
+            const gapAttempts = 30;
+
+            for (let gapAttempt = 0; gapAttempt < gapAttempts && !foundGap; gapAttempt++) {
+                // 随机选择一个已有位置作为参考点
+                if (existingPositions.length > 0) {
+                    const refPos = existingPositions[Math.floor(Math.random() * existingPositions.length)];
+
+                    // 在参考点周围随机偏移（偏移距离至少为minSpacing）
+                    const angle = Math.random() * Math.PI * 2;
+                    const offsetDistance = minSpacing + Math.random() * minSpacing; // 偏移距离：minSpacing 到 2*minSpacing
+
+                    x = refPos.x + Math.cos(angle) * offsetDistance;
+                    y = refPos.y + Math.sin(angle) * offsetDistance;
+
+                    // 确保在区域内
+                    x = Math.max(areaLeft, Math.min(areaRight, x));
+                    y = Math.max(areaBottom, Math.min(areaTop, y));
+
+                    // 检查是否满足间隔要求
+                    foundGap = true;
+                    for (let i = 0; i < existingPositions.length; i++) {
+                        const existingPos = existingPositions[i];
+                        const distance = Math.sqrt(
+                            Math.pow(x - existingPos.x, 2) + Math.pow(y - existingPos.y, 2)
+                        );
+
+                        if (distance < minSpacing) {
+                            foundGap = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 如果仍然找不到空隙，使用简单的网格布局（最后的后备方案）
+            if (!foundGap) {
+                const gridCols = Math.ceil(Math.sqrt(totalCount));  // 列数
+                const gridRows = Math.ceil(totalCount / gridCols);  // 行数
+
+                const gridX = index % gridCols;
+                const gridY = Math.floor(index / gridCols);
+
+                // 计算网格间距（确保不超过区域范围）
+                const gridSpacingX = Math.min(rangeX / (gridCols + 1), minSpacing);
+                const gridSpacingY = Math.min(rangeY / (gridRows + 1), minSpacing);
+
+                // 计算网格位置（在各自区域内居中排列，保持左右分离）
+                const totalGridWidth = (gridCols - 1) * gridSpacingX;
+                const totalGridHeight = (gridRows - 1) * gridSpacingY;
+                const startX = areaLeft + (rangeX - totalGridWidth) / 2;
+                const startY = areaBottom + (rangeY - totalGridHeight) / 2;
+
+                x = startX + gridX * gridSpacingX;
+                y = startY + gridY * gridSpacingY;
+
+                cc.log(`[BattleController] ${team}单位${index}使用网格布局（最后后备）: 网格(${gridX}, ${gridY}), 位置: (${x.toFixed(1)}, ${y.toFixed(1)})`);
+            } else {
+                cc.log(`[BattleController] ${team}单位${index}使用空隙查找: 位置: (${x.toFixed(1)}, ${y.toFixed(1)})`);
+            }
+        } else {
+            cc.log(`[BattleController] ${team}位置计算: 区域[${areaLeft}, ${areaRight}]x[${areaBottom}, ${areaTop}], 结果: (${x.toFixed(1)}, ${y.toFixed(1)}), 尝试次数: ${attempts}`);
+        }
+
+        // 将新位置添加到已生成位置列表
+        const newPosition = cc.v2(x, y);
+        if (!this._generatedPositions[team]) {
+            this._generatedPositions[team] = [];
+        }
+        this._generatedPositions[team].push(newPosition);
+
+        return newPosition;
     },
 
     /**

@@ -13,6 +13,7 @@ var SkillEnum = {
     beastRage: 7,     // 兽化狂暴
     warCry: 5,        // 战吼
     shieldAllies: 6,  // 群体护盾
+    healAllies: 9,    // 群体治疗
     ultimateSkill: 8  // 大招（需要怒气值满）
 };
 
@@ -178,6 +179,41 @@ var SkillConfig = {
             }
 
             return [];
+        }
+    },
+
+    // 群体治疗 - 持续恢复己方阵营所有英雄的生命值
+    healAllies: {
+        name: "治疗术",
+        id: SkillEnum.healAllies,
+        cooldown: 5.0,
+        requireRage: 20,
+        effect: (self, target, log) => {
+            const teamComp = self.getComponent("TeamComponent");
+            if (!teamComp) return [];
+
+            const allies = teamComp.team === "hero"
+                ? TeamRef.herosRef
+                : TeamRef.monstersRef;
+
+            log(`💚 ${self.name} 释放群体治疗术！`);
+
+            // 为所有队友添加持续恢复Buff（每秒恢复10点，持续3秒）
+            const events = [];
+
+            for (let ally of allies) {
+                const allyStats = ally.getComponent("StatsComponent");
+                if (allyStats && !allyStats.isDead()) {
+                    // 添加持续恢复Buff（指定目标）
+                    events.push({
+                        type: "applyBuff",
+                        buff: "healOverTime",
+                        target: ally  // 指定目标单位
+                    });
+                }
+            }
+
+            return events;
         }
     }
 };

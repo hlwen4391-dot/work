@@ -158,7 +158,8 @@ cc.Class({
             "眩晕": cc.Color.YELLOW,
             "战吼": cc.Color.ORANGE,
             "狂暴": new cc.Color(200, 50, 50),
-            "护盾": cc.Color.BLUE
+            "护盾": cc.Color.BLUE,
+            "持续恢复": new cc.Color(50, 255, 50)  // 绿色
         };
         return colorMap[buffName] || cc.Color.GRAY;
     },
@@ -172,7 +173,8 @@ cc.Class({
             "眩晕": "😵",
             "战吼": "📢",
             "狂暴": "😡",
-            "护盾": "🛡"
+            "护盾": "🛡",
+            "持续恢复": "💚"  // 绿色心形，表示治疗
         };
         return iconMap[buffName] || "●";
     },

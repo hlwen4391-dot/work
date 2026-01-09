@@ -40,6 +40,23 @@ var UnitDataConfig = {
                 SkillConfig.normalAttack,
                 SkillConfig.fireball
             ]
+        },
+        {
+            name: "修女",
+            displayName: "修女",
+            icon: null, // 头像图片资源（SpriteFrame，需要在编辑器中设置）
+            prefab: null, // 人物原型Prefab（需要在编辑器中设置）
+            avatarPosition: 2, // 头像固定位置索引（2 = 第三个位置）
+            hp: 100,
+            attack: 5,
+            defense: 6,
+            speed: 10,
+            crit: 0.05,
+            miss: 0.05,
+            skills: [
+                SkillConfig.normalAttack,
+                SkillConfig.healAllies
+            ]
         }
     ],
 

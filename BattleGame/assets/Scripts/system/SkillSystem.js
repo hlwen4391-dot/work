@@ -205,8 +205,16 @@ var SkillSystem = {
                     CombatSystem.damageTrue(entity, target, evt.value, log, recorder, rand);
                     break;
 
+                case "heal":
+                    // 治疗事件：evt.target 是目标单位，evt.value 是治疗量
+                    const healTarget = evt.target || target;
+                    CombatSystem.heal(entity, healTarget, evt.value, log, recorder);
+                    break;
+
                 case "applyBuff":
-                    BuffSystem.addBuff(target, BuffFactory.create(evt.buff), log, recorder);
+                    // Buff事件：evt.target 是目标单位（如果指定），否则使用默认target
+                    const buffTarget = evt.target || target;
+                    BuffSystem.addBuff(buffTarget, BuffFactory.create(evt.buff), log, recorder);
                     break;
 
                 case "applyBuffSelf":
@@ -250,7 +258,8 @@ var SkillSystem = {
                 4: "狂暴",
                 5: "战吼",
                 6: "群体护盾",
-                7: "兽化狂暴"
+                7: "兽化狂暴",
+                9: "治疗术"
             };
             const mappedName = skillIdToName[skill.id];
             if (mappedName) {
@@ -275,8 +284,20 @@ var SkillSystem = {
                 if (!effectPlayer) {
                     const effectNode = new cc.Node("SkillEffectPlayer");
                     effectPlayer = effectNode.addComponent("SkillEffectPlayer");
-                    scene.addChild(effectNode);
-                    // cc.log("[SkillSystem] 动态创建了SkillEffectPlayer节点");
+                    // Scene对象不能直接addChild，需要添加到Canvas节点
+                    const canvas = scene.getChildByName("Canvas");
+                    if (canvas) {
+                        canvas.addChild(effectNode);
+                        // cc.log("[SkillSystem] 动态创建了SkillEffectPlayer节点，添加到Canvas");
+                    } else {
+                        // 如果没有Canvas，尝试添加到场景的第一个子节点
+                        if (scene.children.length > 0) {
+                            scene.children[0].addChild(effectNode);
+                            // cc.log("[SkillSystem] 动态创建了SkillEffectPlayer节点，添加到场景第一个子节点");
+                        } else {
+                            cc.error("[SkillSystem] 无法找到Canvas节点或场景子节点，无法创建SkillEffectPlayer");
+                        }
+                    }
                 }
             } else {
                 cc.error("[SkillSystem] 无法获取场景对象");
