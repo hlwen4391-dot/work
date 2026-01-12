@@ -226,16 +226,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        117.811,
-        194.477,
+        -3.658,
+        169.115,
         0,
         0,
         0,
         0,
         1,
-        1.047,
-        1.047,
-        1.047
+        1.435,
+        1.435,
+        1.435
       ]
     },
     "_eulerAngles": {
@@ -852,11 +852,11 @@
       "__id__": 1
     },
     "_enabled": true,
-    "hp": 95,
-    "maxHp": 150,
-    "attack": 10,
-    "defense": 4,
-    "speed": 4,
+    "hp": 800,
+    "maxHp": 1000,
+    "attack": 80,
+    "defense": 15,
+    "speed": 10,
     "miss": 0.01,
     "crit": 0.01,
     "immune": 0.01,

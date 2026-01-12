@@ -90,15 +90,22 @@ var ActionSystem = cc.Class({
         const attackMover = entity.getComponent("AttackMover");
 
         if (attackMover && !attackMover.isAttacking) {
-            // 有动画组件：先播放动画，动画完成后执行伤害
+            // 有动画组件：先播放动画，在受击动画播放到一半时执行伤害计算
             // attackTarget 方法会自动判断是否是远程攻击（isRanged）
             // 如果是远程攻击，只播放攻击动画不移动；如果是近战，执行完整的移动+攻击+返回序列
-            attackMover.attackTarget(target, () => {
-                // 动画完成后执行技能效果
+
+            // 在受击动画播放到一半时触发伤害计算（onHit回调）
+            const onHit = () => {
+                // ✅ 在受击动画播放到一半时立即执行伤害计算和飘字显示
                 SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand, this.recorder);
+            };
+
+            // 攻击序列完成后只处理死亡检测等后续逻辑（伤害已经在受击动画一半时计算过了）
+            attackMover.attackTarget(target, () => {
+                // 动画完成后检查死亡（伤害已经在受击动画一半时计算过了）
                 this.deathSystem.checkAndHandleDeath(target, this.recorder);
                 if (callback) callback();
-            });
+            }, onHit);
         } else {
             // 没有动画组件：直接执行技能
             SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand, this.recorder);

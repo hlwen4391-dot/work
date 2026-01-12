@@ -226,16 +226,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        117.811,
-        194.477,
+        -4.991,
+        198.643,
         0,
         0,
         0,
         0,
         1,
-        1.047,
-        1.047,
-        1.047
+        1.465,
+        1.465,
+        1.465
       ]
     },
     "_eulerAngles": {
@@ -880,13 +880,13 @@
       "__id__": 1
     },
     "_enabled": true,
-    "hp": 80,
-    "maxHp": 150,
-    "attack": 19,
-    "defense": 2,
-    "speed": 4,
-    "miss": 0.09,
-    "crit": 0.05,
+    "hp": 800,
+    "maxHp": 1000,
+    "attack": 82,
+    "defense": 15,
+    "speed": 15,
+    "miss": 0.1,
+    "crit": 0.1,
     "immune": 0.1,
     "attackInterval": 1,
     "rage": 0,
@@ -994,6 +994,7 @@
     },
     "explosionPrefab": null,
     "beastRageParticlePrefab": null,
+    "healParticlePrefab": null,
     "effectDuration": 3.8000000000000016,
     "_id": ""
   },

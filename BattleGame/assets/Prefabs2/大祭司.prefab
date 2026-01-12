@@ -13,8 +13,8 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "怪物",
-    "_objFlags": 512,
+    "_name": "大祭司",
+    "_objFlags": 0,
     "_parent": null,
     "_children": [
       {
@@ -64,13 +64,10 @@
       },
       {
         "__id__": 34
-      },
-      {
-        "__id__": 35
       }
     ],
     "_prefab": {
-      "__id__": 36
+      "__id__": 35
     },
     "_opacity": 255,
     "_color": {
@@ -82,8 +79,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 364.34,
-      "height": 284.79
+      "width": 349.49,
+      "height": 258.81
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -94,16 +91,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        794.089,
-        340.855,
+        774.712,
+        237.498,
         0,
         0,
         0,
         0,
         1,
-        -0.778,
-        0.806,
-        -0.992
+        -1,
+        1,
+        1
       ]
     },
     "_eulerAngles": {
@@ -131,7 +128,7 @@
         "__id__": 3
       },
       {
-        "__id__": 10
+        "__id__": 6
       }
     ],
     "_active": true,
@@ -174,7 +171,7 @@
         1,
         -1,
         1,
-        -1
+        1
       ]
     },
     "_eulerAngles": {
@@ -192,6 +189,114 @@
   },
   {
     "__type__": "cc.Node",
+    "_name": "飘字",
+    "_objFlags": 0,
+    "_parent": {
+      "__id__": 2
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 4
+      }
+    ],
+    "_prefab": {
+      "__id__": 5
+    },
+    "_opacity": 255,
+    "_color": {
+      "__type__": "cc.Color",
+      "r": 255,
+      "g": 255,
+      "b": 255,
+      "a": 255
+    },
+    "_contentSize": {
+      "__type__": "cc.Size",
+      "width": 80,
+      "height": 50.4
+    },
+    "_anchorPoint": {
+      "__type__": "cc.Vec2",
+      "x": 0.5,
+      "y": 0.5
+    },
+    "_trs": {
+      "__type__": "TypedArray",
+      "ctor": "Float64Array",
+      "array": [
+        7.634,
+        168.414,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1.53,
+        1.53,
+        1.643
+      ]
+    },
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "_groupIndex": 0,
+    "groupIndex": 0,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.Label",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 3
+    },
+    "_enabled": true,
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
+    "_srcBlendFactor": 770,
+    "_dstBlendFactor": 771,
+    "_string": "伤害",
+    "_N$string": "伤害",
+    "_fontSize": 40,
+    "_lineHeight": 40,
+    "_enableWrapText": true,
+    "_N$file": null,
+    "_isSystemFontUsed": true,
+    "_spacingX": 0,
+    "_batchAsBitmap": false,
+    "_styleFlags": 0,
+    "_underlineHeight": 0,
+    "_N$horizontalAlign": 1,
+    "_N$verticalAlign": 1,
+    "_N$fontFamily": "Arial",
+    "_N$overflow": 0,
+    "_N$cacheMode": 0,
+    "_id": ""
+  },
+  {
+    "__type__": "cc.PrefabInfo",
+    "root": {
+      "__id__": 1
+    },
+    "asset": {
+      "__id__": 0
+    },
+    "fileId": "c5lRHMt5FC0bmf3+V7TRfA",
+    "sync": false
+  },
+  {
+    "__type__": "cc.Node",
     "_name": "progressBar",
     "_objFlags": 0,
     "_parent": {
@@ -199,20 +304,20 @@
     },
     "_children": [
       {
-        "__id__": 4
+        "__id__": 7
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 7
+        "__id__": 10
       },
       {
-        "__id__": 8
+        "__id__": 11
       }
     ],
     "_prefab": {
-      "__id__": 9
+      "__id__": 12
     },
     "_opacity": 255,
     "_color": {
@@ -236,15 +341,15 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        0,
-        250,
+        0.001,
+        239.532,
         0,
         0,
         0,
         0,
         1,
         1,
-        1.25,
+        1,
         1
       ]
     },
@@ -264,19 +369,19 @@
   {
     "__type__": "cc.Node",
     "_name": "bar",
-    "_objFlags": 512,
+    "_objFlags": 0,
     "_parent": {
-      "__id__": 3
+      "__id__": 6
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 5
+        "__id__": 8
       }
     ],
     "_prefab": {
-      "__id__": 6
+      "__id__": 9
     },
     "_opacity": 255,
     "_color": {
@@ -330,7 +435,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 4
+      "__id__": 7
     },
     "_enabled": true,
     "_materials": [
@@ -365,7 +470,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "03XrKB339BFZaqBDYVbcjX",
+    "fileId": "52NfGwEjZL+paoVr8yL5fO",
     "sync": false
   },
   {
@@ -373,7 +478,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 3
+      "__id__": 6
     },
     "_enabled": true,
     "_materials": [
@@ -405,12 +510,12 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 3
+      "__id__": 6
     },
     "_enabled": true,
     "_N$totalLength": 300,
     "_N$barSprite": {
-      "__id__": 5
+      "__id__": 8
     },
     "_N$mode": 0,
     "_N$progress": 1,
@@ -425,115 +530,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "d1C3fX61FC6I5+zTFFsrek",
-    "sync": false
-  },
-  {
-    "__type__": "cc.Node",
-    "_name": "伤害",
-    "_objFlags": 0,
-    "_parent": {
-      "__id__": 2
-    },
-    "_children": [],
-    "_active": true,
-    "_components": [
-      {
-        "__id__": 11
-      }
-    ],
-    "_prefab": {
-      "__id__": 12
-    },
-    "_opacity": 255,
-    "_color": {
-      "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
-      "a": 255
-    },
-    "_contentSize": {
-      "__type__": "cc.Size",
-      "width": 97.87,
-      "height": 50.4
-    },
-    "_anchorPoint": {
-      "__type__": "cc.Vec2",
-      "x": 0.5,
-      "y": 0.5
-    },
-    "_trs": {
-      "__type__": "TypedArray",
-      "ctor": "Float64Array",
-      "array": [
-        -5.937,
-        192.611,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1.923,
-        1.539,
-        1.047
-      ]
-    },
-    "_eulerAngles": {
-      "__type__": "cc.Vec3",
-      "x": 0,
-      "y": 0,
-      "z": 0
-    },
-    "_skewX": 0,
-    "_skewY": 0,
-    "_is3DNode": false,
-    "_groupIndex": 0,
-    "groupIndex": 0,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.Label",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 10
-    },
-    "_enabled": true,
-    "_materials": [
-      {
-        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
-      }
-    ],
-    "_srcBlendFactor": 770,
-    "_dstBlendFactor": 771,
-    "_string": "Label",
-    "_N$string": "Label",
-    "_fontSize": 40,
-    "_lineHeight": 40,
-    "_enableWrapText": true,
-    "_N$file": null,
-    "_isSystemFontUsed": true,
-    "_spacingX": 0,
-    "_batchAsBitmap": false,
-    "_styleFlags": 0,
-    "_underlineHeight": 0,
-    "_N$horizontalAlign": 1,
-    "_N$verticalAlign": 1,
-    "_N$fontFamily": "Arial",
-    "_N$overflow": 0,
-    "_N$cacheMode": 0,
-    "_id": ""
-  },
-  {
-    "__type__": "cc.PrefabInfo",
-    "root": {
-      "__id__": 1
-    },
-    "asset": {
-      "__id__": 0
-    },
-    "fileId": "25GGQvN+hPCrP4dz+WGrcV",
+    "fileId": "5dBaLR8ctOir7AYajCB0YD",
     "sync": false
   },
   {
@@ -545,13 +542,13 @@
     },
     "_enabled": true,
     "healthProgress": {
-      "__id__": 8
+      "__id__": 11
     },
     "healthFill": null,
     "shieldProgress": null,
     "shieldFill": null,
     "damageLabel": {
-      "__id__": 11
+      "__id__": 4
     },
     "damageDisplayTime": 1,
     "_id": ""
@@ -564,7 +561,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "4c7H7Uyu9MJretbp+avoq1",
+    "fileId": "a5hFrKwRBOS5ITZXvJitfe",
     "sync": false
   },
   {
@@ -614,7 +611,7 @@
       "ctor": "Float64Array",
       "array": [
         0,
-        232.512,
+        222.633,
         0,
         0,
         0,
@@ -742,7 +739,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "25ZPt20yNCfpglhetlyDHC",
+    "fileId": "ccdmNFWVZGXaw5dQeoGAol",
     "sync": false
   },
   {
@@ -802,18 +799,49 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "24s7kcZyJL2YFAYCZnsc3x",
+    "fileId": "adkn65MPRFYaND3830Zh2p",
     "sync": false
   },
   {
-    "__type__": "6fea3WN1c5JyKwqgvnJC9PY",
+    "__type__": "sp.Skeleton",
     "_name": "",
     "_objFlags": 0,
     "node": {
       "__id__": 1
     },
     "_enabled": true,
-    "lastDamage": 0,
+    "_materials": [
+      {
+        "__uuid__": "7afd064b-113f-480e-b793-8817d19f63c3"
+      }
+    ],
+    "paused": false,
+    "defaultSkin": "default",
+    "defaultAnimation": "",
+    "_preCacheMode": 0,
+    "_cacheMode": 0,
+    "loop": false,
+    "premultipliedAlpha": false,
+    "timeScale": 1,
+    "_accTime": 0,
+    "_playCount": 0,
+    "_frameCache": null,
+    "_curFrame": null,
+    "_skeletonCache": null,
+    "_animationName": "",
+    "_animationQueue": [],
+    "_headAniInfo": null,
+    "_playTimes": 0,
+    "_isAniComplete": true,
+    "_N$skeletonData": {
+      "__uuid__": "cefbb224-0ad5-4f35-86e2-e641e26f7e7a"
+    },
+    "_N$_defaultCacheMode": 0,
+    "_N$debugSlots": false,
+    "_N$debugBones": false,
+    "_N$debugMesh": false,
+    "_N$useTint": false,
+    "_N$enableBatch": false,
     "_id": ""
   },
   {
@@ -824,17 +852,27 @@
       "__id__": 1
     },
     "_enabled": true,
-    "hp": 680,
-    "maxHp": 1000,
-    "attack": 72,
-    "defense": 17,
-    "speed": 15,
+    "hp": 1000,
+    "maxHp": 600,
+    "attack": 81,
+    "defense": 18,
+    "speed": 13,
     "miss": 0.1,
     "crit": 0.1,
-    "immune": 0.1,
+    "immune": 0,
     "attackInterval": 1,
     "rage": 0,
     "maxRage": 40,
+    "_id": ""
+  },
+  {
+    "__type__": "0bb0dexc+ZGsZRCPTPh4SWG",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
     "_id": ""
   },
   {
@@ -872,55 +910,23 @@
     "_id": ""
   },
   {
-    "__type__": "0bb0dexc+ZGsZRCPTPh4SWG",
+    "__type__": "0610drFjIFIHY/BQHhzHYxx",
     "_name": "",
     "_objFlags": 0,
     "node": {
       "__id__": 1
     },
     "_enabled": true,
-    "_id": ""
-  },
-  {
-    "__type__": "sp.Skeleton",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 1
+    "healthProgress": {
+      "__id__": 11
     },
-    "_enabled": true,
-    "_materials": [
-      {
-        "__uuid__": "7afd064b-113f-480e-b793-8817d19f63c3"
-      }
-    ],
-    "paused": false,
-    "defaultSkin": "default",
-    "defaultAnimation": "",
-    "_preCacheMode": 0,
-    "_cacheMode": 0,
-    "loop": false,
-    "premultipliedAlpha": false,
-    "timeScale": 1,
-    "_accTime": 0,
-    "_playCount": 0,
-    "_frameCache": null,
-    "_curFrame": null,
-    "_skeletonCache": null,
-    "_animationName": "atk",
-    "_animationQueue": [],
-    "_headAniInfo": null,
-    "_playTimes": 1,
-    "_isAniComplete": true,
-    "_N$skeletonData": {
-      "__uuid__": "bedcca90-9efa-4b8e-bc61-6a3283685f0c"
+    "healthFill": null,
+    "shieldProgress": null,
+    "shieldFill": null,
+    "damageLabel": {
+      "__id__": 4
     },
-    "_N$_defaultCacheMode": 0,
-    "_N$debugSlots": false,
-    "_N$debugBones": false,
-    "_N$debugMesh": false,
-    "_N$useTint": false,
-    "_N$enableBatch": false,
+    "damageDisplayTime": 1,
     "_id": ""
   },
   {
@@ -931,33 +937,13 @@
       "__id__": 1
     },
     "_enabled": true,
-    "moveSpeed": 700,
-    "attackDistance": 40,
-    "attackDuration": 0.4,
+    "moveSpeed": 750,
+    "attackDistance": 50,
+    "attackDuration": 0.3,
     "isAttacking": false,
     "useSpineAnimation": true,
     "isRanged": false,
-    "hitAnimationDelay": 0.25,
-    "_id": ""
-  },
-  {
-    "__type__": "0610drFjIFIHY/BQHhzHYxx",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 1
-    },
-    "_enabled": true,
-    "healthProgress": {
-      "__id__": 8
-    },
-    "healthFill": null,
-    "shieldProgress": null,
-    "shieldFill": null,
-    "damageLabel": {
-      "__id__": 11
-    },
-    "damageDisplayTime": 1.8000000000000005,
+    "hitAnimationDelay": 0.15,
     "_id": ""
   },
   {
@@ -972,7 +958,7 @@
     "explosionPrefab": null,
     "beastRageParticlePrefab": null,
     "healParticlePrefab": null,
-    "effectDuration": 1.6,
+    "effectDuration": 1,
     "_id": ""
   },
   {

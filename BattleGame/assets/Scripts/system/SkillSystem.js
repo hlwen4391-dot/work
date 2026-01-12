@@ -20,21 +20,17 @@ var SkillSystem = {
         const stats = entity.getComponent("StatsComponent");
         if (!skills) return null;
 
-        // 优先检查大招（AI自动释放：需要怒气值超过maxRage的110%）
+        // 优先检查大招（AI自动释放：需要怒气值达到requireRage要求）
         // 查找所有需要怒气值的技能（大招）
         const ultimateSkills = skills.skills.filter(s => s.requireRage > 0);
         if (ultimateSkills.length > 0 && stats) {
-            // AI自动释放条件：怒气值 >= maxRage * 1.1（超过最大值10%）
-            const autoReleaseThreshold = stats.maxRage * 1.1;
-            if (stats.rage >= autoReleaseThreshold) {
-                // 找到第一个满足怒气值要求的大招
-                for (let ultimateSkill of ultimateSkills) {
-                    if (stats.rage >= ultimateSkill.requireRage) {
-                        // 检查冷却时间（如果有）
-                        if (skills.cooldowns[ultimateSkill.id] >= ultimateSkill.cooldown) {
-                            return ultimateSkill;
-                        }
-                    }
+            // AI自动释放条件：怒气值 >= requireRage（达到技能要求的怒气值即可释放）
+            // 找到第一个满足怒气值要求的大招（大招不受冷却时间限制，怒气值满足即可释放）
+            for (let ultimateSkill of ultimateSkills) {
+                if (stats.rage >= ultimateSkill.requireRage) {
+                    // 大招：只要怒气值满足要求，即使冷却时间未到也可以释放
+                    cc.log(`[SkillSystem] AI自动释放大招: ${entity.name} 怒气值=${stats.rage}/${stats.maxRage}, 技能=${ultimateSkill.skillName}, requireRage=${ultimateSkill.requireRage}, 冷却时间=${skills.cooldowns[ultimateSkill.id]}/${ultimateSkill.cooldown}`);
+                    return ultimateSkill;
                 }
             }
         }
@@ -127,6 +123,13 @@ var SkillSystem = {
      * @returns {boolean} 是否成功释放
      */
     useUltimateSkill(entity, target, log, rand) {
+        // 检查角色是否已死亡
+        const stats = entity.getComponent("StatsComponent");
+        if (stats && stats.isDead()) {
+            log(`${entity.name} 已死亡，禁止释放大招`);
+            return false;
+        }
+
         if (!this.canUseUltimateSkill(entity)) {
             log(`${entity.name} 怒气值不足，无法释放大招`);
             return false;
@@ -159,16 +162,19 @@ var SkillSystem = {
             log(`${entity.name} 没有可攻击的目标`);
             return false;
         }
-
-        const stats = entity.getComponent("StatsComponent");
         log(`🎯 ${entity.name} 手动释放大招：${ultimateSkill.skillName}！`);
 
-        // 消耗怒气值（在useSkill中也会检查，但这里提前消耗）
-        if (stats && ultimateSkill.requireRage > 0) {
-            stats.consumeRage(ultimateSkill.requireRage);
-        }
+        // 显示大招UI（蒙版+顶部动画）
+        this._showUltimateSkillUI(entity, ultimateSkill.skillName, () => {
+            // UI显示完成后，消耗怒气值并释放技能
+            // 注意：传递一个特殊标记"manual"作为recorder，表示这是手动释放，避免重复显示UI
+            if (stats && ultimateSkill.requireRage > 0) {
+                stats.consumeRage(ultimateSkill.requireRage);
+            }
+            // 直接调用_executeSkill，避免useSkill中的重复UI显示逻辑
+            this._executeSkill(entity, target, ultimateSkill, log, rand, "manual", stats);
+        });
 
-        this.useSkill(entity, target, ultimateSkill, log, rand);
         return true;
     },
 
@@ -181,12 +187,38 @@ var SkillSystem = {
                 log(`${entity.name} 怒气值不足，无法释放 ${skill.skillName}`);
                 return;
             }
-            // 消耗怒气值
-            stats.consumeRage(skill.requireRage);
+
+            // 手动释放的大招：已经在useUltimateSkill中消耗了怒气值，直接执行
+            if (recorder === "manual") {
+                this._executeSkill(entity, target, skill, log, rand, recorder, stats);
+                return;
+            }
+
+            // AI自动释放的大招：显示UI后消耗怒气值
+            // recorder为null/undefined时表示AI自动释放（没有战斗记录器）
+            // recorder为对象时也表示AI自动释放（有战斗记录器，但这是AI自动触发的）
+            this._showUltimateSkillUI(entity, skill.skillName || skill.name, () => {
+                // UI显示完成后，消耗怒气值并执行技能
+                if (stats && skill.requireRage > 0) {
+                    stats.consumeRage(skill.requireRage);
+                }
+                // 继续执行技能（传递recorder，可能是null或BattleRecorder对象）
+                this._executeSkill(entity, target, skill, log, rand, recorder, stats);
+            });
+            return;
         }
 
-        // 记录技能释放
-        if (recorder) {
+        // 普通技能直接执行
+        this._executeSkill(entity, target, skill, log, rand, recorder, stats);
+    },
+
+    /**
+     * 执行技能效果（内部方法）
+     * @private
+     */
+    _executeSkill(entity, target, skill, log, rand, recorder, stats) {
+        // 记录技能释放（recorder必须是对象，不能是字符串）
+        if (recorder && typeof recorder === 'object' && recorder.recordSkillUse) {
             recorder.recordSkillUse(entity, target, skill);
         }
 
@@ -214,11 +246,20 @@ var SkillSystem = {
                 case "applyBuff":
                     // Buff事件：evt.target 是目标单位（如果指定），否则使用默认target
                     const buffTarget = evt.target || target;
-                    BuffSystem.addBuff(buffTarget, BuffFactory.create(evt.buff), log, recorder);
+                    // 传递施法者（entity），用于在施法者死亡时清除Buff
+                    BuffSystem.addBuff(buffTarget, BuffFactory.create(evt.buff), log, recorder, entity);
                     break;
 
                 case "applyBuffSelf":
-                    BuffSystem.addBuff(entity, BuffFactory.create(evt.buff), log, recorder);
+                    // 传递施法者（entity），用于在施法者死亡时清除Buff
+                    BuffSystem.addBuff(entity, BuffFactory.create(evt.buff), log, recorder, entity);
+                    break;
+
+                case "removeNegativeBuffs":
+                    // 移除负面Buff事件：evt.target 是目标单位，evt.buffNames 是要移除的Buff名称列表
+                    const cleanseTarget = evt.target || target;
+                    const buffNames = evt.buffNames || [];
+                    BuffSystem.removeBuffs(cleanseTarget, buffNames, log, recorder);
                     break;
 
                 default:
@@ -227,6 +268,87 @@ var SkillSystem = {
         }
 
         entity.getComponent("SkillComponent").cooldowns[skill.id] = 0;
+    },
+
+    /**
+     * 显示大招UI（蒙版+顶部动画）
+     * @private
+     * @param {cc.Node} entity - 施法者节点
+     * @param {string} skillName - 技能名称
+     * @param {Function} onComplete - 完成回调
+     */
+    _showUltimateSkillUI(entity, skillName, onComplete) {
+        // 查找场景中的UltimateSkillUI组件
+        const scene = cc.director.getScene();
+        if (!scene) {
+            cc.warn("[SkillSystem] 无法找到场景，跳过大招UI显示");
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const canvas = scene.getChildByName("Canvas");
+        if (!canvas) {
+            cc.warn("[SkillSystem] 无法找到Canvas节点，跳过大招UI显示");
+            if (onComplete) onComplete();
+            return;
+        }
+
+        // 查找UltimateSkillUI组件（递归查找，更可靠）
+        let ultimateSkillUI = null;
+
+        // 方法1: 在Canvas节点本身查找组件
+        ultimateSkillUI = canvas.getComponent("UltimateSkillUI");
+
+        // 方法2: 在Canvas的子节点中查找名为"UltimateSkillUI"的节点
+        if (!ultimateSkillUI) {
+            const uiNode = canvas.getChildByName("UltimateSkillUI");
+            if (uiNode) {
+                ultimateSkillUI = uiNode.getComponent("UltimateSkillUI");
+            }
+        }
+
+        // 方法3: 使用getComponentInChildren递归查找（最可靠）
+        if (!ultimateSkillUI) {
+            ultimateSkillUI = canvas.getComponentInChildren("UltimateSkillUI");
+        }
+
+        // 方法4: 遍历Canvas的所有子节点查找
+        if (!ultimateSkillUI) {
+            const findComponent = (node, componentName) => {
+                const comp = node.getComponent(componentName);
+                if (comp) return comp;
+                for (let child of node.children) {
+                    const result = findComponent(child, componentName);
+                    if (result) return result;
+                }
+                return null;
+            };
+            ultimateSkillUI = findComponent(canvas, "UltimateSkillUI");
+        }
+
+        if (!ultimateSkillUI) {
+            cc.warn("[SkillSystem] 未找到UltimateSkillUI组件，跳过大招UI显示");
+            cc.warn("[SkillSystem] 请在Canvas或其子节点上添加UltimateSkillUI组件");
+            cc.warn("[SkillSystem] 建议：在Canvas下创建名为'UltimateSkillUI'的子节点，并添加UltimateSkillUI组件");
+            if (onComplete) onComplete();
+            return;
+        }
+
+        cc.log(`[SkillSystem] ✓ 找到UltimateSkillUI组件，节点: ${ultimateSkillUI.node.name}`);
+
+        // 从UnitDataConfig获取头像资源
+        const UnitDataConfig = require("UnitDataConfig");
+        let avatarSpriteFrame = null;
+
+        // 查找对应的单位配置
+        const allUnits = [...(UnitDataConfig.heros || []), ...(UnitDataConfig.monsters || [])];
+        const unitData = allUnits.find(u => u.name === entity.name);
+        if (unitData && unitData.icon) {
+            avatarSpriteFrame = unitData.icon;
+        }
+
+        // 显示大招UI
+        ultimateSkillUI.showUltimateSkill(entity, skillName, avatarSpriteFrame, onComplete);
     },
 
     /**
@@ -259,7 +381,8 @@ var SkillSystem = {
                 5: "战吼",
                 6: "群体护盾",
                 7: "兽化狂暴",
-                9: "治疗术"
+                9: "治疗术",
+                10: "净化术"
             };
             const mappedName = skillIdToName[skill.id];
             if (mappedName) {

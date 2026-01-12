@@ -75,7 +75,7 @@ cc.Class({
         },
 
         // 伤害数字显示时间
-        damageDisplayTime: 1.0
+        damageDisplayTime: 3.0
     },
 
     onLoad() {
@@ -244,31 +244,31 @@ cc.Class({
         switch (type) {
             case 'crit':  // 暴击
                 this.damageLabel.string = "-" + Math.floor(value);
-                this.damageLabel.node.color = cc.color(255, 69, 0);  // 橙红色
-                this.damageLabel.node.scale = 1.5;  // 更大
-                this._playFloatAnimation(startY, startScale, 50, 1.2, true);  // 更高、更慢、震动
+                this.damageLabel.node.color = cc.color(255, 0, 0);  // 红色
+                this.damageLabel.node.scale = 2.0;  // 更大
+                this._playFloatAnimation(startY, startScale, 100, 0.35, true);  // 更高、持续时间稍微延长
                 break;
 
             case 'miss':  // 闪避
                 this.damageLabel.string = "MISS!";
-                this.damageLabel.node.color = cc.color(150, 150, 150);  // 灰色
-                this.damageLabel.node.scale = 1.0;
-                this._playFloatAnimation(startY, startScale, 20, 1.0, false);
+                this.damageLabel.node.color = cc.Color.BLUE;  // 蓝色
+                this.damageLabel.node.scale = 1.5;
+                this._playFloatAnimation(startY, startScale, 50, 0.3, false);
                 break;
 
             case 'heal':  // 治疗
                 this.damageLabel.string = "+" + Math.floor(value);
                 this.damageLabel.node.color = cc.color(50, 205, 50);  // 绿色
-                this.damageLabel.node.scale = 1.2;
-                this._playFloatAnimation(startY, startScale, 40, 1.0, false);
+                this.damageLabel.node.scale = 1.8;
+                this._playFloatAnimation(startY, startScale, 70, 0.3, false);
                 break;
 
             case 'normal':  // 普通伤害
             default:
                 this.damageLabel.string = "-" + Math.floor(value);
                 this.damageLabel.node.color = cc.color(255, 255, 255);  // 白色
-                this.damageLabel.node.scale = 1.0;
-                this._playFloatAnimation(startY, startScale, 30, 1.0, false);
+                this.damageLabel.node.scale = 1.5;
+                this._playFloatAnimation(startY, startScale, 60, 0.3, false);
                 break;
         }
 
@@ -290,24 +290,24 @@ cc.Class({
         let tween = cc.tween(node);
 
         if (shake) {
-            // 暴击特效：震动 + 飘动 + 淡出
+            // 暴击特效：快速震动 + 飘动 + 淡出
             tween
-                .to(0.1, { scale: startScale * 1.2 }, { easing: 'backOut' })
-                .to(0.1, { scale: startScale })
+                .to(0.05, { scale: startScale * 1.2 }, { easing: 'backOut' })
+                .to(0.05, { scale: startScale })
                 .parallel(
-                    cc.tween().to(duration, { y: startY + floatHeight }),
-                    cc.tween().to(duration, { opacity: 0 })
+                    cc.tween().to(duration, { y: startY + floatHeight }, { easing: 'sineOut' }),
+                    cc.tween().to(duration, { opacity: 0 }, { easing: 'sineIn' })
                 )
                 .call(() => {
                     this._resetLabel(startY, startScale);
                 })
                 .start();
         } else {
-            // 普通飘字：飘动 + 淡出
+            // 普通飘字：快速飘动 + 淡出
             tween
                 .parallel(
-                    cc.tween().to(duration, { y: startY + floatHeight }),
-                    cc.tween().to(duration, { opacity: 0 })
+                    cc.tween().to(duration, { y: startY + floatHeight }, { easing: 'sineOut' }),
+                    cc.tween().to(duration, { opacity: 0 }, { easing: 'sineIn' })
                 )
                 .call(() => {
                     this._resetLabel(startY, startScale);

@@ -41,6 +41,13 @@ cc.Class({
     onClick(event) {
         cc.log(`[UltimateSkillButton] ${this.node.name} 被点击，尝试释放大招`);
 
+        // 检查角色是否已死亡
+        const stats = this.node.getComponent("StatsComponent");
+        if (stats && stats.isDead()) {
+            cc.log(`[UltimateSkillButton] ${this.node.name} 已死亡，禁止释放大招`);
+            return;
+        }
+
         // 检查是否正在回放，如果是则禁用大招释放
         if (this._isReplaying()) {
             cc.log(`[UltimateSkillButton] ${this.node.name} 正在回放中，禁用大招释放`);

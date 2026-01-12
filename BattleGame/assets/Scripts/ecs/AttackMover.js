@@ -16,14 +16,14 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
-        // 移动速度（像素/秒）
-        moveSpeed: 500,
+        // 移动速度（像素/秒）- 进一步加快移动速度以提升战斗节奏
+        moveSpeed: 1200,
 
         // 攻击距离（停留在目标前方的距离）
         attackDistance: 50,
 
-        // 攻击动画持续时间（如果使用Spine动画，这个会被动画实际时长覆盖）
-        attackDuration: 0.3,
+        // 攻击动画持续时间（如果使用Spine动画，这个会被动画实际时长覆盖）- 进一步缩短动画时间以加快节奏
+        attackDuration: 0.15,
 
         // 是否正在执行攻击动画
         isAttacking: {
@@ -43,10 +43,16 @@ cc.Class({
             tooltip: "是否是远程攻击，true则不移动只播放攻击动画"
         },
 
-        // 受击动画延迟时间（秒）- 让受击动画在攻击动画之后延迟播放，使战斗更流畅
+        // 受击动画延迟时间（秒）- 让受击动画在攻击动画之后延迟播放，使战斗更流畅 - 缩短延迟以加快节奏
         hitAnimationDelay: {
-            default: 0.15,
-            tooltip: "受击动画延迟时间（秒），建议0.1-0.3秒"
+            default: 0.08,
+            tooltip: "受击动画延迟时间（秒），建议0.05-0.15秒"
+        },
+
+        // 受击动画时长（秒）- 用于计算受击动画播放到一半的时间点
+        hitAnimationDuration: {
+            default: 0.2,
+            tooltip: "受击动画时长（秒），用于在动画播放到一半时触发伤害计算"
         }
     },
 
@@ -75,8 +81,9 @@ cc.Class({
      * 执行攻击动画序列
      * @param {cc.Node} target - 目标节点
      * @param {Function} onComplete - 完成回调
+     * @param {Function} onHit - 受击时回调（在受击动画播放到一半时触发，用于伤害计算）
      */
-    attackTarget(target, onComplete) {
+    attackTarget(target, onComplete, onHit) {
         if (this.isAttacking) {
             cc.warn(`${this.node.name} 正在攻击中，忽略新的攻击请求`);
             return;
@@ -90,12 +97,13 @@ cc.Class({
 
         // 如果是远程攻击，只播放攻击动画，不移动
         if (this.isRanged) {
-            this.playAttackAnimationOnly(target, onComplete);
+            this.playAttackAnimationOnly(target, onComplete, onHit);
             return;
         }
 
         this.isAttacking = true;
         this.onAttackComplete = onComplete;
+        this.onHitCallback = onHit; // 保存受击回调
         this.currentTarget = target; // 保存目标引用
 
         // ========== 调试信息：攻击者和目标节点基本信息 ==========
@@ -178,8 +186,9 @@ cc.Class({
      * 只播放攻击动画（不移动）- 用于远程攻击
      * @param {cc.Node} target - 目标节点
      * @param {Function} onComplete - 完成回调
+     * @param {Function} onHit - 受击时回调（在受击动画播放到一半时触发，用于伤害计算）
      */
-    playAttackAnimationOnly(target, onComplete) {
+    playAttackAnimationOnly(target, onComplete, onHit) {
         if (this.isAttacking) {
             cc.warn(`${this.node.name} 正在攻击中，忽略新的攻击请求`);
             return;
@@ -193,6 +202,7 @@ cc.Class({
 
         this.isAttacking = true;
         this.onAttackComplete = onComplete;
+        this.onHitCallback = onHit; // 保存受击回调
         this.currentTarget = target;
 
         // 保存原始 scale
@@ -365,6 +375,16 @@ cc.Class({
                         // cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画（延迟${this.hitAnimationDelay}秒）`);
                         // 播放受击动画（不循环）
                         targetSkeleton.setAnimation(0, AnimationState.BY_ATK, false);
+
+                        // ✅ 在受击动画播放到一半时触发伤害计算
+                        if (this.onHitCallback) {
+                            const hitAnimationHalfDuration = this.hitAnimationDuration / 2;
+                            this.scheduleOnce(() => {
+                                if (this.onHitCallback) {
+                                    this.onHitCallback();
+                                }
+                            }, hitAnimationHalfDuration);
+                        }
 
                         // 受击动画播放完后返回待机状态
                         // 注意：死亡检测和死亡动画由 DeathSystem 处理

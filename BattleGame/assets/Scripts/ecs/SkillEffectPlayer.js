@@ -70,6 +70,9 @@ cc.Class({
             case "治疗术":
                 this._playHealEffect(caster);
                 break;
+            case "净化术":
+                this._playCleanseEffect(caster);
+                break;
             default:
                 // 默认特效
                 this._playDefaultEffect(caster, target);
@@ -663,6 +666,47 @@ cc.Class({
         } catch (e) {
             cc.error(`[SkillEffectPlayer] 实例化治疗术粒子预制体失败: ${e.message}`);
         }
+    },
+
+    /**
+     * 净化术特效 - 白色光环扩散
+     */
+    _playCleanseEffect(caster) {
+        if (!caster || !caster.isValid || !caster.parent) return;
+
+        // 创建净化光环
+        const cleanseAura = new cc.Node("CleanseAura");
+        cleanseAura.setPosition(caster.getPosition());
+
+        const graphics = cleanseAura.addComponent(cc.Graphics);
+
+        // 绘制多个同心圆（净化光环效果）
+        for (let i = 0; i < 3; i++) {
+            const radius = 40 + i * 20;
+            graphics.circle(0, 0, radius);
+            graphics.strokeColor = new cc.Color(255, 255, 255, 200 - i * 50);  // 白色，逐渐透明
+            graphics.lineWidth = 3;
+            graphics.stroke();
+        }
+
+        // 填充中心区域（可选）
+        graphics.circle(0, 0, 40);
+        graphics.fillColor = new cc.Color(255, 255, 255, 80);  // 淡白色填充
+        graphics.fill();
+
+        caster.parent.addChild(cleanseAura);
+
+        // 光环扩散 + 淡出动画
+        cleanseAura.scale = 0.5;
+        cc.tween(cleanseAura)
+            .to(0.3, { scale: 1.5, opacity: 200 })
+            .to(0.4, { scale: 2.5, opacity: 0 })
+            .call(() => {
+                if (cleanseAura && cleanseAura.isValid) {
+                    cleanseAura.destroy();
+                }
+            })
+            .start();
     },
 
     /**

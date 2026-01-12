@@ -12,7 +12,7 @@ cc.Class({
         immune: 0,
         attackInterval: 1,
         rage: 0,      // 当前怒气值
-        maxRage: 40  // 最大怒气值
+        maxRage: 80  // 最大怒气值
     },
 
     onLoad() {
@@ -45,11 +45,11 @@ cc.Class({
             const BuffComponent = require("BuffComponent");
             const allBuffs = this.node.getComponents(BuffComponent);
             cc.log(`[StatsComponent] ${this.node.name} 查找护盾Buff，当前Buff数量: ${allBuffs.length}`);
-            
+
             for (let buff of allBuffs) {
                 cc.log(`[StatsComponent] Buff: name=${buff.buffName}, shieldValue=${buff.shieldValue}`);
             }
-            
+
             const shieldBuff = allBuffs.find(b => b.buffName === "护盾");
             if (shieldBuff) {
                 shieldValue = shieldBuff.shieldValue || 0;
@@ -73,12 +73,12 @@ cc.Class({
     },
 
     /**
-     * 增加怒气值（允许超过最大值，用于AI自动释放逻辑）
+     * 增加怒气值（限制不超过最大值）
      * @param {number} value - 增加的怒气值
      */
     addRage(value) {
-        // 允许怒气值超过maxRage，用于AI自动释放逻辑
-        this.rage = this.rage + value;
+        // 限制怒气值不超过最大值
+        this.rage = Math.min(this.rage + value, this.maxRage);
         this.updateRageBar();
     },
 

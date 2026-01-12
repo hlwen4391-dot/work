@@ -399,16 +399,16 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        165.848,
-        209.825,
+        -6.748,
+        216.046,
         0,
         0,
         0,
         0,
         1,
-        1.324,
-        1.272,
-        1.096
+        1.823,
+        1.751,
+        1.509
       ]
     },
     "_eulerAngles": {
@@ -756,13 +756,13 @@
       "__id__": 1
     },
     "_enabled": true,
-    "hp": 102,
-    "maxHp": 150,
-    "attack": 30,
-    "defense": 2,
-    "speed": 3,
+    "hp": 900,
+    "maxHp": 1000,
+    "attack": 100,
+    "defense": 20,
+    "speed": 17,
     "miss": 0.08,
-    "crit": 0.05,
+    "crit": 0.1,
     "immune": 0.1,
     "attackInterval": 1.2,
     "rage": 0,
@@ -843,7 +843,7 @@
       "__id__": 1
     },
     "_enabled": true,
-    "moveSpeed": 450,
+    "moveSpeed": 700,
     "attackDistance": 45,
     "attackDuration": 0.3,
     "isAttacking": false,
@@ -876,6 +876,7 @@
     "fireballPrefab": null,
     "explosionPrefab": null,
     "beastRageParticlePrefab": null,
+    "healParticlePrefab": null,
     "effectDuration": 1,
     "_id": ""
   },

@@ -23,6 +23,9 @@ var BattleSystem = cc.Class({
         this.isProcessingAction = false; // 是否正在处理行动
         this.actionQueue = []; // 行动队列
 
+        // 暂停标志（用于大招UI显示时暂停战斗）
+        this.isPaused = false;
+
         // 如果提供了记录器，开始记录
         if (this.recorder) {
             this.recorder.startRecording(heros, monsters);
@@ -101,6 +104,11 @@ var BattleSystem = cc.Class({
         // 如果战斗已结束，不再处理
         if (this.finished) return;
 
+        // 如果战斗已暂停，不处理任何行动
+        if (this.isPaused) {
+            return;
+        }
+
         // 检查战斗是否结束
         if (this.isFinished()) {
             this._handleGameOver();
@@ -122,6 +130,20 @@ var BattleSystem = cc.Class({
 
         // 开始处理队列
         this._processNextAction();
+    },
+
+    /**
+     * 暂停战斗（用于大招UI显示时）
+     */
+    pause() {
+        this.isPaused = true;
+    },
+
+    /**
+     * 恢复战斗
+     */
+    resume() {
+        this.isPaused = false;
     },
 
     /**

@@ -14,6 +14,7 @@ var SkillEnum = {
     warCry: 5,        // 战吼
     shieldAllies: 6,  // 群体护盾
     healAllies: 9,    // 群体治疗
+    cleanseAllies: 10, // 净化队友
     ultimateSkill: 8  // 大招（需要怒气值满）
 };
 
@@ -27,7 +28,7 @@ var SkillConfig = {
     normalAttack: {
         name: "普通攻击",
         id: SkillEnum.normalAttack,
-        cooldown: 1.0,
+        cooldown: 0.5,  // 缩短冷却时间以加快战斗节奏
         effect: (self, target, log, rand) => {
             const atk = self.getComponent("StatsComponent");
             const def = target.getComponent("StatsComponent");
@@ -56,7 +57,7 @@ var SkillConfig = {
     stunSkill: {
         name: "盾击",
         id: SkillEnum.stunSkill,
-        cooldown: 4.0,
+        cooldown: 2.5,  // 缩短冷却时间以加快战斗节奏
         effect: (self, target, log) => {
             const atk = self.getComponent("StatsComponent");
             const def = target.getComponent("StatsComponent");
@@ -77,7 +78,7 @@ var SkillConfig = {
     fireball: {
         name: "火球术",
         id: SkillEnum.fireball,
-        cooldown: 4.2,
+        cooldown: 1.5,  // 缩短冷却时间以加快战斗节奏
         effect: (self, target, log) => {
             log(`🔥 ${self.name} 释放火球术！`);
             return [
@@ -104,7 +105,7 @@ var SkillConfig = {
     beastRage: {
         name: "兽化狂暴",
         id: SkillEnum.beastRage,
-        cooldown: 6.0,
+        cooldown: 4.0,  // 缩短冷却时间以加快战斗节奏
         effect: (self, target, log) => {
             log(`🐺 ${self.name} 进入兽化狂暴状态！`);
             return [
@@ -117,8 +118,8 @@ var SkillConfig = {
     warCry: {
         name: "战吼",
         id: SkillEnum.warCry,
-        cooldown: 9.0,
-        requireRage: 20,  // 设置为0表示普通技能，设置为100表示需要怒气值满才能释放（大招）
+        cooldown: 5.0,  // 缩短冷却时间以加快战斗节奏
+        requireRage: 60,  // 设置为0表示普通技能，
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
@@ -142,11 +143,11 @@ var SkillConfig = {
                 }
             }
 
-            // 为所有队友添加战吼Buff
+            // 为所有队友添加战吼Buff（传递施法者self）
             for (let ally of allies) {
                 const buffComp = BuffFactory.create("warCry");
                 if (buffComp) {
-                    BuffSystem.addBuff(ally, buffComp, log);
+                    BuffSystem.addBuff(ally, buffComp, log, null, self);
                 }
             }
 
@@ -158,8 +159,8 @@ var SkillConfig = {
     shieldAllies: {
         name: "群体护盾",
         id: SkillEnum.shieldAllies,
-        cooldown: 4,
-        requireRage: 20,
+        cooldown: 3.0,  // 缩短冷却时间以加快战斗节奏
+        requireRage: 60,
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
@@ -170,11 +171,11 @@ var SkillConfig = {
 
             log(`🛡️ ${self.name} 为队友施加护盾！`);
 
-            // 为所有队友添加护盾Buff
+            // 为所有队友添加护盾Buff（传递施法者self）
             for (let ally of allies) {
                 const buffComp = BuffFactory.create("shield");
                 if (buffComp) {
-                    BuffSystem.addBuff(ally, buffComp, log);
+                    BuffSystem.addBuff(ally, buffComp, log, null, self);
                 }
             }
 
@@ -186,8 +187,8 @@ var SkillConfig = {
     healAllies: {
         name: "治疗术",
         id: SkillEnum.healAllies,
-        cooldown: 5.0,
-        requireRage: 20,
+        cooldown: 3.5,  // 缩短冷却时间以加快战斗节奏
+        requireRage: 60,
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
@@ -215,7 +216,49 @@ var SkillConfig = {
 
             return events;
         }
+    },
+
+    // 净化术 - 清除己方阵营所有单位的负面Buff
+    cleanseAllies: {
+        name: "净化术",
+        id: SkillEnum.cleanseAllies,
+        cooldown: 4.0,  // 缩短冷却时间以加快战斗节奏
+        requireRage: 60,//需要怒气值满才能释放
+        effect: (self, target, log) => {
+            const teamComp = self.getComponent("TeamComponent");
+            if (!teamComp) return [];
+
+            const allies = teamComp.team === "hero"
+                ? TeamRef.herosRef
+                : TeamRef.monstersRef;
+
+            log(`🌟 ${self.name} 释放净化术！`);
+
+            // 定义负面Buff列表（需要被清除的Buff）
+            const negativeBuffs = ["燃烧", "眩晕"];
+
+            // 为所有队友（包括自己）清除负面Buff
+            const events = [];
+            const allTargets = [...allies, self];  // 包括自己和所有队友
+
+            for (let ally of allTargets) {
+                if (!ally || !ally.isValid) continue;
+
+                const allyStats = ally.getComponent("StatsComponent");
+                if (allyStats && !allyStats.isDead()) {
+                    // 添加清除负面Buff事件
+                    events.push({
+                        type: "removeNegativeBuffs",
+                        target: ally,
+                        buffNames: negativeBuffs
+                    });
+                }
+            }
+
+            return events;
+        }
     }
+
 };
 
 module.exports = {

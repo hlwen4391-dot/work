@@ -16,7 +16,7 @@ var UnitDataConfig = {
             hp: 120,
             attack: 8,
             defense: 10,
-            speed: 12,
+            speed: 18,  // 提高速度以加快战斗节奏（原12）
             crit: 0.15,
             skills: [
                 SkillConfig.normalAttack,
@@ -33,7 +33,7 @@ var UnitDataConfig = {
             hp: 80,
             attack: 12,
             defense: 4,
-            speed: 8,
+            speed: 12,  // 提高速度以加快战斗节奏（原8）
             crit: 0.1,
             miss: 0.1,
             skills: [
@@ -50,7 +50,7 @@ var UnitDataConfig = {
             hp: 100,
             attack: 5,
             defense: 6,
-            speed: 10,
+            speed: 15,  // 提高速度以加快战斗节奏（原10）
             crit: 0.05,
             miss: 0.05,
             skills: [
@@ -71,7 +71,7 @@ var UnitDataConfig = {
             hp: 80,
             attack: 10,
             defense: 5,
-            speed: 15,
+            speed: 22,  // 提高速度以加快战斗节奏（原15）
             skills: [
                 SkillConfig.normalAttack,
                 SkillConfig.beastRage
@@ -86,12 +86,28 @@ var UnitDataConfig = {
             hp: 150,
             attack: 12,
             defense: 8,
-            speed: 10,
+            speed: 15,  // 提高速度以加快战斗节奏（原10）
             skills: [
                 SkillConfig.normalAttack,
                 SkillConfig.warCry
             ]
+        },
+        {
+            name: "大祭司",
+            displayName: "大祭司",
+            icon: null,
+            prefab: null,
+            avatarPosition: 2,
+            hp: 150,
+            attack: 10,
+            defense: 8,
+            speed: 15,  // 提高速度以加快战斗节奏（原10）
+            skills: [
+                SkillConfig.normalAttack,
+                SkillConfig.cleanseAllies
+            ]
         }
+
     ]
 };
 

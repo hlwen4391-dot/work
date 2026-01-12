@@ -131,7 +131,7 @@ cc.Class({
 
         // 单位之间的最小间隔距离（防止重叠和误触）
         minUnitSpacing: {
-            default: 80,
+            default: 120,
             tooltip: "单位之间的最小间隔距离（像素），防止重叠和点击误触"
         },
 
@@ -869,6 +869,10 @@ cc.Class({
         if (stats.immune === 0 && data.immune !== undefined) {
             stats.immune = data.immune;
         }
+
+        // 强制设置最大怒气值为80（覆盖Prefab中的默认值）
+        stats.maxRage = 80;
+        stats.rage = 0; // 重置当前怒气值
 
         // 初始化技能
         if (data.skills && data.skills.length > 0) {
