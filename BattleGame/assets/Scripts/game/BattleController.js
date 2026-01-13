@@ -870,8 +870,8 @@ cc.Class({
             stats.immune = data.immune;
         }
 
-        // 强制设置最大怒气值为80（覆盖Prefab中的默认值）
-        stats.maxRage = 80;
+        // 强制设置最大怒气值为120（覆盖Prefab中的默认值）
+        stats.maxRage = 120;
         stats.rage = 0; // 重置当前怒气值
 
         // 初始化技能

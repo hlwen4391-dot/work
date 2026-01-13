@@ -73,9 +73,18 @@ cc.Class({
             case "净化术":
                 this._playCleanseEffect(caster);
                 break;
+            case "普通攻击":
+                // 检查是否是远程攻击
+                const attackMover = caster.getComponent("AttackMover");
+                if (attackMover && attackMover.isRanged) {
+                    // 远程攻击：弹道特效由AttackMover处理，这里不需要显示
+                    // AttackMover会创建弹道节点并移动到目标附近
+                }
+                // 近战攻击：不显示特效（已经有移动动画）
+                break;
             default:
-                // 默认特效
-                this._playDefaultEffect(caster, target);
+            // 默认特效（已注释 - 白点闪光特效）
+            // this._playDefaultEffect(caster, target);
         }
     },
 
@@ -710,25 +719,78 @@ cc.Class({
     },
 
     /**
-     * 默认特效 - 简单闪光
+     * 远程普通攻击特效 - 弹道飞向目标
+     * @param {cc.Node} caster - 施法者节点
+     * @param {cc.Node} target - 目标节点
      */
-    _playDefaultEffect(caster, target) {
-        const flash = new cc.Node("Flash");
-        flash.setPosition(target.getPosition());
+    _playRangedAttackEffect(caster, target) {
+        if (!caster || !target) {
+            return;
+        }
 
-        const graphics = flash.addComponent(cc.Graphics);
-        graphics.circle(0, 0, 20);
-        graphics.fillColor = cc.Color.WHITE;
+        const parent = caster.parent;
+        if (!parent) {
+            return;
+        }
+
+        // 创建弹道节点
+        const projectile = new cc.Node("RangedProjectile");
+
+        // 使用Graphics绘制一个点（黑点或白点）
+        const graphics = projectile.addComponent(cc.Graphics);
+        graphics.circle(0, 0, 8); // 半径为8的圆点
+        graphics.fillColor = cc.Color.BLACK; // 黑色点（可以改为WHITE使用白点）
         graphics.fill();
 
-        target.parent.addChild(flash);
+        // 获取起始位置和目标位置（转换为世界坐标）
+        const casterWorldPos = caster.convertToWorldSpaceAR(cc.v2(0, 0));
+        const targetWorldPos = target.convertToWorldSpaceAR(cc.v2(0, 0));
 
-        cc.tween(flash)
-            .to(0.2, { scale: 1.5, opacity: 0 })
+        // 转换为父节点的本地坐标
+        const startPos = parent.convertToNodeSpaceAR(casterWorldPos);
+        const endPos = parent.convertToNodeSpaceAR(targetWorldPos);
+
+        // 设置初始位置
+        projectile.setPosition(startPos);
+        parent.addChild(projectile);
+
+        // 计算飞行距离和时间
+        const distance = startPos.sub(endPos).mag();
+        const flySpeed = 800; // 飞行速度（像素/秒）
+        const flyTime = distance / flySpeed;
+
+        // 播放飞行动画
+        cc.tween(projectile)
+            .to(flyTime, { position: endPos }, { easing: 'linear' })
             .call(() => {
-                flash.destroy();
+                // 到达目标后销毁
+                if (projectile && projectile.isValid) {
+                    projectile.destroy();
+                }
             })
             .start();
-    }
+    },
+
+    /**
+     * 默认特效 - 简单闪光（已注释）
+     */
+    // _playDefaultEffect(caster, target) {
+    //     const flash = new cc.Node("Flash");
+    //     flash.setPosition(target.getPosition());
+
+    //     const graphics = flash.addComponent(cc.Graphics);
+    //     graphics.circle(0, 0, 20);
+    //     graphics.fillColor = cc.Color.WHITE;
+    //     graphics.fill();
+
+    //     target.parent.addChild(flash);
+
+    //     cc.tween(flash)
+    //         .to(0.2, { scale: 1.5, opacity: 0 })
+    //         .call(() => {
+    //             flash.destroy();
+    //         })
+    //         .start();
+    // }
 });
 

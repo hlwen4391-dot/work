@@ -944,6 +944,7 @@
     "useSpineAnimation": true,
     "isRanged": false,
     "hitAnimationDelay": 0.15,
+    "hitAnimationDuration": 0.2,
     "_id": ""
   },
   {

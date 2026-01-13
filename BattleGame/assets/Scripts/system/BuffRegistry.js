@@ -6,10 +6,10 @@ var BuffRegistry = {
     // 燃烧Buff - 持续伤害
     burn: {
         name: "燃烧",
-        duration: 2.3,//持续时间
+        duration: 3,//持续时间
         interval: 1, // 每秒执行一次
         onTick: (target, log) => {
-            const dmg = 5;
+            const dmg = 10;
             const stats = target.getComponent("StatsComponent");
             if (stats) {
                 stats.hp -= dmg;
@@ -51,11 +51,11 @@ var BuffRegistry = {
         name: "战吼",
         duration: 3,
         modifiers: {
-            attack: 5,
-            speed: 3
+            attack: 10,
+            speed: 5
         },
         onApply(target, log) {
-            log(`📢 ${target.name} 受到战吼鼓舞，攻击力+5，速度+3`);
+            log(`📢 ${target.name} 受到战吼鼓舞，攻击力+${this.modifiers.attack}，速度+${this.modifiers.speed}`);
         },
         onExpire(target, log) {
             log(`${target.name} 战吼效果结束`);
@@ -67,10 +67,10 @@ var BuffRegistry = {
         name: "狂暴",
         duration: 2,
         modifiers: {
-            attack: 5
+            attack: 10
         },
         onApply(target, log) {
-            log(`😡 ${target.name} 进入狂暴状态，攻击力+5`);
+            log(`😡 ${target.name} 进入狂暴状态，攻击力+${this.modifiers.attack}`);
         },
         onExpire(target, log) {
             log(`${target.name} 狂暴状态结束`);
@@ -92,9 +92,9 @@ var BuffRegistry = {
         duration: 2.5,//持续时间
         status: {},
         modifiers: {},
-        shieldValue: 10, // 护盾值
+        shieldValue: 20, // 护盾值
         onApply(target, log) {
-            log(`🛡️ ${target.name} 获得了 10 点护盾`);
+            log(`🛡️ ${target.name} 获得了 ${this.shieldValue} 点护盾`);
         },
         onExpire(target, log) {
             log(`${target.name} 护盾效果结束`);
@@ -106,7 +106,7 @@ var BuffRegistry = {
         name: "持续恢复",
         duration: 3.0,  // 持续3秒
         interval: 1.0,  // 每秒执行一次
-        healPerTick: 10, // 每次恢复10点HP
+        healPerTick: 15, // 每次恢复10点HP
         onTick: (target, log) => {
             const stats = target.getComponent("StatsComponent");
             if (stats && !stats.isDead()) {
@@ -127,7 +127,7 @@ var BuffRegistry = {
             }
         },
         onApply(target, log) {
-            log(`💚 ${target.name} 开始持续恢复生命值（每秒恢复10点，持续3秒）`);
+            log(`💚 ${target.name} 开始持续恢复生命值（每秒恢复${this.healPerTick}点，持续3秒）`);
         },
         onExpire(target, log) {
             log(`💚 ${target.name} 持续恢复效果结束`);

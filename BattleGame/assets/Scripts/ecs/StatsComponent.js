@@ -12,7 +12,7 @@ cc.Class({
         immune: 0,
         attackInterval: 1,
         rage: 0,      // 当前怒气值
-        maxRage: 80  // 最大怒气值
+        maxRage: 120  // 最大怒气值
     },
 
     onLoad() {

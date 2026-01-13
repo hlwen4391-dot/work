@@ -63,10 +63,14 @@ cc.Class({
         if (this.topContainer) {
             this.topContainer.active = false;
         }
+
+        // 初始化大招队列（用于处理多个同时释放的大招）
+        this._ultimateQueue = [];
+        this._isPlaying = false; // 是否正在播放动画
     },
 
     /**
-     * 显示大招释放UI
+     * 显示大招释放UI（支持队列机制，多个大招会按顺序播放）
      * @param {cc.Node} caster - 施法者节点
      * @param {string} skillName - 技能名称
      * @param {cc.SpriteFrame} avatarSpriteFrame - 头像图片（可选）
@@ -79,7 +83,22 @@ cc.Class({
             return;
         }
 
-        // 暂停战斗系统
+        // 如果正在播放动画，将请求加入队列
+        if (this._isPlaying) {
+            cc.log(`[UltimateSkillUI] 当前正在播放大招动画，将 ${caster.name} 的 ${skillName} 加入队列`);
+            this._ultimateQueue.push({
+                caster: caster,
+                skillName: skillName,
+                avatarSpriteFrame: avatarSpriteFrame,
+                onComplete: onComplete
+            });
+            return;
+        }
+
+        // 标记为正在播放
+        this._isPlaying = true;
+
+        // 暂停战斗系统（只在第一个大招时暂停，后续的会在队列中自动处理）
         this._pauseBattle();
 
         // 设置技能名称
@@ -113,8 +132,16 @@ cc.Class({
             }
         }
 
-        // 显示并播放动画
-        this._playAnimation(onComplete);
+        // 显示并播放动画（传入包装的回调，处理队列）
+        this._playAnimation(() => {
+            // 执行原始回调
+            if (onComplete) {
+                onComplete();
+            }
+
+            // 处理队列中的下一个大招
+            this._processNextUltimate();
+        });
     },
 
     /**
@@ -173,14 +200,18 @@ cc.Class({
                                 if (this.maskNode) {
                                     this.maskNode.active = false;
                                 }
-                                // 恢复战斗系统
-                                this._resumeBattle();
+                                // 只有在队列为空时才恢复战斗系统（最后一个动画）
+                                if (this._ultimateQueue.length === 0) {
+                                    this._resumeBattle();
+                                }
                                 if (onComplete) onComplete();
                             })
                             .start();
                     } else {
-                        // 恢复战斗系统
-                        this._resumeBattle();
+                        // 只有在队列为空时才恢复战斗系统（最后一个动画）
+                        if (this._ultimateQueue.length === 0) {
+                            this._resumeBattle();
+                        }
                         if (onComplete) onComplete();
                     }
                 })
@@ -195,14 +226,18 @@ cc.Class({
                             if (this.maskNode) {
                                 this.maskNode.active = false;
                             }
-                            // 恢复战斗系统
-                            this._resumeBattle();
+                            // 只有在队列为空时才恢复战斗系统（最后一个动画）
+                            if (this._ultimateQueue.length === 0) {
+                                this._resumeBattle();
+                            }
                             if (onComplete) onComplete();
                         })
                         .start();
                 } else {
-                    // 恢复战斗系统
-                    this._resumeBattle();
+                    // 只有在队列为空时才恢复战斗系统（最后一个动画）
+                    if (this._ultimateQueue.length === 0) {
+                        this._resumeBattle();
+                    }
                     if (onComplete) onComplete();
                 }
             }, this.displayDuration);
@@ -338,6 +373,36 @@ cc.Class({
     },
 
     /**
+     * 处理队列中的下一个大招
+     * @private
+     */
+    _processNextUltimate() {
+        // 如果队列为空，恢复战斗系统并重置状态
+        if (this._ultimateQueue.length === 0) {
+            this._isPlaying = false;
+            // 注意：这里不恢复战斗系统，因为最后一个动画的回调中已经恢复了
+            cc.log("[UltimateSkillUI] 大招队列已清空");
+            return;
+        }
+
+        // 从队列中取出下一个大招
+        const nextUltimate = this._ultimateQueue.shift();
+        cc.log(`[UltimateSkillUI] 播放队列中的下一个大招: ${nextUltimate.caster.name} 的 ${nextUltimate.skillName}`);
+
+        // 延迟一小段时间（让上一个动画完全结束），然后播放下一个
+        this.scheduleOnce(() => {
+            // 重新调用 showUltimateSkill（此时 _isPlaying 为 false，会直接播放）
+            this._isPlaying = false; // 先重置，让 showUltimateSkill 可以正常处理
+            this.showUltimateSkill(
+                nextUltimate.caster,
+                nextUltimate.skillName,
+                nextUltimate.avatarSpriteFrame,
+                nextUltimate.onComplete
+            );
+        }, 0.1); // 延迟0.1秒，确保上一个动画完全结束
+    },
+
+    /**
      * 立即隐藏UI（用于紧急情况）
      */
     hide() {
@@ -348,5 +413,9 @@ cc.Class({
         if (this.topContainer) {
             this.topContainer.active = false;
         }
+
+        // 清空队列并重置状态
+        this._ultimateQueue = [];
+        this._isPlaying = false;
     }
 });

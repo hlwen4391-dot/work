@@ -119,7 +119,7 @@ var SkillConfig = {
         name: "战吼",
         id: SkillEnum.warCry,
         cooldown: 5.0,  // 缩短冷却时间以加快战斗节奏
-        requireRage: 60,  // 设置为0表示普通技能，
+        requireRage: 100,  // 设置为0表示普通技能，
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
@@ -160,7 +160,7 @@ var SkillConfig = {
         name: "群体护盾",
         id: SkillEnum.shieldAllies,
         cooldown: 3.0,  // 缩短冷却时间以加快战斗节奏
-        requireRage: 60,
+        requireRage: 100,
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
@@ -188,7 +188,7 @@ var SkillConfig = {
         name: "治疗术",
         id: SkillEnum.healAllies,
         cooldown: 3.5,  // 缩短冷却时间以加快战斗节奏
-        requireRage: 60,
+        requireRage: 100,
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];
@@ -223,7 +223,7 @@ var SkillConfig = {
         name: "净化术",
         id: SkillEnum.cleanseAllies,
         cooldown: 4.0,  // 缩短冷却时间以加快战斗节奏
-        requireRage: 60,//需要怒气值满才能释放
+        requireRage: 100,//需要怒气值满才能释放
         effect: (self, target, log) => {
             const teamComp = self.getComponent("TeamComponent");
             if (!teamComp) return [];

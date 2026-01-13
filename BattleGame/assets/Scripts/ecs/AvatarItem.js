@@ -94,6 +94,12 @@ cc.Class({
         // 设置名称
         if (this.nameLabel) {
             this.nameLabel.string = unitData.displayName || unitData.name;
+            // 调整字体大小（调小一点）
+            if (this.nameLabel.fontSize > 0) {
+                this.nameLabel.fontSize = Math.max(16, this.nameLabel.fontSize * 0.7); // 缩小到原来的70%，最小16
+            } else {
+                this.nameLabel.fontSize = 20; // 如果字体大小为0或未设置，设置为20
+            }
         }
 
         // 初始隐藏勾选标记

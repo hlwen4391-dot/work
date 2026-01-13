@@ -184,6 +184,7 @@ cc.Class({
 
     /**
      * 只播放攻击动画（不移动）- 用于远程攻击
+     * 创建一个弹道节点，移动到目标附近，然后触发受击动画和伤害计算
      * @param {cc.Node} target - 目标节点
      * @param {Function} onComplete - 完成回调
      * @param {Function} onHit - 受击时回调（在受击动画播放到一半时触发，用于伤害计算）
@@ -209,23 +210,142 @@ cc.Class({
         this.originalScaleX = this.node.scaleX;
         this.originalScaleY = this.node.scaleY;
 
-        // cc.log(`[AttackMover] ${this.node.name} 远程攻击：只播放攻击动画，不移动`);
+        // cc.log(`[AttackMover] ${this.node.name} 远程攻击：播放攻击动画，弹道移动到目标`);
 
-        // 播放攻击动画
+        // 播放攻击动画（人物本身）
         this._playAttackAnimation();
 
-        // 等待攻击动画完成
-        if (this.useSpineAnimation && this.skeleton) {
-            // 使用Spine动画的实际时长
-            this.skeleton.setCompleteListener(() => {
-                this.skeleton.setCompleteListener(null);
+        // 创建弹道节点并移动到目标附近
+        this._createAndMoveProjectile(target);
+    },
+
+    /**
+     * 创建弹道节点并移动到目标附近
+     * @private
+     */
+    _createAndMoveProjectile(target) {
+        if (!target || !target.isValid) {
+            this._onRangedAttackComplete();
+            return;
+        }
+
+        const parent = this.node.parent;
+        if (!parent) {
+            cc.error("[AttackMover] 无法创建弹道：攻击者没有父节点");
+            this._onRangedAttackComplete();
+            return;
+        }
+
+        // 创建弹道节点（子弹形状）
+        const projectile = new cc.Node("RangedProjectile");
+        const graphics = projectile.addComponent(cc.Graphics);
+
+        // 获取起始位置和目标位置
+        const casterWorldPos = this.node.convertToWorldSpaceAR(cc.v2(0, 0));
+        const targetWorldPos = target.convertToWorldSpaceAR(cc.v2(0, 0));
+
+        // 转换为父节点的本地坐标
+        const startPos = parent.convertToNodeSpaceAR(casterWorldPos);
+        const targetPos = parent.convertToNodeSpaceAR(targetWorldPos);
+
+        // 计算攻击位置（在目标前方停留，类似近战攻击）
+        const direction = targetPos.sub(startPos).normalize();
+        const attackPos = targetPos.sub(direction.mul(this.attackDistance));
+
+        // 计算圆锥的方向（用于旋转）
+        const angle = Math.atan2(direction.y, direction.x) * 180 / Math.PI;
+
+        // 设置圆锥颜色（白色）
+        graphics.fillColor = cc.Color.WHITE;
+        graphics.strokeColor = cc.Color.WHITE;
+        graphics.lineWidth = 1;
+
+        // 绘制圆锥形状：等腰三角形
+        const coneLength = 15; // 圆锥长度
+        const coneBaseWidth = 5; // 圆锥底部宽度
+
+        // 旋转到目标方向
+        projectile.angle = angle;
+
+        // 绘制圆锥（等腰三角形，底部在原点，尖端指向目标方向）
+        graphics.moveTo(coneLength / 2, 0); // 尖端（指向目标）
+        graphics.lineTo(-coneLength / 2, -coneBaseWidth / 2); // 底部左点
+        graphics.lineTo(-coneLength / 2, coneBaseWidth / 2); // 底部右点
+        graphics.close();
+        graphics.fill();
+
+        // 设置初始位置
+        projectile.setPosition(startPos);
+        parent.addChild(projectile);
+
+        // 计算移动时间（远程攻击弹道速度更快）
+        const distance = startPos.sub(attackPos).mag();
+        const projectileSpeed = this.moveSpeed * 1.5; // 弹道速度是移动速度的1.5倍
+        const duration = distance / projectileSpeed;
+
+        // 弹道移动到目标附近
+        cc.tween(projectile)
+            .to(duration, { position: attackPos }, { easing: 'sineInOut' })
+            .call(() => {
+                // 弹道到达目标附近：触发受击动画和伤害计算
+                if (projectile && projectile.isValid) {
+                    projectile.destroy();
+                }
+
+                // 播放受击动画并触发伤害计算（与近战攻击一样的逻辑）
+                this._playHitAnimationAndDamage();
+            })
+            .start();
+    },
+
+    /**
+     * 播放受击动画并触发伤害计算（用于远程攻击）
+     * @private
+     */
+    _playHitAnimationAndDamage() {
+        if (!this.currentTarget || !this.currentTarget.isValid) {
+            this._onRangedAttackComplete();
+            return;
+        }
+
+        const targetSkeleton = this.currentTarget.getComponent(sp.Skeleton);
+        if (targetSkeleton) {
+            // 播放受击动画（不循环）
+            targetSkeleton.setAnimation(0, AnimationState.BY_ATK, false);
+
+            // 在受击动画播放到一半时触发伤害计算
+            if (this.onHitCallback) {
+                const hitAnimationHalfDuration = this.hitAnimationDuration / 2;
+                this.scheduleOnce(() => {
+                    if (this.onHitCallback) {
+                        this.onHitCallback();
+                    }
+                }, hitAnimationHalfDuration);
+            }
+
+            // 受击动画播放完后返回待机状态
+            targetSkeleton.setCompleteListener(() => {
+                if (this.currentTarget && this.currentTarget.isValid) {
+                    const targetStats = this.currentTarget.getComponent("StatsComponent");
+                    // 只有存活的才返回待机动画
+                    if (targetStats && !targetStats.isDead()) {
+                        targetSkeleton.setAnimation(0, AnimationState.WAIT, true);
+                    }
+                }
+                targetSkeleton.setCompleteListener(null);
+
+                // 受击动画完成后，调用完成回调
                 this._onRangedAttackComplete();
             });
         } else {
-            // 使用配置的时长
+            // 如果没有Spine组件，直接触发伤害计算
+            if (this.onHitCallback) {
+                this.onHitCallback();
+            }
+            // 延迟一小段时间后调用完成回调（模拟受击动画时间）
             this.scheduleOnce(() => {
                 this._onRangedAttackComplete();
-            }, this.attackDuration);
+            }, this.hitAnimationDuration);
         }
     },
 
@@ -366,10 +486,11 @@ cc.Class({
         this.skeleton.setAnimation(0, AnimationState.ATTACK, false);
 
         // 2. 延迟播放被攻击者的受击动画（让战斗更流畅）
-        if (this.currentTarget && this.currentTarget.isValid) {
+        // 注意：对于远程攻击，受击动画会在弹道到达目标后由_playHitAnimationAndDamage播放，这里不播放
+        if (this.currentTarget && this.currentTarget.isValid && !this.isRanged) {
             const targetSkeleton = this.currentTarget.getComponent(sp.Skeleton);
             if (targetSkeleton) {
-                // 延迟播放受击动画
+                // 延迟播放受击动画（仅近战攻击）
                 this.scheduleOnce(() => {
                     if (this.currentTarget && this.currentTarget.isValid && targetSkeleton) {
                         // cc.log(`[AttackMover] ${this.currentTarget.name} 播放受击动画（延迟${this.hitAnimationDelay}秒）`);
@@ -405,7 +526,30 @@ cc.Class({
                 }, this.hitAnimationDelay);
             } else {
                 cc.warn(`[AttackMover] ${this.currentTarget.name} 没有 Spine 组件`);
+                // 如果没有Spine组件，也需要触发onHit回调
+                this.scheduleOnce(() => {
+                    if (this.onHitCallback) {
+                        this.onHitCallback();
+                    }
+                }, this.hitAnimationDelay + this.hitAnimationDuration / 2);
             }
+        } else if (this.isRanged) {
+            // 远程攻击：不在这里播放受击动画，受击动画会在弹道到达目标后由_playHitAnimationAndDamage播放
+            // 但是需要确保onHit回调被调用（如果没有目标或目标无效）
+            if (!this.currentTarget || !this.currentTarget.isValid) {
+                this.scheduleOnce(() => {
+                    if (this.onHitCallback) {
+                        this.onHitCallback();
+                    }
+                }, this.attackDuration / 2);
+            }
+        } else {
+            // 如果没有目标，也需要确保onHit回调被调用（例如，攻击空气）
+            this.scheduleOnce(() => {
+                if (this.onHitCallback) {
+                    this.onHitCallback();
+                }
+            }, this.attackDuration / 2); // 假设攻击动画一半时触发
         }
 
         // 3. 监听攻击动画完成，用于控制时序
