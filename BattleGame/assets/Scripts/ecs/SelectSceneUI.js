@@ -574,6 +574,9 @@ cc.Class({
                 this.centerDisplayArea.opacity = 255;
             }
 
+            // 初始化角色属性（根据保存的等级数据）
+            this._initCharacterStats(prefabInstance, unitData);
+
             cc.log(`[SelectSceneUI] ✓ 显示单位原型: ${unitData.name}, Prefab: ${unitData.prefab.name || '已设置'}`);
             cc.log(`[SelectSceneUI] centerDisplayArea位置: (${this.centerDisplayArea.x}, ${this.centerDisplayArea.y})`);
         } else {
@@ -581,6 +584,84 @@ cc.Class({
             cc.warn(`[SelectSceneUI] 请在SelectSceneUI的${unitData.name.includes("战士") || unitData.name.includes("法师") ? "heroPrefabs" : "monsterPrefabs"}数组中配置Prefab`);
         }
     },
+
+    /**
+     * 初始化角色属性（根据保存的等级数据）
+     * @private
+     * @param {cc.Node} prefabInstance - 人物原型实例
+     * @param {Object} unitData - 单位数据
+     */
+    _initCharacterStats(prefabInstance, unitData) {
+        const CharacterDataManager = require("CharacterDataManager");
+        const LevelSystem = require("LevelSystem");
+        const StatsComponent = require("StatsComponent");
+
+        // 获取StatsComponent组件
+        const stats = prefabInstance.getComponent(StatsComponent);
+        if (!stats) {
+            cc.log(`[SelectSceneUI] ${unitData.name} 没有StatsComponent组件，跳过属性初始化`);
+            return;
+        }
+
+        // 从本地存储加载角色的等级数据
+        const savedData = CharacterDataManager.loadCharacterLevel(unitData.name);
+
+        if (savedData) {
+            // 如果有保存的数据，使用保存的基础属性
+            stats.baseHp = savedData.baseHp || unitData.hp || 100;
+            stats.baseAttack = savedData.baseAttack || unitData.attack || 1;
+            stats.baseDefense = savedData.baseDefense || unitData.defense || 1;
+            stats.baseSpeed = savedData.baseSpeed || unitData.speed || 1;
+            stats.baseCrit = savedData.baseCrit || unitData.crit || 0;
+            stats.baseMiss = savedData.baseMiss || unitData.miss || 0;
+
+            // 设置等级和经验值
+            stats.level = savedData.level || 1;
+            stats.exp = savedData.exp || 0;
+
+            // 应用等级加成
+            stats._applyLevelBonus();
+
+            cc.log(`[SelectSceneUI] 初始化 ${unitData.name} 属性: Lv.${stats.level}, HP:${stats.maxHp}/${stats.maxHp}, ATK:${stats.attack}, DEF:${stats.defense}`);
+        } else {
+            // 如果没有保存的数据，使用unitData中的基础属性
+            stats.baseHp = unitData.hp || 100;
+            stats.baseAttack = unitData.attack || 1;
+            stats.baseDefense = unitData.defense || 1;
+            stats.baseSpeed = unitData.speed || 1;
+            stats.baseCrit = unitData.crit || 0;
+            stats.baseMiss = unitData.miss || 0;
+
+            // 设置默认等级和经验值
+            stats.level = 1;
+            stats.exp = 0;
+
+            // 应用等级加成
+            stats._applyLevelBonus();
+
+            cc.log(`[SelectSceneUI] 初始化 ${unitData.name} 属性（默认）: Lv.${stats.level}, HP:${stats.maxHp}/${stats.maxHp}`);
+        }
+
+        // 设置当前生命值为最大生命值（满血显示）
+        stats.hp = stats.maxHp;
+
+        // 更新血条显示
+        if (stats.updateHealthBar) {
+            stats.updateHealthBar();
+        }
+
+        // 更新经验条显示
+        if (stats.updateExpBar) {
+            stats.updateExpBar();
+        }
+
+        // 更新怒气条显示（初始为0）
+        if (stats.updateRageBar) {
+            stats.rage = 0;
+            stats.updateRageBar();
+        }
+    },
+
 
     /**
      * 获取选中的单位列表

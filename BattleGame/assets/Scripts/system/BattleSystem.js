@@ -179,8 +179,15 @@ var BattleSystem = cc.Class({
         }
 
         // 调用游戏结束回调
+        cc.log(`[BattleSystem] 准备调用游戏结束回调`);
+        cc.log(`[BattleSystem] onGameOverCallback存在: ${!!this.onGameOverCallback}`);
+        cc.log(`[BattleSystem] onGameOverCallback类型: ${typeof this.onGameOverCallback}`);
         if (this.onGameOverCallback && typeof this.onGameOverCallback === 'function') {
+            cc.log(`[BattleSystem] 调用游戏结束回调: winner=${winner}, winnerText=${winnerText}`);
             this.onGameOverCallback(winner, winnerText);
+            cc.log(`[BattleSystem] 游戏结束回调调用完成`);
+        } else {
+            cc.warn(`[BattleSystem] 游戏结束回调未设置或不是函数！`);
         }
     }
 });

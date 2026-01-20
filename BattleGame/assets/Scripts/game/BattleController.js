@@ -246,6 +246,8 @@ cc.Class({
 
         // 游戏结束回调函数
         const onGameOver = (winner, winnerText) => {
+            cc.log(`[BattleController] ===== onGameOver回调被调用 =====`);
+            cc.log(`[BattleController] winner: ${winner}, winnerText: ${winnerText}`);
             this._onGameOver(winner, winnerText);
         };
 
@@ -929,6 +931,12 @@ cc.Class({
         stats.maxRage = 120;
         stats.rage = 0; // 重置当前怒气值
 
+        // 初始化等级系统（在属性设置之后）
+        const LevelSystem = require("LevelSystem");
+        const initialLevel = data.level || 1;  // 从数据中获取初始等级，默认为1
+        const initialExp = data.exp || 0;      // 从数据中获取初始经验值，默认为0
+        LevelSystem.initLevel(node, initialLevel, initialExp);
+
         // 初始化技能
         if (data.skills && data.skills.length > 0) {
             skills.init(data.skills);
@@ -942,7 +950,7 @@ cc.Class({
             stats.updateHealthBar();
         }
 
-        cc.log(`✅ [BattleController] ${node.name} 初始化成功 (${teamName}) - HP:${stats.hp}, ATK:${stats.attack}, DEF:${stats.defense}, SPD:${stats.speed}`);
+        cc.log(`✅ [BattleController] ${node.name} 初始化成功 (${teamName}) - Lv.${stats.level}, HP:${stats.hp}, ATK:${stats.attack}, DEF:${stats.defense}, SPD:${stats.speed}`);
     },
 
     update() {
@@ -967,9 +975,85 @@ cc.Class({
      * @private
      */
     _onGameOver(winner, winnerText) {
+        cc.log(`[BattleController] ===== _onGameOver方法被调用 =====`);
         cc.log(`[BattleController] 游戏结束：${winnerText}胜利`);
+        cc.log(`[BattleController] winner参数值: "${winner}"`);
         cc.log(`[BattleController] 当前英雄数量: ${this.heros.length}, 怪物数量: ${this.monsters.length}`);
         cc.log(`[BattleController] useSceneTransition=${this.useSceneTransition}, gameOverSceneName="${this.gameOverSceneName}"`);
+
+        // 给胜利方的存活单位添加经验值
+        const LevelSystem = require("LevelSystem");
+        const expReward = 200; // 基础经验奖励（可以根据难度调整）
+
+        cc.log(`[BattleController] 检查胜利条件: winner === "hero" ? ${winner === "hero"}`);
+
+        if (winner === "hero") {
+            // 英雄胜利，给所有参战的英雄添加经验值（包括死亡的）
+            cc.log(`[BattleController] ===== 英雄胜利，开始分配经验值 =====`);
+            cc.log(`[BattleController] 经验奖励: ${expReward} 点/人（包括死亡的单位）`);
+
+            this.heros.forEach((hero, index) => {
+                cc.log(`[BattleController] 处理英雄[${index}]: ${hero.name}`);
+                const stats = hero.getComponent("StatsComponent");
+                cc.log(`[BattleController] StatsComponent存在: ${!!stats}`);
+                if (stats) {
+                    cc.log(`[BattleController] ${hero.name} 是否死亡: ${stats.isDead()}`);
+                    cc.log(`[BattleController] ${hero.name} 当前等级: ${stats.level}, 当前经验: ${stats.exp}`);
+                }
+
+                if (stats) {
+                    // 不管是否死亡，都给经验值
+                    const statusText = stats.isDead() ? "（已死亡）" : "（存活）";
+                    cc.log(`[BattleController] ✅ 给 ${hero.name}${statusText} 添加 ${expReward} 点经验值`);
+                    const result = LevelSystem.addExp(hero, expReward);
+                    cc.log(`[BattleController] addExp返回结果:`, result);
+                    if (result && result.leveledUp) {
+                        cc.log(`[BattleController] 🎉 ${hero.name} 升级到 ${result.newLevel} 级！`);
+                        cc.log(`[BattleController] 属性变化:`, result.statChanges);
+                    } else if (result) {
+                        cc.log(`[BattleController] ${hero.name} 获得经验值，当前等级: ${result.newLevel}, 经验: ${stats.exp}`);
+                    } else {
+                        cc.warn(`[BattleController] ${hero.name} addExp返回null！`);
+                    }
+                } else {
+                    cc.warn(`[BattleController] ${hero.name} 没有StatsComponent组件，不获得经验值`);
+                }
+            });
+            cc.log(`[BattleController] ===== 英雄经验值分配完成 =====`);
+        } else if (winner === "monster") {
+            // 怪物胜利，给所有参战的怪物添加经验值（包括死亡的）
+            cc.log(`[BattleController] ===== 怪物胜利，开始分配经验值 =====`);
+            cc.log(`[BattleController] 经验奖励: ${expReward} 点/人（包括死亡的单位）`);
+
+            this.monsters.forEach((monster, index) => {
+                cc.log(`[BattleController] 处理怪物[${index}]: ${monster.name}`);
+                const stats = monster.getComponent("StatsComponent");
+                cc.log(`[BattleController] StatsComponent存在: ${!!stats}`);
+                if (stats) {
+                    cc.log(`[BattleController] ${monster.name} 是否死亡: ${stats.isDead()}`);
+                    cc.log(`[BattleController] ${monster.name} 当前等级: ${stats.level}, 当前经验: ${stats.exp}`);
+                }
+
+                if (stats) {
+                    // 不管是否死亡，都给经验值
+                    const statusText = stats.isDead() ? "（已死亡）" : "（存活）";
+                    cc.log(`[BattleController] ✅ 给 ${monster.name}${statusText} 添加 ${expReward} 点经验值`);
+                    const result = LevelSystem.addExp(monster, expReward);
+                    cc.log(`[BattleController] addExp返回结果:`, result);
+                    if (result && result.leveledUp) {
+                        cc.log(`[BattleController] 🎉 ${monster.name} 升级到 ${result.newLevel} 级！`);
+                        cc.log(`[BattleController] 属性变化:`, result.statChanges);
+                    } else if (result) {
+                        cc.log(`[BattleController] ${monster.name} 获得经验值，当前等级: ${result.newLevel}, 经验: ${stats.exp}`);
+                    } else {
+                        cc.warn(`[BattleController] ${monster.name} addExp返回null！`);
+                    }
+                } else {
+                    cc.warn(`[BattleController] ${monster.name} 没有StatsComponent组件，不获得经验值`);
+                }
+            });
+            cc.log(`[BattleController] ===== 怪物经验值分配完成 =====`);
+        }
 
         // 记录游戏结束事件并保存战斗记录
         if (this.battleRecorder) {
