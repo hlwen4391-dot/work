@@ -197,6 +197,8 @@ var SkillSystem = {
             // AI自动释放的大招：显示UI后消耗怒气值
             // recorder为null/undefined时表示AI自动释放（没有战斗记录器）
             // recorder为对象时也表示AI自动释放（有战斗记录器，但这是AI自动触发的）
+            // 注意：需要传递callback参数，用于在技能执行完成后通知ActionSystem
+            const actionCallback = entity._actionCallback || null; // 从entity获取callback（由ActionSystem设置）
             this._showUltimateSkillUI(entity, skill.skillName || skill.name, () => {
                 // UI显示完成后，消耗怒气值并执行技能
                 if (stats && skill.requireRage > 0) {
@@ -204,6 +206,14 @@ var SkillSystem = {
                 }
                 // 继续执行技能（传递recorder，可能是null或BattleRecorder对象）
                 this._executeSkill(entity, target, skill, log, rand, recorder, stats);
+
+                // 技能执行完成后，调用callback通知ActionSystem
+                if (actionCallback) {
+                    // 清除临时保存的callback
+                    entity._actionCallback = null;
+                    // 调用callback
+                    actionCallback();
+                }
             });
             return;
         }

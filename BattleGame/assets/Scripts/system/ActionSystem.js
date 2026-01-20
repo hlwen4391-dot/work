@@ -86,6 +86,22 @@ var ActionSystem = cc.Class({
             this.recorder.recordActionStart(entity);
         }
 
+        // 检查技能是否是大招（大招不需要AttackMover的动画流程，因为有大招UI）
+        const isUltimateSkill = skill.requireRage && skill.requireRage > 0;
+
+        if (isUltimateSkill) {
+            // 大招：保存callback到entity，供SkillSystem使用
+            entity._actionCallback = () => {
+                // 大招执行完成后，检查死亡并调用callback
+                this.deathSystem.checkAndHandleDeath(target, this.recorder);
+                if (callback) callback();
+            };
+            // 大招：直接执行技能（会显示UI并执行伤害计算）
+            SkillSystem.useSkill(entity, target, skill, this.logger.log.bind(this.logger), this.rand, this.recorder);
+            // 注意：callback会在SkillSystem._showUltimateSkillUI的onComplete回调中调用
+            return;
+        }
+
         // 检查是否有攻击动画组件
         const attackMover = entity.getComponent("AttackMover");
 

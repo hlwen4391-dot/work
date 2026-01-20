@@ -6,28 +6,28 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
-        // 是否启用点击释放大招
+        // 是否启用点击释放大招（已禁用，现在通过点击头像释放大招）
         enableClick: {
-            default: true,
-            tooltip: "是否启用点击释放大招"
+            default: false,
+            tooltip: "是否启用点击释放大招（已禁用，现在通过点击头像释放大招）"
         }
     },
 
     onLoad() {
-        // 添加点击事件监听
-        if (this.enableClick) {
-            // 确保节点可以接收触摸事件
-            if (!this.node.getComponent(cc.Button)) {
-                // 如果没有Button组件，添加触摸事件监听
-                this.node.on(cc.Node.EventType.TOUCH_END, this.onClick, this);
-                cc.log(`[UltimateSkillButton] ${this.node.name} 已添加触摸事件监听`);
-            } else {
-                // 如果有Button组件，使用Button的点击事件
-                const button = this.node.getComponent(cc.Button);
-                button.node.on('click', this.onClick, this);
-                cc.log(`[UltimateSkillButton] ${this.node.name} 使用Button组件的点击事件`);
-            }
+        // 完全禁用点击人物释放大招功能
+        // 移除所有可能已存在的事件监听
+        this.node.off(cc.Node.EventType.TOUCH_END, this.onClick, this);
+        this.node.off(cc.Node.EventType.TOUCH_START, this.onClick, this);
+        this.node.off(cc.Node.EventType.TOUCH_CANCEL, this.onClick, this);
+
+        const button = this.node.getComponent(cc.Button);
+        if (button) {
+            button.node.off('click', this.onClick, this);
+            button.node.off(cc.Node.EventType.TOUCH_END, this.onClick, this);
         }
+
+        // 不再添加任何事件监听
+        cc.log(`[UltimateSkillButton] ${this.node.name} 点击人物释放大招功能已完全禁用`);
     },
 
     onDestroy() {
@@ -36,10 +36,11 @@ cc.Class({
     },
 
     /**
-     * 点击事件处理
+     * 点击事件处理（已禁用，不再执行任何操作）
      */
     onClick(event) {
-        cc.log(`[UltimateSkillButton] ${this.node.name} 被点击，尝试释放大招`);
+        // 已完全禁用点击人物释放大招功能
+        return;
 
         // 检查角色是否已死亡
         const stats = this.node.getComponent("StatsComponent");

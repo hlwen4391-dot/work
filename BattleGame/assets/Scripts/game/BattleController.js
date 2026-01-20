@@ -148,6 +148,47 @@ cc.Class({
             tooltip: "是否启用战斗记录功能"
         },
 
+        // 战斗场景头像显示（左下角和右下角）
+        heroAvatarContainer: {
+            default: null,
+            type: cc.Node,
+            tooltip: "左侧英雄头像容器节点（左下角）"
+        },
+
+        monsterAvatarContainer: {
+            default: null,
+            type: cc.Node,
+            tooltip: "右侧怪物头像容器节点（右下角）"
+        },
+
+        avatarPrefab: {
+            default: null,
+            type: cc.Prefab,
+            tooltip: "头像Prefab（用于动态创建头像，与SelectSceneUI使用相同的Prefab）"
+        },
+
+        heroIcons: {
+            default: [],
+            type: [cc.SpriteFrame],
+            tooltip: "英雄头像资源列表（按顺序：战士、法师...，与SelectSceneUI相同）"
+        },
+
+        monsterIcons: {
+            default: [],
+            type: [cc.SpriteFrame],
+            tooltip: "怪物头像资源列表（按顺序：怪物、Boss...，与SelectSceneUI相同）"
+        },
+
+        avatarSize: {
+            default: 80,
+            tooltip: "头像显示大小（像素）"
+        },
+
+        avatarSpacing: {
+            default: 10,
+            tooltip: "头像之间的间距（像素）"
+        },
+
         // 游戏结束场景名称
         gameOverSceneName: {
             default: "GameOverScene",
@@ -198,8 +239,6 @@ cc.Class({
             this.useSelectSceneMode = true;
             // 创建单位（从选择场景的数据自动创建）
             this.spawnUnitsFromSelection();
-            // 清除全局数据（避免下次进入时误用）
-            window.SelectedUnits = null;
         } else {
             // 创建单位（这是初始化 ECS 组件的关键步骤）
             this.spawnUnits();
@@ -217,6 +256,22 @@ cc.Class({
             recorder = new BattleRecorder();//创建战斗记录器
             this.battleRecorder = recorder; // 保存引用，用于后续访问记录
         }
+
+        // 显示战斗场景头像（从SelectedUnits获取）
+        this.scheduleOnce(() => {
+            this.initBattleAvatars();
+        }, 0.2);
+
+        // 清除全局数据（在头像显示完成后清除）
+        this.scheduleOnce(() => {
+            if (window.SelectedUnits) {
+                cc.log("[BattleController] 清除window.SelectedUnits");
+                window.SelectedUnits = null;
+            }
+        }, 0.5);
+
+        // 开始更新头像颜色（根据怒气值）
+        this.schedule(this._updateAllAvatarColors, 0.1); // 每0.1秒检查一次
 
         // 创建战斗系统
         this.battleSystem = new BattleSystem(
@@ -946,6 +1001,408 @@ cc.Class({
             }
             this._showGameOverPanel(winner);
         }
+    },
+
+    /**
+     * 初始化战斗场景头像显示（从SelectedUnits获取）
+     * @private
+     */
+    initBattleAvatars() {
+        if (!window.SelectedUnits) {
+            cc.log("[BattleController] 无SelectedUnits数据，跳过头像显示");
+            return;
+        }
+
+        const selectedUnits = window.SelectedUnits;
+        cc.log(`[BattleController] 开始初始化战斗场景头像 - 英雄: ${selectedUnits.heros ? selectedUnits.heros.length : 0}个, 怪物: ${selectedUnits.monsters ? selectedUnits.monsters.length : 0}个`);
+
+        // 显示英雄头像（左下角）
+        if (selectedUnits.heros && selectedUnits.heros.length > 0 && this.heroAvatarContainer && this.avatarPrefab) {
+            this._createBattleAvatars(selectedUnits.heros, "hero");
+        }
+
+        // 显示怪物头像（右下角）
+        if (selectedUnits.monsters && selectedUnits.monsters.length > 0 && this.monsterAvatarContainer && this.avatarPrefab) {
+            this._createBattleAvatars(selectedUnits.monsters, "monster");
+        }
+    },
+
+    /**
+     * 创建战斗场景头像列表
+     * @private
+     * @param {Array} selectedUnits - 选中的人物数据列表
+     * @param {string} team - 队伍类型（"hero" 或 "monster"）
+     */
+    _createBattleAvatars(selectedUnits, team) {
+        if (!selectedUnits || selectedUnits.length === 0) {
+            return;
+        }
+
+        const container = team === "hero" ? this.heroAvatarContainer : this.monsterAvatarContainer;
+        if (!container) {
+            cc.warn(`[BattleController] ${team}头像容器未绑定`);
+            return;
+        }
+
+        // 清空容器
+        container.removeAllChildren();
+
+        // 获取头像资源列表
+        const iconList = team === "hero" ? this.heroIcons : this.monsterIcons;
+
+        // 创建头像
+        selectedUnits.forEach((unitData, index) => {
+            const avatarNode = this._createBattleAvatar(unitData, team, index, iconList);
+            if (avatarNode) {
+                container.addChild(avatarNode);
+            }
+        });
+
+        // 调整容器布局（垂直排列）
+        this._layoutBattleAvatars(container, selectedUnits.length);
+    },
+
+    /**
+     * 创建单个战斗场景头像
+     * @private
+     * @param {Object} unitData - 单位数据
+     * @param {string} team - 队伍类型
+     * @param {number} index - 索引
+     * @param {Array} iconList - 头像资源列表
+     * @returns {cc.Node|null} 头像节点
+     */
+    _createBattleAvatar(unitData, team, index, iconList) {
+        if (!this.avatarPrefab) {
+            cc.warn("[BattleController] avatarPrefab未绑定");
+            return null;
+        }
+
+        // 实例化头像Prefab
+        const avatarNode = cc.instantiate(this.avatarPrefab);
+        avatarNode.name = `BattleAvatar_${unitData.name || unitData.displayName || index}`;
+
+        // 查找对应的人物节点（通过名称匹配）
+        const unitName = unitData.name || unitData.displayName;
+        cc.log(`[BattleController] 查找人物节点: ${unitName}, 队伍: ${team}`);
+        const characterNode = this._findCharacterNode(unitName, team);
+        if (characterNode) {
+            cc.log(`[BattleController] ✓ 找到人物节点: ${characterNode.name}`);
+            // 保存人物节点引用到头像节点
+            avatarNode._characterNode = characterNode;
+            // 添加点击事件监听
+            this._addAvatarClickHandler(avatarNode, characterNode);
+        } else {
+            cc.warn(`[BattleController] ✗ 未找到对应的人物节点: ${unitName}`);
+            cc.warn(`[BattleController]   当前${team}列表: ${(team === "hero" ? this.heros : this.monsters).map(n => n ? n.name : "null").join(", ")}`);
+        }
+
+        // 查找头像图片节点
+        const iconNode = avatarNode.getChildByName("Icon") || avatarNode;
+        const sprite = iconNode.getComponent(cc.Sprite);
+
+        if (sprite) {
+            // 优先使用unitData中的icon
+            let spriteFrame = unitData.icon || null;
+
+            // 如果unitData没有icon，尝试从iconList按索引获取
+            if (!spriteFrame && iconList && iconList.length > 0) {
+                // 尝试根据名称匹配
+                const UnitDataConfig = require("UnitDataConfig");
+                const unitConfigList = team === "hero" ? (UnitDataConfig.heros || []) : (UnitDataConfig.monsters || []);
+                const configIndex = unitConfigList.findIndex(config =>
+                    config.name === unitData.name || config.displayName === unitData.displayName
+                );
+                if (configIndex >= 0 && configIndex < iconList.length) {
+                    spriteFrame = iconList[configIndex];
+                } else if (index < iconList.length) {
+                    // 如果找不到匹配，按索引获取
+                    spriteFrame = iconList[index];
+                }
+            }
+
+            if (spriteFrame) {
+                sprite.spriteFrame = spriteFrame;
+                sprite.type = cc.Sprite.Type.SIMPLE;
+                sprite.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+
+                // 设置头像大小
+                iconNode.width = this.avatarSize || 80;
+                iconNode.height = this.avatarSize || 80;
+            } else {
+                cc.warn(`[BattleController] 未找到头像资源: ${unitData.name || unitData.displayName}`);
+            }
+        }
+
+        // 查找名称标签
+        const nameLabel = avatarNode.getChildByName("NameLabel");
+        if (nameLabel) {
+            const label = nameLabel.getComponent(cc.Label);
+            if (label) {
+                label.string = unitData.displayName || unitData.name || "未知";
+                // 调整字体大小
+                if (label.fontSize > 0) {
+                    label.fontSize = Math.max(14, label.fontSize * 0.6);
+                } else {
+                    label.fontSize = 16;
+                }
+            }
+        }
+
+        // 隐藏勾选标记（战斗场景不需要）
+        const checkmark = avatarNode.getChildByName("Checkmark");
+        if (checkmark) {
+            checkmark.active = false;
+        }
+
+        // 根据怒气值设置头像颜色（初始状态）
+        if (characterNode) {
+            this._updateAvatarColor(avatarNode, characterNode);
+        }
+
+        return avatarNode;
+    },
+
+    /**
+     * 查找对应的人物节点
+     * @private
+     * @param {string} unitName - 单位名称
+     * @param {string} team - 队伍类型
+     * @returns {cc.Node|null} 人物节点
+     */
+    _findCharacterNode(unitName, team) {
+        const unitList = team === "hero" ? this.heros : this.monsters;
+        if (!unitList || unitList.length === 0) {
+            return null;
+        }
+
+        // 通过名称匹配
+        let characterNode = unitList.find(node => {
+            if (!node || !node.isValid) return false;
+            const stats = node.getComponent("StatsComponent");
+            if (!stats) return false;
+            return stats.name === unitName || node.name === unitName;
+        });
+
+        // 如果找不到，尝试通过索引匹配（如果unitName是索引）
+        if (!characterNode && !isNaN(unitName)) {
+            const index = parseInt(unitName);
+            if (index >= 0 && index < unitList.length) {
+                characterNode = unitList[index];
+            }
+        }
+
+        return characterNode;
+    },
+
+    /**
+     * 给头像添加点击事件处理
+     * @private
+     * @param {cc.Node} avatarNode - 头像节点
+     * @param {cc.Node} characterNode - 人物节点
+     */
+    _addAvatarClickHandler(avatarNode, characterNode) {
+        // 确保节点可以接收触摸事件
+        avatarNode._touchEnabled = true;
+
+        // 确保节点有足够的大小来接收触摸
+        if (avatarNode.width === 0 || avatarNode.height === 0) {
+            avatarNode.setContentSize(this.avatarSize || 80, this.avatarSize || 80);
+        }
+
+        // 移除之前可能绑定的事件监听（防止重复绑定）
+        avatarNode.off(cc.Node.EventType.TOUCH_END);
+        avatarNode.off(cc.Node.EventType.TOUCH_START);
+        avatarNode.off('click');
+
+        // 添加按钮组件（用于更好的点击反馈和事件处理）
+        let button = avatarNode.getComponent(cc.Button);
+        if (!button) {
+            button = avatarNode.addComponent(cc.Button);
+            button.transition = cc.Button.Transition.SCALE;
+            button.zoomScale = 0.9;
+        }
+
+        // 只使用Button组件的click事件（避免与TOUCH_END重复触发）
+        button.node.on('click', (event) => {
+            cc.log(`[BattleController] 头像Button点击事件触发: ${avatarNode.name}`);
+            // 注意：Button的click事件对象可能不支持stopPropagation，所以不调用
+            // 如果需要阻止事件冒泡，可以在事件处理函数中直接返回
+            this._onAvatarClick(characterNode, event);
+        }, this);
+
+        // 确保Icon子节点也可以接收触摸（如果存在）
+        const iconNode = avatarNode.getChildByName("Icon");
+        if (iconNode) {
+            iconNode._touchEnabled = true;
+            if (iconNode.width === 0 || iconNode.height === 0) {
+                iconNode.setContentSize(this.avatarSize || 80, this.avatarSize || 80);
+            }
+        }
+
+        cc.log(`[BattleController] ✓ 已为头像添加点击事件: ${avatarNode.name} -> ${characterNode.name}`);
+    },
+
+    /**
+     * 头像点击事件处理
+     * @private
+     * @param {cc.Node} characterNode - 人物节点
+     * @param {cc.Event} event - 事件对象
+     */
+    _onAvatarClick(characterNode, event) {
+        if (!characterNode || !characterNode.isValid) {
+            cc.warn("[BattleController] 人物节点无效，无法释放大招");
+            return;
+        }
+
+        // 防止重复触发：如果该人物正在释放大招，则忽略
+        if (characterNode._isReleasingUltimate) {
+            cc.log(`[BattleController] ${characterNode.name} 正在释放大招中，忽略重复点击`);
+            return;
+        }
+
+        cc.log(`[BattleController] ========== 头像被点击 ==========`);
+        cc.log(`[BattleController] 人物: ${characterNode.name}`);
+        cc.log(`[BattleController] 尝试释放大招...`);
+
+        // 检查角色是否已死亡
+        const stats = characterNode.getComponent("StatsComponent");
+        if (stats && stats.isDead()) {
+            cc.log(`[BattleController] ${characterNode.name} 已死亡，禁止释放大招`);
+            return;
+        }
+
+        // 检查是否正在回放，如果是则禁用大招释放
+        if (this.isReplaying) {
+            cc.log(`[BattleController] 正在回放中，禁用大招释放`);
+            return;
+        }
+
+        const SkillSystem = require("SkillSystem");
+        const TeamRef = require("TeamRef");
+        const TeamComponent = require("TeamComponent");
+
+        // 检查是否可以释放大招
+        if (!SkillSystem.canUseUltimateSkill(characterNode)) {
+            cc.log(`[BattleController] ${characterNode.name} 怒气值不足，无法释放大招`);
+            return;
+        }
+
+        cc.log(`[BattleController] ${characterNode.name} 可以释放大招，继续执行...`);
+
+        // 获取目标
+        const teamComp = characterNode.getComponent("TeamComponent");
+        if (!teamComp) {
+            cc.warn(`[BattleController] ${characterNode.name} 缺少TeamComponent组件`);
+            return;
+        }
+
+        const enemies = teamComp.team === "hero"
+            ? TeamRef.monstersRef
+            : TeamRef.herosRef;
+
+        const target = enemies.find(e => {
+            if (!e || !e.isValid) return false;
+            const s = e.getComponent("StatsComponent");
+            return s && !s.isDead();
+        });
+
+        if (!target) {
+            cc.log(`[BattleController] ${characterNode.name} 没有可攻击的目标`);
+            return;
+        }
+
+        // 标记为正在释放大招（防止重复触发）
+        characterNode._isReleasingUltimate = true;
+
+        // 释放大招
+        const log = (msg) => cc.log(msg);
+        const rand = Math.random;
+        SkillSystem.useUltimateSkill(characterNode, target, log, rand);
+
+        // 延迟重置标志（大招UI动画完成后重置）
+        this.scheduleOnce(() => {
+            characterNode._isReleasingUltimate = false;
+            cc.log(`[BattleController] ${characterNode.name} 大招释放完成，重置标志`);
+        }, 3.0); // 延迟3秒，确保大招UI动画完成
+    },
+
+    /**
+     * 更新所有头像的颜色（根据怒气值）
+     * @private
+     */
+    _updateAllAvatarColors() {
+        // 更新英雄头像的颜色
+        if (this.heroAvatarContainer) {
+            this.heroAvatarContainer.children.forEach(avatarNode => {
+                this._updateAvatarColor(avatarNode, avatarNode._characterNode);
+            });
+        }
+
+        // 更新怪物头像的颜色
+        if (this.monsterAvatarContainer) {
+            this.monsterAvatarContainer.children.forEach(avatarNode => {
+                this._updateAvatarColor(avatarNode, avatarNode._characterNode);
+            });
+        }
+    },
+
+    /**
+     * 更新单个头像的颜色（根据怒气值）
+     * @private
+     * @param {cc.Node} avatarNode - 头像节点
+     * @param {cc.Node} characterNode - 人物节点
+     */
+    _updateAvatarColor(avatarNode, characterNode) {
+        if (!avatarNode || !avatarNode.isValid) {
+            return;
+        }
+
+        if (!characterNode || !characterNode.isValid) {
+            return;
+        }
+
+        const stats = characterNode.getComponent("StatsComponent");
+        if (!stats) {
+            return;
+        }
+
+        // 检查怒气值是否已满
+        const isRageFull = stats.isRageFull();
+
+        // 查找头像图片节点
+        const iconNode = avatarNode.getChildByName("Icon") || avatarNode;
+
+        // 根据怒气值设置颜色
+        if (isRageFull) {
+            // 怒气值满：正常颜色（白色，RGB=255,255,255）
+            iconNode.color = cc.Color.WHITE;
+            avatarNode.color = cc.Color.WHITE;
+        } else {
+            // 怒气值未满：灰色（RGB=128,128,128）
+            iconNode.color = new cc.Color(128, 128, 128, 255);
+            avatarNode.color = new cc.Color(128, 128, 128, 255);
+        }
+    },
+
+    /**
+     * 调整头像容器布局（水平排列，从左往右）
+     * @private
+     * @param {cc.Node} container - 容器节点
+     * @param {number} count - 头像数量
+     */
+    _layoutBattleAvatars(container, count) {
+        if (count === 0) return;
+
+        const children = container.children;
+        const spacing = this.avatarSpacing || 10;
+        const avatarWidth = this.avatarSize || 80;
+        const totalWidth = count * avatarWidth + (count - 1) * spacing;
+
+        // 从左往右排列
+        children.forEach((child, index) => {
+            const x = -totalWidth / 2 + avatarWidth / 2 + index * (avatarWidth + spacing);
+            child.setPosition(x, 0);
+        });
     },
 
     /**
