@@ -24,6 +24,19 @@ cc.Class({
             default: null,
             type: cc.Button,
             tooltip: "清除所有等级数据按钮（测试用，可选）"
+        },
+
+        // 查看人物按钮
+        characterViewButton: {
+            default: null,
+            type: cc.Button,
+            tooltip: "查看人物属性按钮"
+        },
+
+        // 人物属性查看场景名称
+        characterViewSceneName: {
+            default: "CharacterViewScene",
+            tooltip: "人物属性查看场景名称"
         }
     },
 
@@ -42,6 +55,14 @@ cc.Class({
         if (this.clearDataButton) {
             this.clearDataButton.node.on(cc.Node.EventType.TOUCH_END, this.onClearDataClick, this);
             cc.log(`[MainMenuScene] 已绑定clearDataButton事件`);
+        }
+
+        // 绑定查看人物按钮事件（如果存在）
+        if (this.characterViewButton) {
+            this.characterViewButton.node.on(cc.Node.EventType.TOUCH_END, this.onCharacterViewClick, this);
+            cc.log(`[MainMenuScene] 已绑定characterViewButton事件`);
+        } else {
+            cc.warn("[MainMenuScene] 未设置characterViewButton，如需查看人物属性功能，请在主菜单场景中绑定查看人物按钮");
         }
     },
 
@@ -75,6 +96,26 @@ cc.Class({
             CharacterDataManager.clearAllCharacterData();
             cc.log("[MainMenuScene] 已清除所有角色的等级数据");
             alert("已清除所有角色的等级数据！\n下次进入游戏时，所有角色将从1级开始。");
+        }
+    },
+
+    /**
+     * 查看人物属性按钮点击事件
+     */
+    onCharacterViewClick() {
+        cc.log(`[MainMenuScene] 查看人物属性，场景名称: ${this.characterViewSceneName}`);
+        if (this.characterViewSceneName) {
+            cc.director.loadScene(this.characterViewSceneName, (error) => {
+                if (error) {
+                    cc.error(`[MainMenuScene] 加载人物属性查看场景失败: ${error}`);
+                    cc.error(`[MainMenuScene] 请检查场景名称是否正确: ${this.characterViewSceneName}`);
+                    cc.error(`[MainMenuScene] 请确保场景文件存在于项目中`);
+                } else {
+                    cc.log(`[MainMenuScene] 成功加载人物属性查看场景: ${this.characterViewSceneName}`);
+                }
+            });
+        } else {
+            cc.warn("[MainMenuScene] 未设置characterViewSceneName，无法跳转到人物属性查看场景");
         }
     }
 });

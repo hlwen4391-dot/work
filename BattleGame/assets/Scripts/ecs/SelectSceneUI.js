@@ -562,9 +562,9 @@ cc.Class({
             this.centerDisplayArea.addChild(prefabInstance);
             this.currentDisplayPrefab = prefabInstance;
 
-            // 设置位置和缩放（居中显示）
+            // 设置位置和缩放（居中显示，缩小显示）
             prefabInstance.setPosition(0, 0);
-            prefabInstance.setScale(1.0);
+            prefabInstance.setScale(0.8);
 
             // 确保centerDisplayArea可见
             if (!this.centerDisplayArea.active) {

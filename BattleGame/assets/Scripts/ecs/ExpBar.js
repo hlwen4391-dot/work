@@ -45,6 +45,8 @@ cc.Class({
 
         // 如果使用ProgressBar方式，初始化进度为0
         if (this.expProgress) {
+            // 统一设置所有单位的经验条从左到右填充
+            this.expProgress.reverse = false;
             this.expProgress.progress = 0;
         }
 
@@ -54,6 +56,13 @@ cc.Class({
         }
         if (this.expLabel) {
             this.expLabel.string = "0/0";
+        }
+    },
+
+    start() {
+        // 在start中再次确保reverse设置正确（因为某些情况下onLoad可能太早）
+        if (this.expProgress) {
+            this.expProgress.reverse = false;
         }
     },
 
@@ -70,6 +79,8 @@ cc.Class({
 
         // 优先使用ProgressBar
         if (this.expProgress) {
+            // 强制设置从左到右填充（确保每次更新时都是正确的方向）
+            this.expProgress.reverse = false;
             this.expProgress.progress = percent;
         }
         // 否则使用Sprite宽度方式

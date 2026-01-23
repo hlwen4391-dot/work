@@ -95,6 +95,9 @@ cc.Class({
         // 获取经验条组件
         if (this.expBar) {
             this._expBarComponent = this.expBar.getComponent("ExpBar");
+            // 反一下Scale（水平翻转）
+            const currentScale = this.expBar.scaleX;
+            this.expBar.scaleX = -currentScale;
         }
 
         // 开始定时更新

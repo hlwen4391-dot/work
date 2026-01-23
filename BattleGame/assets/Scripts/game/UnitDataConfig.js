@@ -32,10 +32,10 @@ var UnitDataConfig = {
             avatarPosition: 1, // 头像固定位置索引（1 = 第二个位置）
             hp: 100,
             attack: 12,
-            defense: 4,
-            speed: 12,  // 提高速度以加快战斗节奏（原8）
-            crit: 0.1,
-            miss: 0.1,
+            defense: 1,
+            speed: 3,  // 提高速度以加快战斗节奏（原8）
+            crit: 0,
+            miss: 0,
             skills: [
                 SkillConfig.normalAttack,
                 SkillConfig.fireball
@@ -84,9 +84,9 @@ var UnitDataConfig = {
             prefab: null, // 人物原型Prefab（需要在编辑器中设置）
             avatarPosition: 1, // 头像固定位置索引（1 = 第二个位置）
             hp: 150,
-            attack: 12,
-            defense: 8,
-            speed: 15,  // 提高速度以加快战斗节奏（原10）
+            attack: 20,
+            defense: 1,
+            speed: 1,  // 提高速度以加快战斗节奏（原10）
             skills: [
                 SkillConfig.normalAttack,
                 SkillConfig.warCry
