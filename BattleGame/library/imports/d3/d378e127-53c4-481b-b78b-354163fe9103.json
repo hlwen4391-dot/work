@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "shengbing_01",
+    "texture": "1fb62db6-169e-4156-b165-7fbd9d0df461",
+    "atlas": "",
+    "rect": [
+      40,
+      60,
+      766,
+      154
+    ],
+    "offset": [
+      -89,
+      -9
+    ],
+    "originalSize": [
+      1024,
+      256
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

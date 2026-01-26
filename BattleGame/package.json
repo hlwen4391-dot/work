@@ -1,0 +1,22 @@
+{
+  "name": "game-server",
+  "version": "1.0.0",
+  "description": "游戏服务器 - 无数据库版本，使用内存和JSON文件存储",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "game",
+    "server",
+    "express",
+    "json"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.22.1"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "战士",
+    "texture": "c4080e1f-22b2-4fa3-9e12-18a7518d0314",
+    "atlas": "",
+    "rect": [
+      104,
+      147,
+      798,
+      819
+    ],
+    "offset": [
+      -9,
+      -44.5
+    ],
+    "originalSize": [
+      1024,
+      1024
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

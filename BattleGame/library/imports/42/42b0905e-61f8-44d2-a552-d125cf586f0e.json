@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "spineboy",
+    "texture": "517f2d23-89e2-46ae-943c-93aef6e6e18d",
+    "atlas": "",
+    "rect": [
+      2,
+      2,
+      998,
+      240
+    ],
+    "offset": [
+      -11,
+      6
+    ],
+    "originalSize": [
+      1024,
+      256
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

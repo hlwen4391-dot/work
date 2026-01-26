@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "shangbing_05",
+    "texture": "3cf5fc8a-670b-4b41-bfaf-8dd359e50164",
+    "atlas": "",
+    "rect": [
+      2,
+      2,
+      612,
+      439
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      616,
+      443
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

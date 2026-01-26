@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "巨狼",
+    "texture": "923b06d4-d3d9-4294-b565-ef5d3d9bcf28",
+    "atlas": "",
+    "rect": [
+      16,
+      142,
+      942,
+      793
+    ],
+    "offset": [
+      -25,
+      -26.5
+    ],
+    "originalSize": [
+      1024,
+      1024
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

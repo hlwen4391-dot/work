@@ -20,12 +20,16 @@ var ServerConfig = {
         headerValue: null // 请求头值，例如："Bearer {token}"
     },
     
+    // 所有角色数据的服务器地址（可选，如果为null则使用baseURL）
+    baseURLForAll: null,
+    
     /**
      * 初始化服务器配置
      * @param {Object} config - 配置对象
      */
     init(config) {
         if (config.baseURL) this.baseURL = config.baseURL;
+        if (config.baseURLForAll !== undefined) this.baseURLForAll = config.baseURLForAll;
         if (config.timeout) this.timeout = config.timeout;
         if (config.retryCount) this.retryCount = config.retryCount;
         if (config.auth) {
@@ -71,6 +75,7 @@ var ServerConfig = {
         try {
             const CharacterDataAdapter = require("CharacterDataAdapter");
             CharacterDataAdapter.serverConfig.baseURL = this.baseURL;
+            CharacterDataAdapter.serverConfig.baseURLForAll = this.baseURLForAll;
             CharacterDataAdapter.serverConfig.timeout = this.timeout;
             CharacterDataAdapter.serverConfig.retryCount = this.retryCount;
             

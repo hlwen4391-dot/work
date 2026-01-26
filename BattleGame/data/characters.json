@@ -1,0 +1,70 @@
+{
+  "1": {
+    "战士": {
+      "level": 8,
+      "exp": 2052,
+      "baseHp": 120,
+      "baseAttack": 18,
+      "baseDefense": 1,
+      "baseSpeed": 2,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "saveTime": 1769426189169
+    },
+    "法师": {
+      "level": 4,
+      "exp": 719,
+      "baseHp": 100,
+      "baseAttack": 12,
+      "baseDefense": 1,
+      "baseSpeed": 3,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "saveTime": 1769426189171
+    },
+    "修女": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 120,
+      "baseAttack": 20,
+      "baseDefense": 1,
+      "baseSpeed": 1,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "saveTime": 1769426189172
+    },
+    "怪物": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 130,
+      "baseAttack": 12,
+      "baseDefense": 1,
+      "baseSpeed": 1,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "saveTime": 1769426338888
+    },
+    "Boss": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 100,
+      "baseAttack": 1,
+      "baseDefense": 1,
+      "baseSpeed": 1,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "saveTime": 1769426338890
+    },
+    "大祭司": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 100,
+      "baseAttack": 1,
+      "baseDefense": 1,
+      "baseSpeed": 1,
+      "baseCrit": -0.1,
+      "baseMiss": 0,
+      "saveTime": 1769426338892
+    }
+  }
+}

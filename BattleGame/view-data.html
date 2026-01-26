@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看服务器数据</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.reset {
+            background-color: #f44336;
+        }
+        button.reset:hover {
+            background-color: #da190b;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .config {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ffc107;
+        }
+        .config input {
+            padding: 5px 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+        }
+        .config label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        #characterName {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 游戏服务器数据查看器</h1>
+    
+    <div class="config">
+        <h3>服务器配置</h3>
+        <div style="margin-bottom: 10px;">
+            <label>
+                单个角色数据服务器（端口3000）：
+                <input type="text" id="serverUrl" value="http://localhost:3000/api" placeholder="http://localhost:3000/api">
+            </label>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label>
+                所有角色数据服务器（端口3001）：
+                <input type="text" id="serverUrlForAll" value="http://localhost:3001/api" placeholder="http://localhost:3001/api">
+            </label>
+        </div>
+        <button onclick="saveConfig()">💾 保存配置</button>
+    </div>
+    
+    <div class="container">
+        <h2>操作</h2>
+        <button onclick="loadData()">🔄 刷新所有数据</button>
+        <button onclick="loadAllCharacters()">👥 获取所有角色数据（端口3001）</button>
+        <button onclick="loadSingleCharacter()">👤 获取单个角色数据（端口3000）</button>
+        <button onclick="resetData()" class="reset">🗑️ 重置所有数据</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <div class="container">
+        <h2>📊 所有角色数据（从端口3001获取）</h2>
+        <pre id="allCharacters">点击"获取所有角色数据"按钮加载...</pre>
+    </div>
+
+    <div class="container">
+        <h2>👤 单个角色数据（从端口3000获取）</h2>
+        <div style="margin-bottom: 10px;">
+            <input type="text" id="characterName" placeholder="输入角色名称（如：战士）" style="padding: 5px 10px; width: 200px; margin-right: 10px;">
+            <button onclick="loadSingleCharacter()">🔍 查询</button>
+        </div>
+        <pre id="singleCharacter">输入角色名称后点击"查询"按钮...</pre>
+    </div>
+
+    <div class="container">
+        <h2>📋 完整数据（从端口3000获取）</h2>
+        <pre id="characters">点击"刷新所有数据"按钮加载...</pre>
+    </div>
+
+    <div class="container">
+        <h2>🎒 道具数据（从端口3000获取）</h2>
+        <pre id="inventory">点击"刷新所有数据"按钮加载...</pre>
+    </div>
+
+    <script>
+        // 从localStorage加载配置
+        let API_BASE = localStorage.getItem('serverUrl') || 'http://localhost:3000/api';
+        let API_BASE_FOR_ALL = localStorage.getItem('serverUrlForAll') || 'http://localhost:3001/api';
+        
+        document.getElementById('serverUrl').value = API_BASE;
+        document.getElementById('serverUrlForAll').value = API_BASE_FOR_ALL;
+
+        function saveConfig() {
+            API_BASE = document.getElementById('serverUrl').value;
+            API_BASE_FOR_ALL = document.getElementById('serverUrlForAll').value;
+            localStorage.setItem('serverUrl', API_BASE);
+            localStorage.setItem('serverUrlForAll', API_BASE_FOR_ALL);
+            showStatus('✅ 配置已保存！', 'success');
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type} show`;
+            statusDiv.textContent = message;
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 加载所有数据（从端口3000）
+        async function loadData() {
+            try {
+                showStatus('正在加载所有数据...', 'info');
+                
+                const response = await fetch(`${API_BASE}/admin/data`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('characters').textContent = 
+                        JSON.stringify(result.data.characters, null, 2);
+                    document.getElementById('inventory').textContent = 
+                        JSON.stringify(result.data.inventory, null, 2);
+                    showStatus('✅ 所有数据加载成功！', 'success');
+                } else {
+                    throw new Error(result.message || '加载失败');
+                }
+            } catch (error) {
+                showStatus(`❌ 加载失败: ${error.message}\n请确保服务器正在运行！`, 'error');
+                console.error('加载数据失败:', error);
+                
+                // 显示错误提示
+                document.getElementById('characters').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 服务器地址是否正确（端口3000）`;
+                document.getElementById('inventory').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 服务器地址是否正确（端口3000）`;
+            }
+        }
+
+        // 获取所有角色数据（从端口3001）
+        async function loadAllCharacters() {
+            try {
+                showStatus('正在从端口3001获取所有角色数据...', 'info');
+                
+                const response = await fetch(`${API_BASE_FOR_ALL}/characters`, {
+                    headers: {
+                        'Authorization': 'Bearer 1'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('allCharacters').textContent = 
+                        JSON.stringify(result.data, null, 2);
+                    showStatus('✅ 所有角色数据加载成功！（端口3001）', 'success');
+                } else {
+                    throw new Error(result.message || '加载失败');
+                }
+            } catch (error) {
+                showStatus(`❌ 加载失败: ${error.message}\n请确保端口3001的服务器正在运行！`, 'error');
+                console.error('加载所有角色数据失败:', error);
+                
+                document.getElementById('allCharacters').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 端口3001是否已启动\n3. 服务器地址是否正确`;
+            }
+        }
+
+        // 获取单个角色数据（从端口3000）
+        async function loadSingleCharacter() {
+            const characterName = document.getElementById('characterName').value.trim();
+            
+            if (!characterName) {
+                showStatus('❌ 请输入角色名称！', 'error');
+                return;
+            }
+
+            try {
+                showStatus(`正在从端口3000获取角色"${characterName}"的数据...`, 'info');
+                
+                const response = await fetch(`${API_BASE}/characters/${encodeURIComponent(characterName)}`, {
+                    headers: {
+                        'Authorization': 'Bearer 1'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.data) {
+                        document.getElementById('singleCharacter').textContent = 
+                            JSON.stringify(result.data, null, 2);
+                        showStatus(`✅ 角色"${characterName}"数据加载成功！（端口3000）`, 'success');
+                    } else {
+                        document.getElementById('singleCharacter').textContent = 
+                            `角色"${characterName}"没有数据`;
+                        showStatus(`⚠️ 角色"${characterName}"没有数据`, 'info');
+                    }
+                } else {
+                    throw new Error(result.message || '加载失败');
+                }
+            } catch (error) {
+                showStatus(`❌ 加载失败: ${error.message}\n请确保端口3000的服务器正在运行！`, 'error');
+                console.error('加载单个角色数据失败:', error);
+                
+                document.getElementById('singleCharacter').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 端口3000是否已启动\n3. 角色名称是否正确`;
+            }
+        }
+
+        async function resetData() {
+            if (!confirm('⚠️ 确定要重置所有数据吗？\n\n此操作不可恢复！\n所有角色和道具数据将被清空！')) {
+                return;
+            }
+
+            try {
+                showStatus('正在重置数据...', 'info');
+                
+                const response = await fetch(`${API_BASE}/admin/reset`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('✅ 数据已重置！', 'success');
+                    await loadData(); // 刷新显示
+                } else {
+                    throw new Error(result.message || '重置失败');
+                }
+            } catch (error) {
+                showStatus(`❌ 重置失败: ${error.message}`, 'error');
+                console.error('重置数据失败:', error);
+            }
+        }
+
+        // 页面加载时自动加载数据
+        window.onload = () => {
+            loadData();
+            loadAllCharacters();
+        };
+    </script>
+</body>
+</html>

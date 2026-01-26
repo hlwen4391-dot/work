@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "dijing_1",
+    "texture": "eb5ca0a3-b0ef-4319-b758-66c2890f7cec",
+    "atlas": "",
+    "rect": [
+      2,
+      2,
+      439,
+      517
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      443,
+      521
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

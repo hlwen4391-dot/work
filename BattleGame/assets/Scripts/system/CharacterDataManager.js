@@ -139,25 +139,26 @@ var CharacterDataManager = {
 
     /**
      * 获取所有保存的角色数据
-     * @returns {Object} { characterName: data, ... }
+     * @returns {Promise<Object>|Object} { characterName: data, ... }（服务器模式下返回Promise）
      */
     getAllCharacterData() {
-        const result = {};
-        try {
-            const keys = Object.keys(cc.sys.localStorage);
-            keys.forEach(key => {
-                if (key.startsWith(this.STORAGE_PREFIX)) {
-                    const characterName = key.replace(this.STORAGE_PREFIX, "");
-                    const data = this.loadCharacterData(characterName);
-                    if (data) {
-                        result[characterName] = data;
-                    }
+        const result = CharacterDataAdapter.loadAllCharacterData();
+
+        // 如果是Promise（服务器模式），返回Promise
+        if (result instanceof Promise) {
+            return result.then(data => {
+                if (data) {
+                    cc.log(`[CharacterDataManager] 获取所有角色数据:`, Object.keys(data).length, "个角色");
                 }
+                return data || {};
             });
-        } catch (e) {
-            cc.error(`[CharacterDataManager] 获取所有数据失败: ${e.message}`);
         }
-        return result;
+
+        // 本地模式，直接返回结果
+        if (result && Object.keys(result).length > 0) {
+            cc.log(`[CharacterDataManager] 获取所有角色数据:`, Object.keys(result).length, "个角色");
+        }
+        return result || {};
     },
 
     /**

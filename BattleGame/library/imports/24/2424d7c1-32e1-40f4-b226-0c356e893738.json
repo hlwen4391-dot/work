@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "11011_jia",
+    "texture": "3edcb573-b554-47b8-986d-7ce38f0daecc",
+    "atlas": "",
+    "rect": [
+      2,
+      2,
+      983,
+      930
+    ],
+    "offset": [
+      -0.5,
+      0
+    ],
+    "originalSize": [
+      988,
+      934
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

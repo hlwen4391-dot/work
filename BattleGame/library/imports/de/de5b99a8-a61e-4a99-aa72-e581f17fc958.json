@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "denglu_xinnian",
+    "texture": "fe16174c-9066-4a21-a536-6dad5a6d4fc5",
+    "atlas": "",
+    "rect": [
+      2,
+      28,
+      1899,
+      1970
+    ],
+    "offset": [
+      0,
+      -13
+    ],
+    "originalSize": [
+      1903,
+      2000
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

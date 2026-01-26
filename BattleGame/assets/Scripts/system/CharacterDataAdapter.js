@@ -14,6 +14,7 @@ var CharacterDataAdapter = {
     // 服务器API配置
     serverConfig: {
         baseURL: "https://your-api-server.com/api",
+        baseURLForAll: null, // 获取所有角色数据的服务器地址（如果为null，则使用baseURL）
         timeout: 5000, // 请求超时时间（毫秒）
         retryCount: 3,  // 失败重试次数
         // 角色数据的API路径
@@ -53,6 +54,36 @@ var CharacterDataAdapter = {
                 return await this._saveServer(characterName, data);
             default:
                 return this._saveLocal(characterName, data);
+        }
+    },
+
+    /**
+     * 加载所有角色数据（适配器方法）
+     * @returns {Promise<Object>|Object} 所有角色数据 { characterName: data, ... }
+     */
+    async loadAllCharacterData() {
+        switch (this.storageMode) {
+            case "local":
+                return this._loadAllLocal();
+            case "server":
+                return await this._loadAllServer();
+            case "hybrid":
+                // 先从服务器加载，失败则使用本地缓存
+                try {
+                    const serverData = await this._loadAllServer();
+                    // 同步到本地缓存
+                    if (serverData) {
+                        Object.keys(serverData).forEach(characterName => {
+                            this._saveLocal(characterName, serverData[characterName]);
+                        });
+                    }
+                    return serverData;
+                } catch (e) {
+                    cc.warn(`[CharacterDataAdapter] 服务器加载失败，使用本地缓存: ${e.message}`);
+                    return this._loadAllLocal();
+                }
+            default:
+                return this._loadAllLocal();
         }
     },
 
@@ -115,6 +146,29 @@ var CharacterDataAdapter = {
     },
 
     /**
+     * 本地存储：加载所有数据
+     * @private
+     */
+    _loadAllLocal() {
+        const result = {};
+        try {
+            const keys = Object.keys(cc.sys.localStorage);
+            keys.forEach(key => {
+                if (key.startsWith("character_data_")) {
+                    const characterName = key.replace("character_data_", "");
+                    const data = this._loadLocal(characterName);
+                    if (data) {
+                        result[characterName] = data;
+                    }
+                }
+            });
+        } catch (e) {
+            cc.error(`[CharacterDataAdapter] 本地加载所有数据失败: ${e.message}`);
+        }
+        return result;
+    },
+
+    /**
      * 服务器存储：保存数据
      * @private
      */
@@ -157,6 +211,30 @@ var CharacterDataAdapter = {
             }
         } catch (e) {
             cc.error(`[CharacterDataAdapter] 服务器加载失败: ${e.message}`);
+            throw e;
+        }
+    },
+
+    /**
+     * 服务器存储：加载所有数据
+     * @private
+     */
+    async _loadAllServer() {
+        try {
+            // 如果配置了baseURLForAll，使用它；否则使用baseURL
+            const baseURL = this.serverConfig.baseURLForAll || this.serverConfig.baseURL;
+            const url = `${baseURL}${this.serverConfig.characterDataPath}`;
+            
+            const response = await this._httpRequest('GET', url);
+
+            if (response.success && response.data) {
+                cc.log(`[CharacterDataAdapter] 服务器加载所有角色数据成功`);
+                return response.data || {};
+            } else {
+                throw new Error(response.message || "服务器加载失败");
+            }
+        } catch (e) {
+            cc.error(`[CharacterDataAdapter] 服务器加载所有数据失败: ${e.message}`);
             throw e;
         }
     },

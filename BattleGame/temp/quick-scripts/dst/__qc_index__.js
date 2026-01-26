@@ -1,0 +1,79 @@
+
+                (function() {
+                    var nodeEnv = typeof require !== 'undefined' && typeof process !== 'undefined';
+                    var __module = nodeEnv ? module : {exports:{}};
+                    var __filename = 'preview-scripts/__qc_index__.js';
+                    var __require = nodeEnv ? function (request) {
+                        return cc.require(request);
+                    } : function (request) {
+                        return __quick_compile_project__.require(request, __filename);
+                    };
+                    function __define (exports, require, module) {
+                        if (!nodeEnv) {__quick_compile_project__.registerModule(__filename, module);}
+require('./assets/Scripts/ecs/AttackMover');
+require('./assets/Scripts/ecs/AvatarItem');
+require('./assets/Scripts/ecs/BuffComponent');
+require('./assets/Scripts/ecs/BuffIconDisplay');
+require('./assets/Scripts/ecs/BuffManager');
+require('./assets/Scripts/ecs/CharacterViewUI');
+require('./assets/Scripts/ecs/CombatComponent');
+require('./assets/Scripts/ecs/ExpBar');
+require('./assets/Scripts/ecs/GameOverPanel');
+require('./assets/Scripts/ecs/HealthBar');
+require('./assets/Scripts/ecs/ItemIconSetter');
+require('./assets/Scripts/ecs/LevelUI');
+require('./assets/Scripts/ecs/RageBar');
+require('./assets/Scripts/ecs/ReplayController');
+require('./assets/Scripts/ecs/SelectSceneUI');
+require('./assets/Scripts/ecs/SkillComponent');
+require('./assets/Scripts/ecs/SkillEffectPlayer');
+require('./assets/Scripts/ecs/StatsComponent');
+require('./assets/Scripts/ecs/StunIcon');
+require('./assets/Scripts/ecs/TeamComponent');
+require('./assets/Scripts/ecs/UltimateSkillButton');
+require('./assets/Scripts/ecs/UltimateSkillUI');
+require('./assets/Scripts/ecs/random');
+require('./assets/Scripts/game/BattleController');
+require('./assets/Scripts/game/CharacterViewScene');
+require('./assets/Scripts/game/GameOver');
+require('./assets/Scripts/game/GameOverScene');
+require('./assets/Scripts/game/GameOverSceneData');
+require('./assets/Scripts/game/HeroController');
+require('./assets/Scripts/game/ItemConfig');
+require('./assets/Scripts/game/MainMenuScene');
+require('./assets/Scripts/game/MonsterController');
+require('./assets/Scripts/game/SelectScene');
+require('./assets/Scripts/game/UnitConfigItem');
+require('./assets/Scripts/game/UnitDataConfig');
+require('./assets/Scripts/game/UnitDataConfigComponent');
+require('./assets/Scripts/system/ActionSystem');
+require('./assets/Scripts/system/BattleLoggers');
+require('./assets/Scripts/system/BattleRecorder');
+require('./assets/Scripts/system/BattleReplayer');
+require('./assets/Scripts/system/BattleSystem');
+require('./assets/Scripts/system/BuffFactory');
+require('./assets/Scripts/system/BuffRegistry');
+require('./assets/Scripts/system/BuffSystem');
+require('./assets/Scripts/system/CharacterDataAdapter');
+require('./assets/Scripts/system/CharacterDataManager');
+require('./assets/Scripts/system/CombatSystem');
+require('./assets/Scripts/system/DeathSystem');
+require('./assets/Scripts/system/ItemDataAdapter');
+require('./assets/Scripts/system/ItemDataManager');
+require('./assets/Scripts/system/LevelConfig');
+require('./assets/Scripts/system/LevelSystem');
+require('./assets/Scripts/system/ServerConfig');
+require('./assets/Scripts/system/SkillConfig');
+require('./assets/Scripts/system/SkillSystem');
+require('./assets/Scripts/system/TeamRef');
+
+                    }
+                    if (nodeEnv) {
+                        __define(__module.exports, __require, __module);
+                    }
+                    else {
+                        __quick_compile_project__.registerModuleFunc(__filename, function () {
+                            __define(__module.exports, __require, __module);
+                        });
+                    }
+                })();

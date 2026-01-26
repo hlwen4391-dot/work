@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "勾选图标",
+    "texture": "91a66606-b637-4fdf-9e86-d5add6c7b690",
+    "atlas": "",
+    "rect": [
+      108,
+      142,
+      688,
+      793
+    ],
+    "offset": [
+      -60,
+      -26.5
+    ],
+    "originalSize": [
+      1024,
+      1024
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}
