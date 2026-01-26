@@ -1,0 +1,38 @@
+{
+  "ver": "2.3.7",
+  "uuid": "5543a734-bff1-4131-96db-8e777f1e962c",
+  "importer": "texture",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "width": 1024,
+  "height": 1024,
+  "platformSettings": {},
+  "subMetas": {
+    "升级药水": {
+      "ver": "1.0.6",
+      "uuid": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f",
+      "importer": "sprite-frame",
+      "rawTextureUuid": "5543a734-bff1-4131-96db-8e777f1e962c",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 1024,
+      "height": 1024,
+      "rawWidth": 1024,
+      "rawHeight": 1024,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

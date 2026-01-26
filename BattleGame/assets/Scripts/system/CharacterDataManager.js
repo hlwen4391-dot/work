@@ -1,15 +1,21 @@
 /**
  * 角色数据管理器
  * 负责保存和加载角色的等级、经验值等数据
+ * 
+ * 注意：现在使用 CharacterDataAdapter 作为数据层，支持本地存储和服务器存储的切换
+ * 要切换到服务器模式，只需调用：CharacterDataAdapter.setStorageMode('server')
  */
+const CharacterDataAdapter = require("CharacterDataAdapter");
+
 var CharacterDataManager = {
-    // 存储键前缀
+    // 存储键前缀（仅用于本地存储）
     STORAGE_PREFIX: "character_data_",
 
     /**
      * 保存角色数据
      * @param {string} characterName - 角色名称（唯一标识）
      * @param {Object} data - 角色数据 { level, exp, ... }
+     * @returns {Promise<boolean>|boolean} 是否保存成功（服务器模式下返回Promise）
      */
     saveCharacterData(characterName, data) {
         if (!characterName) {
@@ -17,46 +23,58 @@ var CharacterDataManager = {
             return false;
         }
 
-        try {
-            const key = this.STORAGE_PREFIX + characterName;
-            const json = JSON.stringify(data);
-            cc.sys.localStorage.setItem(key, json);
-            cc.log(`[CharacterDataManager] 保存角色数据: ${characterName}`, data);
-            return true;
-        } catch (e) {
-            cc.error(`[CharacterDataManager] 保存失败: ${e.message}`);
-            return false;
+        const result = CharacterDataAdapter.saveCharacterData(characterName, data);
+
+        // 如果是Promise（服务器模式），返回Promise
+        if (result instanceof Promise) {
+            return result.then(success => {
+                if (success) {
+                    cc.log(`[CharacterDataManager] 保存角色数据: ${characterName}`, data);
+                }
+                return success;
+            });
         }
+
+        // 本地模式，直接返回结果
+        if (result) {
+            cc.log(`[CharacterDataManager] 保存角色数据: ${characterName}`, data);
+        }
+        return result;
     },
 
     /**
      * 加载角色数据
      * @param {string} characterName - 角色名称
-     * @returns {Object|null} 角色数据 { level, exp, ... } 或 null
+     * @returns {Promise<Object|null>|Object|null} 角色数据 { level, exp, ... } 或 null（服务器模式下返回Promise）
      */
     loadCharacterData(characterName) {
         if (!characterName) {
             return null;
         }
 
-        try {
-            const key = this.STORAGE_PREFIX + characterName;
-            const json = cc.sys.localStorage.getItem(key);
-            if (json) {
-                const data = JSON.parse(json);
-                cc.log(`[CharacterDataManager] 加载角色数据: ${characterName}`, data);
+        const result = CharacterDataAdapter.loadCharacterData(characterName);
+
+        // 如果是Promise（服务器模式），返回Promise
+        if (result instanceof Promise) {
+            return result.then(data => {
+                if (data) {
+                    cc.log(`[CharacterDataManager] 加载角色数据: ${characterName}`, data);
+                }
                 return data;
-            }
-            return null;
-        } catch (e) {
-            cc.error(`[CharacterDataManager] 加载失败: ${e.message}`);
-            return null;
+            });
         }
+
+        // 本地模式，直接返回结果
+        if (result) {
+            cc.log(`[CharacterDataManager] 加载角色数据: ${characterName}`, result);
+        }
+        return result;
     },
 
     /**
      * 保存角色的等级和经验值
      * @param {cc.Node} characterNode - 角色节点
+     * @returns {Promise<boolean>|boolean} 是否保存成功（服务器模式下返回Promise）
      */
     saveCharacterLevel(characterNode) {
         const StatsComponent = require("StatsComponent");
@@ -67,7 +85,14 @@ var CharacterDataManager = {
             return false;
         }
 
-        const characterName = characterNode.name;
+        // 获取角色名称（优先使用原始名称）
+        let characterName = characterNode.name;
+        if (characterNode._originalCharacterName) {
+            characterName = characterNode._originalCharacterName;
+        } else if (characterName.startsWith("Display_")) {
+            characterName = characterName.replace("Display_", "");
+        }
+
         const data = {
             level: stats.level,
             exp: stats.exp,
@@ -86,7 +111,7 @@ var CharacterDataManager = {
     /**
      * 加载角色的等级和经验值
      * @param {string} characterName - 角色名称
-     * @returns {Object|null} { level, exp, ... } 或 null
+     * @returns {Promise<Object|null>|Object|null} { level, exp, ... } 或 null（服务器模式下返回Promise）
      */
     loadCharacterLevel(characterName) {
         return this.loadCharacterData(characterName);

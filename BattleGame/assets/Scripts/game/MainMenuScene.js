@@ -37,6 +37,13 @@ cc.Class({
         characterViewSceneName: {
             default: "CharacterViewScene",
             tooltip: "人物属性查看场景名称"
+        },
+
+        // 添加道具测试按钮（可选，用于测试）
+        addItemTestButton: {
+            default: null,
+            type: cc.Button,
+            tooltip: "添加升级药水测试按钮（测试用，可选）"
         }
     },
 
@@ -63,6 +70,12 @@ cc.Class({
             cc.log(`[MainMenuScene] 已绑定characterViewButton事件`);
         } else {
             cc.warn("[MainMenuScene] 未设置characterViewButton，如需查看人物属性功能，请在主菜单场景中绑定查看人物按钮");
+        }
+
+        // 绑定添加道具测试按钮事件（如果存在）
+        if (this.addItemTestButton) {
+            this.addItemTestButton.node.on(cc.Node.EventType.TOUCH_END, this.onAddItemTestClick, this);
+            cc.log(`[MainMenuScene] 已绑定addItemTestButton事件`);
         }
     },
 
@@ -116,6 +129,31 @@ cc.Class({
             });
         } else {
             cc.warn("[MainMenuScene] 未设置characterViewSceneName，无法跳转到人物属性查看场景");
+        }
+    },
+
+    /**
+     * 添加道具测试按钮点击事件
+     */
+    async onAddItemTestClick() {
+        const ItemDataManager = require("ItemDataManager");
+        
+        try {
+            // 添加10个升级药水
+            const success = await ItemDataManager.addItem("upgrade_potion", 10);
+            
+            if (success) {
+                // 获取当前数量
+                const count = await ItemDataManager.getItemCount("upgrade_potion");
+                cc.log(`[MainMenuScene] ✓ 已添加10个升级药水，当前总数: ${count}`);
+                alert(`已添加10个升级药水！\n当前总数: ${count}`);
+            } else {
+                cc.error("[MainMenuScene] ✗ 添加升级药水失败");
+                alert("添加升级药水失败，请查看控制台日志");
+            }
+        } catch (error) {
+            cc.error(`[MainMenuScene] 添加道具时发生错误: ${error.message}`);
+            alert(`添加道具失败: ${error.message}`);
         }
     }
 });

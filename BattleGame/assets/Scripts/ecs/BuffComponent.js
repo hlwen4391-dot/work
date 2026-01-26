@@ -13,6 +13,12 @@ cc.Class({
         shieldValue: {
             default: 0,
             tooltip: "护盾值"
+        },
+        caster: {
+            default: null,
+            type: cc.Node,
+            visible: false,
+            tooltip: "施法者（释放这个Buff的单位）"
         }
     },
 

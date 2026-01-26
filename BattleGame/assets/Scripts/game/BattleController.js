@@ -355,7 +355,10 @@ cc.Class({
         }
 
         // 为所有角色初始化战斗数据和动画
-        this._initAllUnits();
+        // 初始化所有战斗单位（支持异步）
+        this._initAllUnits().catch(err => {
+            cc.error(`[BattleController] 初始化战斗单位失败: ${err.message}`);
+        });
     },
 
     /**
@@ -400,7 +403,10 @@ cc.Class({
         }
 
         // 为所有角色初始化战斗数据和动画
-        this._initAllUnits();
+        // 初始化所有战斗单位（支持异步）
+        this._initAllUnits().catch(err => {
+            cc.error(`[BattleController] 初始化战斗单位失败: ${err.message}`);
+        });
     },
 
     /**
@@ -767,7 +773,7 @@ cc.Class({
      * 初始化所有战斗单位
      * @private
      */
-    _initAllUnits() {
+    async _initAllUnits() {
         const { SkillConfig } = this;
 
         // 角色数据配置（根据名称匹配）
@@ -828,7 +834,7 @@ cc.Class({
             } else {
                 data = unitDataConfig[node.name] || this._getDefaultData();
             }
-            this.initEntity(node, data, "hero");
+            await this.initEntity(node, data, "hero");
 
             // 设置初始待机动画
             const skeleton = node.getComponent(sp.Skeleton);
@@ -849,7 +855,7 @@ cc.Class({
             } else {
                 data = unitDataConfig[node.name] || this._getDefaultData();
             }
-            this.initEntity(node, data, "monster");
+            await this.initEntity(node, data, "monster");
 
             // 设置初始待机动画
             const skeleton = node.getComponent(sp.Skeleton);
@@ -876,7 +882,7 @@ cc.Class({
         };
     },
 
-    initEntity(node, data, teamName) {
+    async initEntity(node, data, teamName) {
         const stats = node.getComponent("StatsComponent");
         const team = node.getComponent("TeamComponent");
         const skills = node.getComponent("SkillComponent");
@@ -898,44 +904,56 @@ cc.Class({
             return;
         }
 
-        // 初始化属性 - 优先使用编辑器中设置的值，如果为默认值则使用配置
-        // 只有当编辑器值为默认值(100)时，才使用代码配置的值
-        if (stats.hp === 100 && data.hp !== undefined) {
-            stats.hp = data.hp;
-            stats.maxHp = data.hp;
-        } else {
-            // 使用编辑器中设置的值
-            stats.maxHp = stats.hp;
-        }
+        // 重要：先加载保存的等级数据，以便正确设置基础属性
+        const CharacterDataManager = require("CharacterDataManager");
+        const savedData = await CharacterDataManager.loadCharacterLevel(data.name || node.name);
 
-        if (stats.attack === 1 && data.attack !== undefined) {
-            stats.attack = data.attack;
-        }
-        if (stats.defense === 1 && data.defense !== undefined) {
-            stats.defense = data.defense;
-        }
-        if (stats.speed === 1 && data.speed !== undefined) {
-            stats.speed = data.speed;
-        }
-        if (stats.crit === 0 && data.crit !== undefined) {
-            stats.crit = data.crit;
-        }
-        if (stats.miss === 0 && data.miss !== undefined) {
-            stats.miss = data.miss;
-        }
-        if (stats.immune === 0 && data.immune !== undefined) {
-            stats.immune = data.immune;
+        // 如果有保存的基础属性数据，优先使用保存的基础属性（用于正确计算等级加成）
+        if (savedData) {
+            if (savedData.baseHp) stats.baseHp = savedData.baseHp;
+            if (savedData.baseAttack) stats.baseAttack = savedData.baseAttack;
+            if (savedData.baseDefense) stats.baseDefense = savedData.baseDefense;
+            if (savedData.baseSpeed) stats.baseSpeed = savedData.baseSpeed;
+            if (savedData.baseCrit !== undefined) stats.baseCrit = savedData.baseCrit;
+            if (savedData.baseMiss !== undefined) stats.baseMiss = savedData.baseMiss;
+        } else {
+            // 如果没有保存的数据，使用data中的基础属性
+            if (data.hp) stats.baseHp = data.hp;
+            if (data.attack) stats.baseAttack = data.attack;
+            if (data.defense) stats.baseDefense = data.defense;
+            if (data.speed) stats.baseSpeed = data.speed;
+            if (data.crit !== undefined) stats.baseCrit = data.crit;
+            if (data.miss !== undefined) stats.baseMiss = data.miss;
         }
 
         // 强制设置最大怒气值为120（覆盖Prefab中的默认值）
         stats.maxRage = 120;
         stats.rage = 0; // 重置当前怒气值
 
-        // 初始化等级系统（在属性设置之后）
+        // 初始化等级系统（必须在设置其他属性之前，因为等级加成会重新计算所有属性）
+        // 重要：使用data.name（角色原始名称）来加载保存的等级数据
         const LevelSystem = require("LevelSystem");
-        const initialLevel = data.level || 1;  // 从数据中获取初始等级，默认为1
-        const initialExp = data.exp || 0;      // 从数据中获取初始经验值，默认为0
-        LevelSystem.initLevel(node, initialLevel, initialExp);
+
+        // 如果有保存的数据，使用保存的等级和经验值；否则使用传入的值或默认值
+        const initialLevel = savedData ? (savedData.level || data.level || 1) : (data.level || 1);
+        const initialExp = savedData ? (savedData.exp || data.exp || 0) : (data.exp || 0);
+
+        // 初始化等级（不自动从存储加载，因为我们已经手动加载了）
+        // 这会调用_applyLevelBonus，根据等级计算实际属性值（maxHp, attack等）
+        LevelSystem.initLevel(node, initialLevel, initialExp, false);
+
+        // 设置当前生命值为最大生命值（满血）
+        stats.hp = stats.maxHp;
+
+        // 设置其他特殊属性（这些属性不受等级加成影响）
+        if (stats.immune === 0 && data.immune !== undefined) {
+            stats.immune = data.immune;
+        }
+
+        // 保存原始角色名称（用于后续保存数据）
+        if (data.name) {
+            node._originalCharacterName = data.name;
+        }
 
         // 初始化技能
         if (data.skills && data.skills.length > 0) {

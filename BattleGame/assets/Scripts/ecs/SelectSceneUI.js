@@ -574,8 +574,10 @@ cc.Class({
                 this.centerDisplayArea.opacity = 255;
             }
 
-            // 初始化角色属性（根据保存的等级数据）
-            this._initCharacterStats(prefabInstance, unitData);
+            // 初始化角色属性（根据保存的等级数据，支持异步）
+            this._initCharacterStats(prefabInstance, unitData).catch(err => {
+                cc.error(`[SelectSceneUI] 初始化角色属性失败: ${err.message}`);
+            });
 
             cc.log(`[SelectSceneUI] ✓ 显示单位原型: ${unitData.name}, Prefab: ${unitData.prefab.name || '已设置'}`);
             cc.log(`[SelectSceneUI] centerDisplayArea位置: (${this.centerDisplayArea.x}, ${this.centerDisplayArea.y})`);
@@ -591,7 +593,7 @@ cc.Class({
      * @param {cc.Node} prefabInstance - 人物原型实例
      * @param {Object} unitData - 单位数据
      */
-    _initCharacterStats(prefabInstance, unitData) {
+    async _initCharacterStats(prefabInstance, unitData) {
         const CharacterDataManager = require("CharacterDataManager");
         const LevelSystem = require("LevelSystem");
         const StatsComponent = require("StatsComponent");
@@ -603,8 +605,8 @@ cc.Class({
             return;
         }
 
-        // 从本地存储加载角色的等级数据
-        const savedData = CharacterDataManager.loadCharacterLevel(unitData.name);
+        // 从本地存储加载角色的等级数据（支持异步）
+        const savedData = await CharacterDataManager.loadCharacterLevel(unitData.name);
 
         if (savedData) {
             // 如果有保存的数据，使用保存的基础属性

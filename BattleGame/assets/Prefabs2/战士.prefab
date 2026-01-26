@@ -1526,6 +1526,7 @@
     "tickTimer": 0,
     "status": {},
     "shieldValue": 0,
+    "caster": null,
     "_id": ""
   },
   {

@@ -171,6 +171,14 @@ cc.Class({
             this._initInventory();
         }, 0);
 
+        // 设置道具图标（如果ItemIconSetter组件已设置）
+        this._setupItemIcons();
+
+        // 初始化道具数据（添加5个升级药水用于测试）
+        this.scheduleOnce(async () => {
+            await this._initDefaultItems();
+        }, 0.5);
+
         // 隐藏属性面板
         if (this.statsPanel) {
             this.statsPanel.active = false;
@@ -672,14 +680,13 @@ cc.Class({
      * 更新道具栏显示（根据当前选中的角色）
      * @private
      */
-    _updateInventory() {
+    async _updateInventory() {
         if (!this.inventoryContainer || !this.currentUnitData) {
             return;
         }
 
-        // TODO: 从角色数据中获取道具列表
-        // 这里先显示示例道具，后续可以连接到道具系统
-        const items = this._getCharacterItems(this.currentUnitData.name);
+        // 从角色数据中获取道具列表（支持异步）
+        const items = await this._getCharacterItems(this.currentUnitData.name);
 
         // 更新每个格子
         const slots = this.inventoryContainer.children;
@@ -701,7 +708,8 @@ cc.Class({
      * @param {Object} item - 道具数据 { id, name, icon, count }
      */
     _setItemSlot(slotNode, item) {
-        if (!item) {
+        if (!item || !item.count || item.count <= 0) {
+            // 道具不存在或数量为0，清空格子
             this._initItemSlot(slotNode, slotNode._slotIndex);
             return;
         }
@@ -734,19 +742,152 @@ cc.Class({
         // 保存道具数据
         slotNode._itemData = item;
         slotNode._isEmpty = false;
+
+        // 绑定点击事件（点击道具使用）
+        slotNode.off(cc.Node.EventType.TOUCH_END); // 先移除旧的事件
+        slotNode.on(cc.Node.EventType.TOUCH_END, (event) => {
+            event.stopPropagation(); // 阻止事件冒泡
+            this._onItemSlotClick(slotNode, item);
+        }, this);
+
+        // 确保可以接收触摸事件
+        slotNode.setContentSize(this.itemSlotSize, this.itemSlotSize);
     },
 
     /**
-     * 获取角色的道具列表（示例方法，需要连接到实际的道具系统）
+     * 道具格子点击事件（使用道具）
      * @private
-     * @param {string} characterName - 角色名称
-     * @returns {Array} 道具列表
+     * @param {cc.Node} slotNode - 道具格子节点
+     * @param {Object} item - 道具数据
      */
-    _getCharacterItems(characterName) {
-        // TODO: 连接到实际的道具系统
-        // 这里返回空数组，表示没有道具
-        // 后续可以从CharacterDataManager或道具系统中获取
-        return [];
+    async _onItemSlotClick(slotNode, item) {
+        if (!item || !item.config) {
+            cc.warn("[CharacterViewUI] 无效的道具数据");
+            return;
+        }
+
+        // 检查是否有当前显示的角色
+        if (!this.currentDisplayPrefab) {
+            cc.warn("[CharacterViewUI] 请先选择一个角色");
+            // 可以显示提示给用户
+            return;
+        }
+
+        const ItemSystem = require("ItemSystem");
+
+        // 使用道具
+        const result = await ItemSystem.useItem(this.currentDisplayPrefab, item.id);
+
+        if (result.success) {
+            cc.log(`[CharacterViewUI] ✓ 使用道具成功: ${item.name} - ${result.message}`);
+
+            // 刷新道具栏显示
+            await this._updateInventory();
+
+            // 更新角色属性显示（如果属性面板已打开）
+            if (this.statsPanel && this.statsPanel.active && this.currentUnitData) {
+                this._showStatsPanel(this.currentUnitData);
+            }
+
+            // TODO: 可以显示使用成功的提示UI
+        } else {
+            cc.warn(`[CharacterViewUI] ✗ 使用道具失败: ${item.name} - ${result.message}`);
+            // TODO: 可以显示错误提示UI
+        }
+    },
+
+    /**
+     * 设置道具图标（从ItemIconSetter组件获取）
+     * @private
+     */
+    _setupItemIcons() {
+        // 查找场景中的ItemIconSetter组件
+        const scene = cc.director.getScene();
+        if (!scene) {
+            return;
+        }
+
+        const canvas = scene.getChildByName("Canvas");
+        if (!canvas) {
+            return;
+        }
+
+        // 查找ItemIconSetter组件
+        const iconSetter = canvas.getComponentInChildren("ItemIconSetter");
+        if (iconSetter) {
+            cc.log("[CharacterViewUI] 找到ItemIconSetter组件，道具图标已设置");
+        } else {
+            cc.log("[CharacterViewUI] 未找到ItemIconSetter组件，道具图标需要在代码中设置");
+        }
+    },
+
+    /**
+     * 初始化默认道具（添加5个升级药水，仅首次进入时）
+     * @private
+     */
+    async _initDefaultItems() {
+        const ItemDataManager = require("ItemDataManager");
+
+        // 检查是否已经初始化过道具（使用localStorage标志）
+        const INIT_FLAG_KEY = "character_view_items_initialized";
+        const hasInitialized = cc.sys.localStorage.getItem(INIT_FLAG_KEY);
+
+        if (hasInitialized) {
+            // 已经初始化过，不再自动添加道具
+            cc.log("[CharacterViewUI] 道具已初始化过，跳过自动添加");
+            return;
+        }
+
+        // 检查是否已有升级药水
+        const currentCount = await ItemDataManager.getItemCount("upgrade_potion");
+
+        // 如果还没有升级药水，添加5个（仅首次）
+        if (currentCount === 0) {
+            const success = await ItemDataManager.addItem("upgrade_potion", 10);
+            if (success) {
+                cc.log("[CharacterViewUI] ✓ 首次进入，已添加10个升级药水到全局道具栏");
+
+                // 标记已初始化，确保只初始化一次
+                cc.sys.localStorage.setItem(INIT_FLAG_KEY, "true");
+
+                // 如果当前已选中角色，刷新道具栏显示
+                if (this.currentUnitData) {
+                    await this._updateInventory();
+                }
+            } else {
+                cc.error("[CharacterViewUI] ✗ 添加升级药水失败");
+            }
+        } else {
+            // 如果已有升级药水，也标记为已初始化（可能是从其他地方添加的）
+            cc.sys.localStorage.setItem(INIT_FLAG_KEY, "true");
+            cc.log(`[CharacterViewUI] 全局道具栏已有 ${currentCount} 个升级药水，标记为已初始化`);
+        }
+    },
+
+    /**
+     * 获取道具列表（全局共享，所有角色共用）
+     * @private
+     * @param {string} characterName - 角色名称（已废弃，保留用于兼容）
+     * @returns {Promise<Array>|Array} 道具列表 [{ id, name, icon, count }, ...]（服务器模式下返回Promise）
+     */
+    async _getCharacterItems(characterName) {
+        const ItemDataManager = require("ItemDataManager");
+
+        // 获取全局道具（所有角色共享，忽略characterName参数）
+        const itemsWithConfig = await ItemDataManager.getAllItemsWithConfig();
+
+        // 转换为显示格式，并过滤掉数量为0的道具（一次性消耗品使用完后应该消失）
+        return itemsWithConfig
+            .filter(item => item.count > 0) // 只显示数量大于0的道具
+            .map(item => {
+                return {
+                    id: item.itemId,
+                    name: item.config.displayName || item.config.name,
+                    icon: item.config.icon, // SpriteFrame资源
+                    count: item.count,
+                    config: item.config // 保存完整配置，用于后续使用道具
+                };
+            });
     },
 
     /**
@@ -842,6 +983,9 @@ cc.Class({
             const prefabInstance = cc.instantiate(unitData.prefab);
             prefabInstance.name = `Display_${unitData.name}`;
 
+            // 保存原始角色名称，用于数据保存和加载
+            prefabInstance._originalCharacterName = unitData.name;
+
             // 确保节点可见
             prefabInstance.active = true;
             prefabInstance.opacity = 255;
@@ -853,8 +997,10 @@ cc.Class({
             prefabInstance.setPosition(0, 100);
             prefabInstance.setScale(0.7);
 
-            // 初始化角色属性（根据保存的等级数据）
-            this._initCharacterStats(prefabInstance, unitData);
+            // 初始化角色属性（根据保存的等级数据，支持异步）
+            this._initCharacterStats(prefabInstance, unitData).catch(err => {
+                cc.error(`[CharacterViewUI] 初始化角色属性失败: ${err.message}`);
+            });
 
             // 绑定点击事件（点击人物原型显示属性面板）
             prefabInstance.on(cc.Node.EventType.TOUCH_END, (event) => {
@@ -880,7 +1026,7 @@ cc.Class({
      * @param {cc.Node} prefabInstance - 人物原型实例
      * @param {Object} unitData - 单位数据
      */
-    _initCharacterStats(prefabInstance, unitData) {
+    async _initCharacterStats(prefabInstance, unitData) {
         const CharacterDataManager = require("CharacterDataManager");
         // StatsComponent 是组件类，不需要 require，直接使用 getComponent 获取
 
@@ -891,8 +1037,8 @@ cc.Class({
             return;
         }
 
-        // 从本地存储加载角色的等级数据
-        const savedData = CharacterDataManager.loadCharacterLevel(unitData.name);
+        // 从本地存储加载角色的等级数据（支持异步）
+        const savedData = await CharacterDataManager.loadCharacterLevel(unitData.name);
 
         if (savedData) {
             // 如果有保存的数据，使用保存的基础属性

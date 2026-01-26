@@ -165,8 +165,9 @@ var LevelSystem = {
             return;
         }
 
-        // 保存基础属性
-        stats._saveBaseStats();
+        // 注意：不应该在这里调用_saveBaseStats()，因为此时属性可能已经应用了等级加成
+        // 基础属性应该从保存的数据或unitData中获取，而不是从当前属性中保存
+        // 基础属性应该在第一次创建角色时从UnitDataConfig中获取并保存，之后不应该改变
 
         // 优先检查编辑器中是否设置了等级或经验值
         if (stats._useEditorValues) {
