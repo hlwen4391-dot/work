@@ -38,6 +38,12 @@ cc.Class({
       type: cc.Prefab,
       tooltip: "道具格子Prefab（包含图标和数量标签）"
     },
+    // 道具信息弹窗组件（可选）
+    itemTooltip: {
+      "default": null,
+      type: cc.Node,
+      tooltip: "道具信息弹窗节点（包含ItemTooltip组件）"
+    },
     // 道具栏网格配置
     inventoryColumns: {
       "default": 6,
@@ -687,6 +693,13 @@ cc.Class({
               } else {
                 // 空格子
                 _this6._initItemSlot(slotNode, index);
+
+                // 清空所有事件（空格子不需要显示tooltip）
+                slotNode.off(cc.Node.EventType.MOUSE_DOWN);
+                slotNode.off(cc.Node.EventType.MOUSE_UP);
+                slotNode.off(cc.Node.EventType.TOUCH_START);
+                slotNode.off(cc.Node.EventType.TOUCH_END);
+                slotNode._touchStartTime = null;
               }
             });
           case 7:
@@ -739,15 +752,121 @@ cc.Class({
     slotNode._itemData = item;
     slotNode._isEmpty = false;
 
-    // 绑定点击事件（点击道具使用）
+    // 记录触摸开始时间（用于区分点击和长按）
+    slotNode._touchStartTime = null;
+    slotNode.off(cc.Node.EventType.TOUCH_START);
+    slotNode.on(cc.Node.EventType.TOUCH_START, function (event) {
+      slotNode._touchStartTime = Date.now();
+    }, this);
+
+    // 绑定触摸结束事件（处理左键点击和长按）
     slotNode.off(cc.Node.EventType.TOUCH_END); // 先移除旧的事件
     slotNode.on(cc.Node.EventType.TOUCH_END, function (event) {
-      event.stopPropagation(); // 阻止事件冒泡
-      _this7._onItemSlotClick(slotNode, item);
+      var pressTime = slotNode._touchStartTime ? Date.now() - slotNode._touchStartTime : 0;
+      var LONG_PRESS_TIME = 500; // 长按500毫秒
+
+      if (pressTime >= LONG_PRESS_TIME) {
+        // 长按：显示道具信息（移动设备上模拟右键）
+        event.stopPropagation();
+        _this7._showItemTooltipOnTouch(slotNode, item, event);
+      } else if (pressTime > 0 && pressTime < LONG_PRESS_TIME) {
+        // 短按：使用道具（左键点击）
+        event.stopPropagation();
+        _this7._onItemSlotClick(slotNode, item);
+      }
+      slotNode._touchStartTime = null;
     }, this);
+
+    // 绑定右键点击事件（显示道具信息）- 仅PC端
+    this._setupItemTooltip(slotNode, item);
 
     // 确保可以接收触摸事件
     slotNode.setContentSize(this.itemSlotSize, this.itemSlotSize);
+  },
+  /**
+   * 设置道具格子的右键点击事件（显示道具信息）
+   * @private
+   * @param {cc.Node} slotNode - 道具格子节点
+   * @param {Object} item - 道具数据
+   */
+  _setupItemTooltip: function _setupItemTooltip(slotNode, item) {
+    if (!this.itemTooltip) {
+      // 如果没有设置tooltip节点，跳过
+      cc.warn("[CharacterViewUI] itemTooltip节点未绑定，跳过tooltip设置");
+      return;
+    }
+    var tooltipComponent = this.itemTooltip.getComponent("ItemTooltip");
+    if (!tooltipComponent) {
+      cc.warn("[CharacterViewUI] itemTooltip节点没有ItemTooltip组件，请添加ItemTooltip组件");
+      return;
+    }
+    if (!item || !item.id) {
+      cc.warn("[CharacterViewUI] 道具数据无效，缺少id字段", item);
+      return;
+    }
+
+    // 添加调试日志
+    cc.log("[CharacterViewUI] 设置道具右键点击tooltip:", item.id, "tooltip节点:", this.itemTooltip.name);
+
+    // 移除旧的鼠标事件监听
+    slotNode.off(cc.Node.EventType.MOUSE_DOWN);
+    slotNode.off(cc.Node.EventType.MOUSE_UP);
+
+    // 绑定鼠标右键按下事件（显示道具信息）
+    slotNode.on(cc.Node.EventType.MOUSE_DOWN, function (event) {
+      // 检查是否是右键
+      // 注意：cc.Event.EventMouse.BUTTON_RIGHT 的值是 2
+      var button = event.getButton ? event.getButton() : -1;
+      if (button === 2 || button === cc.Event.EventMouse.BUTTON_RIGHT) {
+        event.stopPropagation(); // 阻止事件冒泡，防止触发右键菜单
+        event.preventDefault && event.preventDefault(); // 阻止默认右键菜单
+
+        // 使用item.id作为itemId传递给tooltip
+        var tooltipData = {
+          itemId: item.id,
+          count: item.count
+        };
+
+        // 传递道具格子节点，让tooltip显示在节点右上方
+        tooltipComponent.showItemInfo(tooltipData, slotNode);
+        cc.log("[CharacterViewUI] 右键点击道具，显示信息:", item.id, "按钮:", button);
+      }
+    }, this);
+
+    // 绑定鼠标右键释放事件（隐藏道具信息）
+    slotNode.on(cc.Node.EventType.MOUSE_UP, function (event) {
+      // 检查是否是右键
+      var button = event.getButton ? event.getButton() : -1;
+      if (button === 2 || button === cc.Event.EventMouse.BUTTON_RIGHT) {
+        event.stopPropagation();
+        event.preventDefault && event.preventDefault();
+        tooltipComponent.hideItemInfo();
+      }
+    }, this);
+  },
+  /**
+   * 在触摸设备上显示道具信息（长按触发）
+   * @private
+   * @param {cc.Node} slotNode - 道具格子节点
+   * @param {Object} item - 道具数据
+   * @param {cc.Event} event - 触摸事件
+   */
+  _showItemTooltipOnTouch: function _showItemTooltipOnTouch(slotNode, item, event) {
+    if (!this.itemTooltip) {
+      return;
+    }
+    var tooltipComponent = this.itemTooltip.getComponent("ItemTooltip");
+    if (!tooltipComponent) {
+      return;
+    }
+    var tooltipData = {
+      itemId: item.id,
+      count: item.count
+    };
+
+    // 传递道具格子节点，让tooltip显示在节点右上方
+    tooltipComponent.showItemInfo(tooltipData, slotNode);
+    cc.log("[CharacterViewUI] 长按道具，显示信息:", item.id);
   },
   /**
    * 道具格子点击事件（使用道具）

@@ -111,7 +111,7 @@ cc.Class({
     var label = new cc.Node("Label");
     var labelComp = label.addComponent(cc.Label);
     labelComp.string = this._getBuffIcon(buff.buffName);
-    labelComp.fontSize = 14;
+    labelComp.fontSize = 14; //设置字体大小
     labelComp.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
     labelComp.verticalAlign = cc.Label.VerticalAlign.CENTER;
     label.setPosition(0, 2);

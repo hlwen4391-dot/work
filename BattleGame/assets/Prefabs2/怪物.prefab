@@ -1115,8 +1115,8 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 0,
-      "g": 250,
+      "r": 255,
+      "g": 255,
       "b": 255,
       "a": 255
     },
@@ -1621,6 +1621,7 @@
     "tickTimer": 0,
     "status": {},
     "shieldValue": 0,
+    "caster": null,
     "_id": ""
   },
   {

@@ -1,6 +1,6 @@
 {
   "ver": "2.3.7",
-  "uuid": "36ec0a5b-5c9d-49e5-9cae-105898c19234",
+  "uuid": "1dae608c-673c-461e-94a6-3b36ece1403a",
   "importer": "texture",
   "type": "sprite",
   "wrapMode": "clamp",
@@ -12,11 +12,11 @@
   "height": 1024,
   "platformSettings": {},
   "subMetas": {
-    "法师头像": {
+    "道具背景图": {
       "ver": "1.0.6",
-      "uuid": "dd85998a-85df-407b-967b-058015ec59aa",
+      "uuid": "80448b4f-7505-4010-b1e8-117b822a9fbe",
       "importer": "sprite-frame",
-      "rawTextureUuid": "36ec0a5b-5c9d-49e5-9cae-105898c19234",
+      "rawTextureUuid": "1dae608c-673c-461e-94a6-3b36ece1403a",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

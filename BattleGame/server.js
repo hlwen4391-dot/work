@@ -376,7 +376,7 @@ async function startServer() {
             // 自动尝试其他端口（可选）
             const alternativePort = PORT_ALL + 1;
             console.log(`正在尝试端口 ${alternativePort}...`);
-            const altServer = app.listen(alternativePort, () => {
+            const altServerAll = appAll.listen(alternativePort, () => {
                 console.log(`========================================`);
                 console.log(`✅ 所有角色数据服务器运行在 http://localhost:${alternativePort}`);
                 console.log(`⚠️  注意：端口已从 ${PORT_ALL} 改为 ${alternativePort}`);
@@ -384,7 +384,7 @@ async function startServer() {
                 console.log(`========================================\n`);
             });
             
-            altServer.on('error', (altError) => {
+            altServerAll.on('error', (altError) => {
                 console.error(`端口 ${alternativePort} 也被占用，请手动选择可用端口`);
                 process.exit(1);
             });

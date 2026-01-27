@@ -99,9 +99,9 @@ var ServerConfig = {
    */
   setAuthToken: function setAuthToken(token) {
     this.auth.token = token;
-    this.auth.headerValue = "Bearer " + token;
-    this.auth.enabled = true;
-    this._updateAdapters();
+    this.auth.headerValue = "Bearer " + token; //设置请求头值
+    this.auth.enabled = true; //设置是否启用身份验证
+    this._updateAdapters(); //更新所有适配器的配置
     cc.log("[ServerConfig] 用户token已设置");
   },
   /**

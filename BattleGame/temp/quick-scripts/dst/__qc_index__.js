@@ -21,6 +21,7 @@ require('./assets/Scripts/ecs/ExpBar');
 require('./assets/Scripts/ecs/GameOverPanel');
 require('./assets/Scripts/ecs/HealthBar');
 require('./assets/Scripts/ecs/ItemIconSetter');
+require('./assets/Scripts/ecs/ItemTooltip');
 require('./assets/Scripts/ecs/LevelUI');
 require('./assets/Scripts/ecs/RageBar');
 require('./assets/Scripts/ecs/ReplayController');

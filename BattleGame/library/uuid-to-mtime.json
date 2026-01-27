@@ -85,8 +85,8 @@
     "relativePath": "Scripts\\system\\TeamRef.js"
   },
   "73affaa4-2171-404f-bec3-5b1d9f3ba09c": {
-    "asset": 1767603162659,
-    "meta": 1767603162665,
+    "asset": 1769496306802,
+    "meta": 1769496306806,
     "relativePath": "Scenes\\GameOverScene.fire"
   },
   "70b6bbf9-618e-49ca-a219-d4ca9b89dc13": {
@@ -5970,8 +5970,8 @@
     "relativePath": "Scenes\\MainMenu.fire"
   },
   "6af7c587-70dd-4363-8447-661be1bf0147": {
-    "asset": 1768985689483,
-    "meta": 1768985689489,
+    "asset": 1769507480181,
+    "meta": 1769507480184,
     "relativePath": "Scenes\\SelectScene.fire"
   },
   "6e38d1aa-650a-41cd-af04-0b6062f229c4": {
@@ -6005,8 +6005,8 @@
     "relativePath": "Prefabs2\\战士.prefab"
   },
   "c1e28402-b037-4db8-993f-779f565ccdbe": {
-    "asset": 1768994449903,
-    "meta": 1768994449905,
+    "asset": 1769507062578,
+    "meta": 1769507062582,
     "relativePath": "Prefabs2\\怪物.prefab"
   },
   "9c323ea9-2ce5-418f-8cba-5fbe14bba7ad": {
@@ -6044,11 +6044,6 @@
     "meta": 1767778496505,
     "relativePath": "Prefabs2\\Monsters.prefab"
   },
-  "36ec0a5b-5c9d-49e5-9cae-105898c19234": {
-    "asset": 1767783984167,
-    "meta": 1767783984201,
-    "relativePath": "头像\\法师头像.png"
-  },
   "401865c7-587b-41d2-986a-479c3d70e684": {
     "asset": 1767783984167,
     "meta": 1767783984203,
@@ -6075,8 +6070,8 @@
     "relativePath": "Scripts\\game\\GameOverScene.js"
   },
   "6521ded3-d98b-4751-ba75-51bb992325ae": {
-    "asset": 1769157712581,
-    "meta": 1769157712585,
+    "asset": 1769507073205,
+    "meta": 1769507073209,
     "relativePath": "Prefabs2\\修女.prefab"
   },
   "c7619c8b-e963-4ef0-9fc2-e534bd7f4dd4": {
@@ -6108,11 +6103,6 @@
     "asset": 1767950458246,
     "meta": 1767950458254,
     "relativePath": "Prefabs2\\治疗术.prefab"
-  },
-  "27b67e2e-f44e-4db9-a079-1f41741c2d4d": {
-    "asset": 1767950003794,
-    "meta": 1767950015932,
-    "relativePath": "Scripts\\ecs\\BuffIconDisplay.js"
   },
   "982a88ae-f63e-4d70-897a-f0798fe5c4ce": {
     "asset": 1768989865078,
@@ -6205,8 +6195,8 @@
     "relativePath": "Scripts\\system\\BattleSystem.js"
   },
   "09b1dbc8-462d-48c0-9f57-54cd3f4f0d71": {
-    "asset": 1769167514952,
-    "meta": 1769167514955,
+    "asset": 1769507433700,
+    "meta": 1769507433703,
     "relativePath": "Scenes\\CharacterViewScene.fire"
   },
   "fe798d59-199e-4633-9f42-c00df6972a8d": {
@@ -6284,11 +6274,6 @@
     "meta": 1769410514545,
     "relativePath": "Scripts\\system\\LevelSystem.js"
   },
-  "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
-    "asset": 1769411873582,
-    "meta": 1769415378653,
-    "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
-  },
   "fec3d7c6-7579-4ce1-8d0f-5c55e01b25fd": {
     "asset": 1769411873743,
     "meta": 1769415378719,
@@ -6314,9 +6299,39 @@
     "meta": 1769425537825,
     "relativePath": "Scripts\\system\\CharacterDataAdapter.js"
   },
+  "27b67e2e-f44e-4db9-a079-1f41741c2d4d": {
+    "asset": 1769483372570,
+    "meta": 1769496271154,
+    "relativePath": "Scripts\\ecs\\BuffIconDisplay.js"
+  },
   "b3a8ccf1-80fa-4b8e-8f0b-b89233ce94b7": {
-    "asset": 1769425447005,
-    "meta": 1769425537836,
+    "asset": 1769486379047,
+    "meta": 1769496271367,
     "relativePath": "Scripts\\system\\ServerConfig.js"
+  },
+  "9e0230c4-cc54-46bb-8d92-cbac6b646202": {
+    "asset": 1769496714003,
+    "meta": 1769496714003,
+    "relativePath": "Background"
+  },
+  "1dae608c-673c-461e-94a6-3b36ece1403a": {
+    "asset": 1769496748389,
+    "meta": 1769496770444,
+    "relativePath": "Background\\道具背景图.png"
+  },
+  "7d9f113a-b8fe-47fe-9042-33e521d01155": {
+    "asset": 1769506822070,
+    "meta": 1769506873157,
+    "relativePath": "Scripts\\ecs\\ItemTooltip.js"
+  },
+  "e8f402df-799a-47bc-b55f-779926345e9c": {
+    "asset": 1769507407230,
+    "meta": 1769507407265,
+    "relativePath": "头像\\法师头像 (2).png"
+  },
+  "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
+    "asset": 1769507902082,
+    "meta": 1769507909874,
+    "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
   }
 }

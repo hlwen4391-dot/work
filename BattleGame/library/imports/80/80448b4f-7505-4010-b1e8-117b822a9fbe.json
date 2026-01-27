@@ -1,8 +1,8 @@
 {
   "__type__": "cc.SpriteFrame",
   "content": {
-    "name": "法师头像",
-    "texture": "36ec0a5b-5c9d-49e5-9cae-105898c19234",
+    "name": "道具背景图",
+    "texture": "1dae608c-673c-461e-94a6-3b36ece1403a",
     "atlas": "",
     "rect": [
       0,

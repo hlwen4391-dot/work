@@ -291,8 +291,10 @@
     "playPauseButton": null,
     "stopButton": null,
     "speedSlider": null,
+    "speedLabel": null,
     "progressBar": null,
     "timeLabel": null,
+    "gameOverSceneName": "GameOverScene",
     "_id": "2fSet1wcZGrqFwYkksd898"
   },
   {
