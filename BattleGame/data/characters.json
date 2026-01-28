@@ -1,15 +1,15 @@
 {
   "1": {
     "战士": {
-      "level": 29,
-      "exp": 14816,
+      "level": 35,
+      "exp": 19825,
       "baseHp": 120,
       "baseAttack": 18,
       "baseDefense": 1,
       "baseSpeed": 2,
       "baseCrit": 0,
       "baseMiss": 0,
-      "saveTime": 1769570572921
+      "saveTime": 1769592040153
     },
     "法师": {
       "level": 5,

@@ -5965,8 +5965,8 @@
     "relativePath": "Scripts\\game\\GameOverSceneData.js"
   },
   "b334e2fc-d2a5-40cc-8960-ce59da8dc45f": {
-    "asset": 1769409648779,
-    "meta": 1769409648783,
+    "asset": 1769590483023,
+    "meta": 1769590483029,
     "relativePath": "Scenes\\MainMenu.fire"
   },
   "6af7c587-70dd-4363-8447-661be1bf0147": {
@@ -6289,11 +6289,6 @@
     "meta": 1769421149332,
     "relativePath": "Scripts\\system\\CharacterDataManager.js"
   },
-  "ad7223ff-1d39-4acb-9e23-431b1d8b6049": {
-    "asset": 1769425452532,
-    "meta": 1769425537697,
-    "relativePath": "Scripts\\game\\MainMenuScene.js"
-  },
   "ab3febc0-22d8-4930-ae74-3e567c8fa320": {
     "asset": 1769425439220,
     "meta": 1769425537825,
@@ -6303,11 +6298,6 @@
     "asset": 1769483372570,
     "meta": 1769496271154,
     "relativePath": "Scripts\\ecs\\BuffIconDisplay.js"
-  },
-  "b3a8ccf1-80fa-4b8e-8f0b-b89233ce94b7": {
-    "asset": 1769486379047,
-    "meta": 1769496271367,
-    "relativePath": "Scripts\\system\\ServerConfig.js"
   },
   "9e0230c4-cc54-46bb-8d92-cbac6b646202": {
     "asset": 1769496714003,
@@ -6333,5 +6323,50 @@
     "asset": 1769572167561,
     "meta": 1769572175064,
     "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
+  },
+  "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
+    "asset": 1769582711239,
+    "meta": 1769584485682,
+    "relativePath": "Scripts\\game\\ShopConfig.js"
+  },
+  "cf6ac42d-564d-4151-9b6a-4f37bab8f00a": {
+    "asset": 1769587565112,
+    "meta": 1769587565117,
+    "relativePath": "Scenes\\ShopScene.fire"
+  },
+  "2777fbe0-2c92-4a08-9b11-f26333247139": {
+    "asset": 1769585480577,
+    "meta": 1769585480578,
+    "relativePath": "Prefabs(商品项)"
+  },
+  "66f41d5a-3911-42c1-8433-367f22a543a4": {
+    "asset": 1769585935035,
+    "meta": 1769585935037,
+    "relativePath": "Prefabs(商品项)\\商品项.prefab"
+  },
+  "b3a8ccf1-80fa-4b8e-8f0b-b89233ce94b7": {
+    "asset": 1769586667303,
+    "meta": 1769586818733,
+    "relativePath": "Scripts\\system\\ServerConfig.js"
+  },
+  "6c84b692-7abb-42f5-b3af-b17d470d9872": {
+    "asset": 1769587479272,
+    "meta": 1769587482980,
+    "relativePath": "Scripts\\game\\ShopScene.js"
+  },
+  "8b1d8707-f248-4408-87fa-9b5d3072eb7f": {
+    "asset": 1769589325033,
+    "meta": 1769590032040,
+    "relativePath": "Scripts\\system\\CoinManager.js"
+  },
+  "ad7223ff-1d39-4acb-9e23-431b1d8b6049": {
+    "asset": 1769590343116,
+    "meta": 1769590358772,
+    "relativePath": "Scripts\\game\\MainMenuScene.js"
+  },
+  "39c7c592-b93f-45d2-a1a8-716550e6ab2f": {
+    "asset": 1769590981939,
+    "meta": 1769591290118,
+    "relativePath": "Scripts\\ecs\\ShopUI.js"
   }
 }

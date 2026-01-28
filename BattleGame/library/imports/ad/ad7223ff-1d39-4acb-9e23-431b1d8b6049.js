@@ -47,6 +47,23 @@ cc.Class({
       "default": null,
       type: cc.Button,
       tooltip: "添加升级药水测试按钮（测试用，可选）"
+    },
+    // 添加金币测试按钮（可选，用于测试）
+    addCoinTestButton: {
+      "default": null,
+      type: cc.Button,
+      tooltip: "添加金币测试按钮（测试用，可选）"
+    },
+    // 商城按钮
+    shopButton: {
+      "default": null,
+      type: cc.Button,
+      tooltip: "商城按钮（跳转到商城场景）"
+    },
+    // 商城场景名称
+    shopSceneName: {
+      "default": "ShopScene",
+      tooltip: "商城场景名称"
     }
   },
   onLoad: function onLoad() {
@@ -84,6 +101,20 @@ cc.Class({
     if (this.addItemTestButton) {
       this.addItemTestButton.node.on(cc.Node.EventType.TOUCH_END, this.onAddItemTestClick, this);
       cc.log("[MainMenuScene] \u5DF2\u7ED1\u5B9AaddItemTestButton\u4E8B\u4EF6");
+    }
+
+    // 绑定添加金币测试按钮事件（如果存在）
+    if (this.addCoinTestButton) {
+      this.addCoinTestButton.node.on(cc.Node.EventType.TOUCH_END, this.onAddCoinTestClick, this);
+      cc.log("[MainMenuScene] \u5DF2\u7ED1\u5B9AaddCoinTestButton\u4E8B\u4EF6");
+    }
+
+    // 绑定商城按钮事件（如果存在）
+    if (this.shopButton) {
+      this.shopButton.node.on(cc.Node.EventType.TOUCH_END, this.onShopClick, this);
+      cc.log("[MainMenuScene] \u5DF2\u7ED1\u5B9AshopButton\u4E8B\u4EF6");
+    } else {
+      cc.warn("[MainMenuScene] 未设置shopButton，如需商城功能，请在主菜单场景中绑定商城按钮");
     }
   },
   /**
@@ -280,6 +311,72 @@ cc.Class({
         }
       }, _callee2, null, [[1, 17]]);
     }))();
+  },
+  /**
+   * 添加金币测试按钮点击事件
+   */
+  onAddCoinTestClick: function onAddCoinTestClick() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+      var CoinManager, amount, success, coins;
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) switch (_context3.prev = _context3.next) {
+          case 0:
+            CoinManager = require("CoinManager");
+            _context3.prev = 1;
+            amount = 1000; // 每次增加1000金币
+            _context3.next = 5;
+            return CoinManager.addCoins(amount);
+          case 5:
+            success = _context3.sent;
+            if (!success) {
+              _context3.next = 14;
+              break;
+            }
+            _context3.next = 9;
+            return CoinManager.getCoins();
+          case 9:
+            coins = _context3.sent;
+            cc.log("[MainMenuScene] \u2713 \u5DF2\u589E\u52A0 " + amount + " \u91D1\u5E01\uFF0C\u5F53\u524D\u91D1\u5E01: " + coins);
+            alert("\u5DF2\u589E\u52A0 " + amount + " \u91D1\u5E01\uFF01\n\u5F53\u524D\u91D1\u5E01: " + coins);
+            _context3.next = 16;
+            break;
+          case 14:
+            cc.error("[MainMenuScene] ✗ 增加金币失败");
+            alert("增加金币失败，请查看控制台日志");
+          case 16:
+            _context3.next = 22;
+            break;
+          case 18:
+            _context3.prev = 18;
+            _context3.t0 = _context3["catch"](1);
+            cc.error("[MainMenuScene] \u589E\u52A0\u91D1\u5E01\u65F6\u53D1\u751F\u9519\u8BEF: " + _context3.t0.message);
+            alert("\u589E\u52A0\u91D1\u5E01\u5931\u8D25: " + _context3.t0.message);
+          case 22:
+          case "end":
+            return _context3.stop();
+        }
+      }, _callee3, null, [[1, 18]]);
+    }))();
+  },
+  /**
+   * 商城按钮点击事件
+   */
+  onShopClick: function onShopClick() {
+    var _this3 = this;
+    cc.log("[MainMenuScene] \u6253\u5F00\u5546\u57CE\uFF0C\u573A\u666F\u540D\u79F0: " + this.shopSceneName);
+    if (this.shopSceneName) {
+      cc.director.loadScene(this.shopSceneName, function (error) {
+        if (error) {
+          cc.error("[MainMenuScene] \u52A0\u8F7D\u5546\u57CE\u573A\u666F\u5931\u8D25: " + error);
+          cc.error("[MainMenuScene] \u8BF7\u68C0\u67E5\u573A\u666F\u540D\u79F0\u662F\u5426\u6B63\u786E: " + _this3.shopSceneName);
+          cc.error("[MainMenuScene] \u8BF7\u786E\u4FDD\u573A\u666F\u6587\u4EF6\u5B58\u5728\u4E8E\u9879\u76EE\u4E2D");
+        } else {
+          cc.log("[MainMenuScene] \u6210\u529F\u52A0\u8F7D\u5546\u57CE\u573A\u666F: " + _this3.shopSceneName);
+        }
+      });
+    } else {
+      cc.warn("[MainMenuScene] 未设置shopSceneName，无法跳转到商城场景");
+    }
   }
 });
 

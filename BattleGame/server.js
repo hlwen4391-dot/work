@@ -10,10 +10,12 @@ const PORT_ALL = process.env.PORT_ALL || 3001; // 所有角色数据端口
 const DATA_DIR = path.join(__dirname, 'data');
 const CHARACTERS_FILE = path.join(DATA_DIR, 'characters.json');
 const INVENTORY_FILE = path.join(DATA_DIR, 'inventory.json');
+const COINS_FILE = path.join(DATA_DIR, 'coins.json');
 
 // 内存中的数据存储
 let charactersData = {}; // { userId: { characterName: data } }
 let inventoryData = {}; // { userId: items[] }
+let coinsData = {}; // { userId: coins }
 
 // 创建两个独立的Express应用实例
 const app = express(); // 端口3000：单个角色、保存、道具、管理
@@ -47,6 +49,21 @@ async function loadData() {
                 // 文件不存在，使用空对象
                 charactersData = {};
                 console.log('[数据加载] 角色数据文件不存在，使用空数据');
+            } else {
+                throw error;
+            }
+        }
+
+        // 加载金币数据
+        try {
+            const coinsContent = await fs.readFile(COINS_FILE, 'utf8');
+            coinsData = JSON.parse(coinsContent);
+            console.log('[数据加载] 金币数据已加载');
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                // 文件不存在，使用空对象
+                coinsData = {};
+                console.log('[数据加载] 金币数据文件不存在，使用空数据');
             } else {
                 throw error;
             }
@@ -90,17 +107,26 @@ async function saveInventoryData() {
     }
 }
 
+async function saveCoinsData() {
+    try {
+        await fs.writeFile(COINS_FILE, JSON.stringify(coinsData, null, 2), 'utf8');
+        console.log('[数据保存] 金币数据已保存');
+    } catch (error) {
+        console.error('[数据保存] 保存金币数据失败:', error);
+    }
+}
+
 // 身份验证中间件（简化版）
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-    
+
     if (!token) {
         // 如果没有token，使用默认用户ID（仅用于测试）
         req.user = { id: 1 };
         return next();
     }
-    
+
     // 实际应该验证token并获取用户ID
     // 这里简化处理，假设token就是用户ID
     req.user = { id: parseInt(token) || 1 };
@@ -113,10 +139,10 @@ function authenticateToken(req, res, next) {
 appAll.get('/api/characters', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        
+
         // 从内存中获取该用户的所有角色数据
         const userCharacters = charactersData[userId] || {};
-        
+
         res.json({
             success: true,
             data: userCharacters // 返回 { characterName: data, ... }
@@ -135,18 +161,18 @@ app.get('/api/characters/:characterName', authenticateToken, async (req, res) =>
     try {
         const { characterName } = req.params;
         const userId = req.user.id;
-        
+
         // 从内存中获取数据
         const userCharacters = charactersData[userId] || {};
         const characterData = userCharacters[characterName];
-        
+
         if (!characterData) {
             return res.json({
                 success: true,
                 data: null // 没有数据，返回null
             });
         }
-        
+
         res.json({
             success: true,
             data: characterData
@@ -166,12 +192,12 @@ app.put('/api/characters/:characterName', authenticateToken, async (req, res) =>
         const { characterName } = req.params;
         const userId = req.user.id;
         const data = req.body;
-        
+
         // 确保用户数据对象存在
         if (!charactersData[userId]) {
             charactersData[userId] = {};
         }
-        
+
         // 保存到内存
         charactersData[userId][characterName] = {
             level: data.level,
@@ -184,12 +210,12 @@ app.put('/api/characters/:characterName', authenticateToken, async (req, res) =>
             baseMiss: data.baseMiss,
             saveTime: data.saveTime || Date.now()
         };
-        
+
         // 异步保存到文件（不阻塞响应）
         saveCharactersData().catch(err => {
             console.error('保存角色数据到文件失败:', err);
         });
-        
+
         res.json({
             success: true,
             message: "保存成功"
@@ -209,10 +235,10 @@ app.put('/api/characters/:characterName', authenticateToken, async (req, res) =>
 app.get('/api/inventory', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        
+
         // 从内存中获取数据
         const items = inventoryData[userId] || [];
-        
+
         res.json({
             success: true,
             data: {
@@ -233,15 +259,15 @@ app.put('/api/inventory', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const { items } = req.body;
-        
+
         // 保存到内存
         inventoryData[userId] = items || [];
-        
+
         // 异步保存到文件（不阻塞响应）
         saveInventoryData().catch(err => {
             console.error('保存道具数据到文件失败:', err);
         });
-        
+
         res.json({
             success: true,
             message: "保存成功"
@@ -263,7 +289,8 @@ app.get('/api/admin/data', (req, res) => {
         success: true,
         data: {
             characters: charactersData,
-            inventory: inventoryData
+            inventory: inventoryData,
+            coins: coinsData // 添加金币数据
         }
     });
 });
@@ -274,10 +301,206 @@ app.post('/api/admin/reset', async (req, res) => {
     inventoryData = {};
     await saveCharactersData();
     await saveInventoryData();
+    await saveCoinsData();
     res.json({
         success: true,
         message: "所有数据已重置"
     });
+});
+
+// ========== 金币系统API ==========
+
+// GET /api/coins - 获取金币数量
+app.get('/api/coins', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // 从内存中获取数据，如果没有则返回默认值
+        const coins = coinsData[userId] || 1000;
+
+        res.json({
+            success: true,
+            coins: coins
+        });
+    } catch (error) {
+        console.error('获取金币失败:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// POST /api/coins/add - 增加金币
+app.post('/api/coins/add', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { amount } = req.body;
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: '增加数量无效'
+            });
+        }
+
+        // 获取当前金币
+        const currentCoins = coinsData[userId] || 1000;
+        const newCoins = currentCoins + amount;
+
+        // 保存到内存
+        coinsData[userId] = newCoins;
+
+        // 异步保存到文件
+        saveCoinsData().catch(err => {
+            console.error('保存金币数据到文件失败:', err);
+        });
+
+        res.json({
+            success: true,
+            coins: newCoins,
+            added: amount
+        });
+    } catch (error) {
+        console.error('增加金币失败:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// POST /api/coins/spend - 减少金币（购买商品）
+app.post('/api/coins/spend', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { amount } = req.body;
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: '减少数量无效'
+            });
+        }
+
+        // 获取当前金币
+        const currentCoins = coinsData[userId] || 1000;
+
+        // 检查金币是否足够
+        if (currentCoins < amount) {
+            return res.status(400).json({
+                success: false,
+                error: 'insufficient_coins',
+                currentCoins: currentCoins,
+                required: amount,
+                message: '金币不足'
+            });
+        }
+
+        const newCoins = currentCoins - amount;
+
+        // 保存到内存
+        coinsData[userId] = newCoins;
+
+        // 异步保存到文件
+        saveCoinsData().catch(err => {
+            console.error('保存金币数据到文件失败:', err);
+        });
+
+        res.json({
+            success: true,
+            coins: newCoins,
+            spent: amount
+        });
+    } catch (error) {
+        console.error('减少金币失败:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// ========== 商城API ==========
+
+// POST /api/shop/purchase - 购买商品
+app.post('/api/shop/purchase', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { shopItemId } = req.body;
+
+        if (!shopItemId) {
+            return res.status(400).json({
+                success: false,
+                message: '商品ID无效'
+            });
+        }
+
+        // 这里应该从ShopConfig获取商品信息，但服务器端没有ShopConfig
+        // 所以客户端需要传递完整的商品信息
+        const { itemId, count, price } = req.body;
+
+        if (!itemId || !count || !price) {
+            return res.status(400).json({
+                success: false,
+                message: '商品信息不完整'
+            });
+        }
+
+        // 检查金币是否足够
+        const currentCoins = coinsData[userId] || 1000;
+        if (currentCoins < price) {
+            return res.status(400).json({
+                success: false,
+                error: 'insufficient_coins',
+                currentCoins: currentCoins,
+                required: price,
+                message: '金币不足'
+            });
+        }
+
+        // 扣除金币
+        const newCoins = currentCoins - price;
+        coinsData[userId] = newCoins;
+
+        // 添加道具到背包
+        const items = inventoryData[userId] || [];
+        const existingItemIndex = items.findIndex(item => item.itemId === itemId);
+
+        if (existingItemIndex >= 0) {
+            // 如果道具已存在，增加数量
+            items[existingItemIndex].count += count;
+        } else {
+            // 如果道具不存在，添加新道具
+            items.push({ itemId, count });
+        }
+
+        inventoryData[userId] = items;
+
+        // 异步保存到文件
+        saveCoinsData().catch(err => {
+            console.error('保存金币数据到文件失败:', err);
+        });
+        saveInventoryData().catch(err => {
+            console.error('保存道具数据到文件失败:', err);
+        });
+
+        res.json({
+            success: true,
+            coins: newCoins,
+            items: items,
+            purchased: {
+                itemId,
+                count
+            }
+        });
+    } catch (error) {
+        console.error('购买商品失败:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 });
 
 // ========== 启动服务器 ==========
@@ -285,10 +508,10 @@ app.post('/api/admin/reset', async (req, res) => {
 async function startServer() {
     // 确保数据目录存在
     await ensureDataDir();
-    
+
     // 加载数据到内存
     await loadData();
-    
+
     // 启动单个角色数据服务器（端口3000）
     const server = app.listen(PORT, () => {
         console.log(`========================================`);
@@ -302,11 +525,15 @@ async function startServer() {
         console.log(`  PUT  /api/characters/:name        - 保存角色数据`);
         console.log(`  GET  /api/inventory               - 获取道具列表`);
         console.log(`  PUT  /api/inventory               - 保存道具列表`);
-        console.log(`  GET  /api/admin/data              - 查看所有数据（调试）`);
-        console.log(`  POST /api/admin/reset              - 重置所有数据（测试）`);
+        console.log(`  GET  /api/coins                  - 获取金币数量`);
+        console.log(`  POST /api/coins/add               - 增加金币`);
+        console.log(`  POST /api/coins/spend            - 减少金币`);
+        console.log(`  POST /api/shop/purchase          - 购买商品`);
+        console.log(`  GET  /api/admin/data             - 查看所有数据（调试）`);
+        console.log(`  POST /api/admin/reset             - 重置所有数据（测试）`);
         console.log(`========================================\n`);
     });
-    
+
     // 启动所有角色数据服务器（端口3001）- 使用独立的app实例
     const serverAll = appAll.listen(PORT_ALL, () => {
         console.log(`========================================`);
@@ -332,7 +559,7 @@ async function startServer() {
             }
             console.error(`\n2. 或者修改 server.js 中的 PORT 为其他端口（如3001）`);
             console.error(`\n3. 或者等待30秒后自动重试其他端口...\n`);
-            
+
             // 自动尝试其他端口（可选）
             const alternativePort = PORT + 1;
             console.log(`正在尝试端口 ${alternativePort}...`);
@@ -346,7 +573,7 @@ async function startServer() {
                 console.log(`道具数据文件: ${INVENTORY_FILE}`);
                 console.log(`========================================\n`);
             });
-            
+
             altServer.on('error', (altError) => {
                 console.error(`端口 ${alternativePort} 也被占用，请手动选择可用端口`);
                 process.exit(1);
@@ -356,7 +583,7 @@ async function startServer() {
             process.exit(1);
         }
     });
-    
+
     // 处理所有角色数据服务器端口占用错误
     serverAll.on('error', (error) => {
         if (error.code === 'EADDRINUSE') {
@@ -372,7 +599,7 @@ async function startServer() {
             }
             console.error(`\n2. 或者修改 server.js 中的 PORT_ALL 为其他端口（如3002）`);
             console.error(`\n3. 或者等待30秒后自动重试其他端口...\n`);
-            
+
             // 自动尝试其他端口（可选）
             const alternativePort = PORT_ALL + 1;
             console.log(`正在尝试端口 ${alternativePort}...`);
@@ -383,7 +610,7 @@ async function startServer() {
                 console.log(`⚠️  请更新客户端配置中的服务器地址！`);
                 console.log(`========================================\n`);
             });
-            
+
             altServerAll.on('error', (altError) => {
                 console.error(`端口 ${alternativePort} 也被占用，请手动选择可用端口`);
                 process.exit(1);
@@ -393,27 +620,30 @@ async function startServer() {
             process.exit(1);
         }
     });
-    
+
     // 定期保存数据（每30秒自动保存一次，防止数据丢失）
     setInterval(async () => {
         await saveCharactersData();
         await saveInventoryData();
+        await saveCoinsData();
         console.log('[自动保存] 数据已自动保存到文件');
     }, 30000); // 30秒
-    
+
     // 优雅关闭：程序退出时保存数据
     process.on('SIGINT', async () => {
         console.log('\n[关闭] 正在保存数据...');
         await saveCharactersData();
         await saveInventoryData();
+        await saveCoinsData();
         console.log('[关闭] 数据已保存，服务器关闭');
         process.exit(0);
     });
-    
+
     process.on('SIGTERM', async () => {
         console.log('\n[关闭] 正在保存数据...');
         await saveCharactersData();
         await saveInventoryData();
+        await saveCoinsData();
         console.log('[关闭] 数据已保存，服务器关闭');
         process.exit(0);
     });

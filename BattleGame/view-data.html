@@ -127,6 +127,8 @@
         <button onclick="loadData()">🔄 刷新所有数据</button>
         <button onclick="loadAllCharacters()">👥 获取所有角色数据（端口3001）</button>
         <button onclick="loadSingleCharacter()">👤 获取单个角色数据（端口3000）</button>
+        <button onclick="loadCoins()">💰 获取金币数据</button>
+        <button onclick="loadShopConfig()">🛒 查看商城配置</button>
         <button onclick="resetData()" class="reset">🗑️ 重置所有数据</button>
         <div id="status" class="status"></div>
     </div>
@@ -153,6 +155,24 @@
     <div class="container">
         <h2>🎒 道具数据（从端口3000获取）</h2>
         <pre id="inventory">点击"刷新所有数据"按钮加载...</pre>
+    </div>
+
+    <div class="container">
+        <h2>💰 金币数据（从端口3000获取）</h2>
+        <button onclick="loadCoins()" style="margin-bottom: 10px;">🔄 刷新金币数据</button>
+        <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
+            💡 提示：金币数据按用户ID存储，默认用户ID为1。可以通过 <code>POST /api/coins/add</code> 增加金币。
+        </p>
+        <pre id="coins">点击"刷新金币数据"按钮或"刷新所有数据"按钮加载...</pre>
+    </div>
+
+    <div class="container">
+        <h2>🛒 商城商品配置（客户端配置）</h2>
+        <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
+            💡 提示：商城商品配置在客户端 <code>ShopConfig.js</code> 中定义。服务器端提供购买API：<code>POST /api/shop/purchase</code>
+        </p>
+        <button onclick="loadShopConfig()" style="margin-bottom: 10px;">📋 查看商品配置</button>
+        <pre id="shopConfig">点击"查看商品配置"按钮加载...</pre>
     </div>
 
     <script>
@@ -198,6 +218,25 @@
                         JSON.stringify(result.data.characters, null, 2);
                     document.getElementById('inventory').textContent = 
                         JSON.stringify(result.data.inventory, null, 2);
+                    
+                    // 显示金币数据（如果存在）
+                    if (result.data.coins) {
+                        const coinsDisplay = {
+                            coins: result.data.coins,
+                            formatted: Object.keys(result.data.coins).map(userId => ({
+                                userId: userId,
+                                coins: result.data.coins[userId],
+                                formatted: `${result.data.coins[userId].toLocaleString()} 金币`
+                            })),
+                            timestamp: new Date().toLocaleString('zh-CN')
+                        };
+                        document.getElementById('coins').textContent = 
+                            JSON.stringify(coinsDisplay, null, 2);
+                    } else {
+                        // 如果没有金币数据，单独加载
+                        await loadCoins();
+                    }
+                    
                     showStatus('✅ 所有数据加载成功！', 'success');
                 } else {
                     throw new Error(result.message || '加载失败');
@@ -211,6 +250,97 @@
                     `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 服务器地址是否正确（端口3000）`;
                 document.getElementById('inventory').textContent = 
                     `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 服务器地址是否正确（端口3000）`;
+            }
+        }
+
+        // 加载金币数据
+        async function loadCoins() {
+            try {
+                showStatus('正在加载金币数据...', 'info');
+                
+                const response = await fetch(`${API_BASE}/coins`, {
+                    headers: {
+                        'Authorization': 'Bearer 1'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    const coinsData = {
+                        userId: 1, // 默认用户ID
+                        coins: result.coins,
+                        formatted: `${result.coins.toLocaleString()} 金币`, // 格式化显示
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        note: "金币数据存储在服务器的 data/coins.json 文件中"
+                    };
+                    document.getElementById('coins').textContent = 
+                        JSON.stringify(coinsData, null, 2);
+                    showStatus(`✅ 金币数据加载成功！当前金币: ${result.coins}`, 'success');
+                } else {
+                    throw new Error(result.message || '加载失败');
+                }
+            } catch (error) {
+                showStatus(`❌ 加载金币数据失败: ${error.message}`, 'error');
+                console.error('加载金币数据失败:', error);
+                
+                document.getElementById('coins').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 服务器地址是否正确（端口3000）\n3. /api/coins 端点是否已注册\n4. 服务器代码是否包含金币API路由`;
+            }
+        }
+
+        // 加载商城商品配置（显示客户端配置信息）
+        async function loadShopConfig() {
+            try {
+                // 商城商品配置在客户端，这里显示配置说明
+                const shopConfigInfo = {
+                    note: "商城商品配置在客户端 ShopConfig.js 文件中定义",
+                    location: "assets/Scripts/game/ShopConfig.js",
+                    description: "商品列表通过 ShopConfig.getAllItems() 方法获取",
+                    exampleItems: [
+                        {
+                            id: "upgrade_potion_1",
+                            name: "升级药水",
+                            price: 100,
+                            itemId: "upgrade_potion",
+                            count: 1,
+                            description: "使用后可以提升角色等级"
+                        },
+                        {
+                            id: "upgrade_potion_5",
+                            name: "升级药水 x5",
+                            price: 450,
+                            itemId: "upgrade_potion",
+                            count: 5,
+                            description: "5个升级药水打包，更优惠"
+                        },
+                        {
+                            id: "upgrade_potion_10",
+                            name: "升级药水 x10",
+                            price: 800,
+                            itemId: "upgrade_potion",
+                            count: 10,
+                            description: "10个升级药水打包，超值优惠"
+                        }
+                    ],
+                    serverAPI: {
+                        purchase: "POST /api/shop/purchase - 购买商品",
+                        coins: "GET /api/coins - 获取金币数量",
+                        addCoins: "POST /api/coins/add - 增加金币",
+                        spendCoins: "POST /api/coins/spend - 减少金币"
+                    }
+                };
+                
+                document.getElementById('shopConfig').textContent = 
+                    JSON.stringify(shopConfigInfo, null, 2);
+                showStatus('✅ 商城配置信息已显示', 'success');
+            } catch (error) {
+                showStatus(`❌ 加载商城配置失败: ${error.message}`, 'error');
+                console.error('加载商城配置失败:', error);
             }
         }
 
@@ -327,6 +457,7 @@
         window.onload = () => {
             loadData();
             loadAllCharacters();
+            loadCoins(); // 自动加载金币数据
         };
     </script>
 </body>

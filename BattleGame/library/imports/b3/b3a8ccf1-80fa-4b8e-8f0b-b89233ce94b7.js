@@ -113,6 +113,37 @@ var ServerConfig = {
     this.auth.enabled = false;
     this._updateAdapters();
     cc.log("[ServerConfig] 用户token已清除");
+  },
+  /**
+   * 获取存储模式（从ItemDataAdapter获取，因为存储模式由适配器管理）
+   * @returns {string} 存储模式：'local', 'server', 'hybrid'
+   */
+  getStorageMode: function getStorageMode() {
+    try {
+      var ItemDataAdapter = require("ItemDataAdapter");
+      return ItemDataAdapter.storageMode || 'local';
+    } catch (e) {
+      // 如果ItemDataAdapter不存在，默认返回local
+      return 'local';
+    }
+  },
+  /**
+   * 获取基础URL
+   * @returns {string} 服务器基础URL
+   */
+  getBaseURL: function getBaseURL() {
+    return this.baseURL;
+  },
+  /**
+   * 获取身份验证请求头
+   * @returns {Object} 请求头对象
+   */
+  getAuthHeaders: function getAuthHeaders() {
+    if (this.auth.enabled && this.auth.headerValue) {
+      var _ref;
+      return _ref = {}, _ref[this.auth.headerName] = this.auth.headerValue, _ref;
+    }
+    return {};
   }
 };
 module.exports = ServerConfig;
