@@ -79,7 +79,7 @@
         "__id__": 48
       },
       {
-        "__id__": 29
+        "__id__": 30
       }
     ],
     "_active": true,
@@ -299,10 +299,7 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 28
-      },
-      {
-        "__id__": 47
+        "__id__": 29
       }
     ],
     "_prefab": null,
@@ -1382,7 +1379,11 @@
     },
     "_children": [],
     "_active": true,
-    "_components": [],
+    "_components": [
+      {
+        "__id__": 28
+      }
+    ],
     "_prefab": null,
     "_opacity": 255,
     "_color": {
@@ -1432,6 +1433,19 @@
     "_id": "4f030vyw5Gr6ZVMaMZt+Rh"
   },
   {
+    "__type__": "87faaF6VwpACo+QYJbnpmAo",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 27
+    },
+    "_enabled": true,
+    "upgradePotionIcon": {
+      "__uuid__": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f"
+    },
+    "_id": "4cRs6cdilJvKrxyIt+OGo3"
+  },
+  {
     "__type__": "b65e6CyLjFJiZlgPPPHKXLR",
     "_name": "",
     "_objFlags": 0,
@@ -1452,7 +1466,7 @@
       "__uuid__": "cf6f2443-d8f7-4535-bf34-02aa44466432"
     },
     "itemTooltip": {
-      "__id__": 29
+      "__id__": 30
     },
     "inventoryColumns": 6,
     "inventoryRows": 4,
@@ -1545,13 +1559,13 @@
     },
     "_children": [
       {
-        "__id__": 30
+        "__id__": 31
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 46
+        "__id__": 47
       }
     ],
     "_prefab": null,
@@ -1607,35 +1621,35 @@
     "_name": "Background",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 29
+      "__id__": 30
     },
     "_children": [
       {
-        "__id__": 31
+        "__id__": 32
       },
       {
-        "__id__": 33
+        "__id__": 34
       },
       {
-        "__id__": 35
+        "__id__": 36
       },
       {
-        "__id__": 37
+        "__id__": 38
       },
       {
-        "__id__": 39
+        "__id__": 40
       },
       {
-        "__id__": 41
+        "__id__": 42
       },
       {
-        "__id__": 43
+        "__id__": 44
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 45
+        "__id__": 46
       }
     ],
     "_prefab": null,
@@ -1691,13 +1705,13 @@
     "_name": "NameLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 32
+        "__id__": 33
       }
     ],
     "_prefab": null,
@@ -1753,7 +1767,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 31
+      "__id__": 32
     },
     "_enabled": true,
     "_materials": [
@@ -1786,13 +1800,13 @@
     "_name": "DescriptionLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 34
+        "__id__": 35
       }
     ],
     "_prefab": null,
@@ -1848,7 +1862,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 33
+      "__id__": 34
     },
     "_enabled": true,
     "_materials": [
@@ -1881,13 +1895,13 @@
     "_name": "EffectLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 36
+        "__id__": 37
       }
     ],
     "_prefab": null,
@@ -1943,7 +1957,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 35
+      "__id__": 36
     },
     "_enabled": true,
     "_materials": [
@@ -1976,13 +1990,13 @@
     "_name": "CountLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 38
+        "__id__": 39
       }
     ],
     "_prefab": null,
@@ -2038,7 +2052,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 37
+      "__id__": 38
     },
     "_enabled": true,
     "_materials": [
@@ -2071,13 +2085,13 @@
     "_name": "rarityLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 40
+        "__id__": 41
       }
     ],
     "_prefab": null,
@@ -2133,7 +2147,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 39
+      "__id__": 40
     },
     "_enabled": true,
     "_materials": [
@@ -2166,13 +2180,13 @@
     "_name": "typeLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 42
+        "__id__": 43
       }
     ],
     "_prefab": null,
@@ -2228,7 +2242,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 41
+      "__id__": 42
     },
     "_enabled": true,
     "_materials": [
@@ -2261,13 +2275,13 @@
     "_name": "PriceLabel",
     "_objFlags": 0,
     "_parent": {
-      "__id__": 30
+      "__id__": 31
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 44
+        "__id__": 45
       }
     ],
     "_prefab": null,
@@ -2323,7 +2337,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 43
+      "__id__": 44
     },
     "_enabled": true,
     "_materials": [
@@ -2356,7 +2370,7 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 30
+      "__id__": 31
     },
     "_enabled": true,
     "_materials": [
@@ -2388,49 +2402,36 @@
     "_name": "",
     "_objFlags": 0,
     "node": {
-      "__id__": 29
+      "__id__": 30
     },
     "_enabled": true,
     "background": {
-      "__id__": 30
+      "__id__": 31
     },
     "nameLabel": {
-      "__id__": 32
+      "__id__": 33
     },
     "descriptionLabel": {
-      "__id__": 34
+      "__id__": 35
     },
     "effectLabel": {
-      "__id__": 36
+      "__id__": 37
     },
     "countLabel": {
-      "__id__": 38
+      "__id__": 39
     },
     "rarityLabel": {
-      "__id__": 40
+      "__id__": 41
     },
     "typeLabel": {
-      "__id__": 42
+      "__id__": 43
     },
     "priceLabel": {
-      "__id__": 44
+      "__id__": 45
     },
     "showDelay": 300,
     "hideDelay": 100,
     "_id": "3c98SDlIxHfJFVeijGN+dM"
-  },
-  {
-    "__type__": "87faaF6VwpACo+QYJbnpmAo",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 6
-    },
-    "_enabled": true,
-    "upgradePotionIcon": {
-      "__uuid__": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f"
-    },
-    "_id": "be7ITSdtFCTI1n7wG9R0bb"
   },
   {
     "__type__": "cc.Node",

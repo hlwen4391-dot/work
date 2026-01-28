@@ -6195,8 +6195,8 @@
     "relativePath": "Scripts\\system\\BattleSystem.js"
   },
   "09b1dbc8-462d-48c0-9f57-54cd3f4f0d71": {
-    "asset": 1769507433700,
-    "meta": 1769507433703,
+    "asset": 1769572619744,
+    "meta": 1769572619747,
     "relativePath": "Scenes\\CharacterViewScene.fire"
   },
   "fe798d59-199e-4633-9f42-c00df6972a8d": {
@@ -6330,8 +6330,8 @@
     "relativePath": "头像\\法师头像 (2).png"
   },
   "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
-    "asset": 1769507902082,
-    "meta": 1769507909874,
+    "asset": 1769572167561,
+    "meta": 1769572175064,
     "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
   }
 }
