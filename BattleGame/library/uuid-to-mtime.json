@@ -6324,14 +6324,9 @@
     "meta": 1769572175064,
     "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
   },
-  "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
-    "asset": 1769582711239,
-    "meta": 1769584485682,
-    "relativePath": "Scripts\\game\\ShopConfig.js"
-  },
   "cf6ac42d-564d-4151-9b6a-4f37bab8f00a": {
-    "asset": 1769587565112,
-    "meta": 1769587565117,
+    "asset": 1769671158288,
+    "meta": 1769671158294,
     "relativePath": "Scenes\\ShopScene.fire"
   },
   "2777fbe0-2c92-4a08-9b11-f26333247139": {
@@ -6364,9 +6359,19 @@
     "meta": 1769590358772,
     "relativePath": "Scripts\\game\\MainMenuScene.js"
   },
-  "39c7c592-b93f-45d2-a1a8-716550e6ab2f": {
-    "asset": 1769590981939,
-    "meta": 1769591290118,
+  "56e2a783-d036-43ca-80bb-fe8cb6cb9c98": {
+    "asset": 1769667645941,
+    "meta": 1769667646013,
+    "relativePath": "Background\\商城背景.png"
+  },
+  "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
+    "asset": 1769669860953,
+    "meta": 1769669865349,
+    "relativePath": "Scripts\\game\\ShopConfig.js"
+  },
+  "d788163b-e3ab-4c9f-962e-67e90a9edb5d": {
+    "asset": 1769670849924,
+    "meta": 1769670899723,
     "relativePath": "Scripts\\ecs\\ShopUI.js"
   }
 }

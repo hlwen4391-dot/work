@@ -1,37 +1,37 @@
 {
   "1": {
     "战士": {
-      "level": 35,
-      "exp": 19825,
+      "level": 38,
+      "exp": 22506,
       "baseHp": 120,
       "baseAttack": 18,
       "baseDefense": 1,
       "baseSpeed": 2,
       "baseCrit": 0,
       "baseMiss": 0,
-      "saveTime": 1769592040153
+      "saveTime": 1769673999152
     },
     "法师": {
-      "level": 5,
-      "exp": 1000,
+      "level": 6,
+      "exp": 1318,
       "baseHp": 100,
       "baseAttack": 12,
       "baseDefense": 1,
       "baseSpeed": 3,
       "baseCrit": 0,
       "baseMiss": 0,
-      "saveTime": 1769508352713
+      "saveTime": 1769672681934
     },
     "修女": {
-      "level": 2,
-      "exp": 200,
+      "level": 3,
+      "exp": 400,
       "baseHp": 120,
       "baseAttack": 20,
       "baseDefense": 1,
       "baseSpeed": 1,
       "baseCrit": 0,
       "baseMiss": 0,
-      "saveTime": 1769426189172
+      "saveTime": 1769672681934
     },
     "怪物": {
       "level": 2,

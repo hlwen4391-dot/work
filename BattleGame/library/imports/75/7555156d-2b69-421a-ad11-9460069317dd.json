@@ -1,0 +1,28 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "商城背景",
+    "texture": "56e2a783-d036-43ca-80bb-fe8cb6cb9c98",
+    "atlas": "",
+    "rect": [
+      0,
+      0,
+      1536,
+      1024
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      1536,
+      1024
+    ],
+    "capInsets": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

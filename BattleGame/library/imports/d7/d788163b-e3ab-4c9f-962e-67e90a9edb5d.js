@@ -1,5 +1,5 @@
 "use strict";
-cc._RF.push(module, '39c7cWSuT9F0qGocWVQ5qsv', 'ShopUI');
+cc._RF.push(module, 'd7881Y746tMn5YuZ+kKnttd', 'ShopUI');
 // Scripts/ecs/ShopUI.js
 
 "use strict";
@@ -50,7 +50,8 @@ cc.Class({
     },
     // 商品项布局配置（参考专业商城布局）
     shopItemWidth: {
-      "default": 180,
+      "default": 220,
+      // ⭐ 从180增加到220，让卡片更宽
       tooltip: "商品项宽度（卡片宽度）"
     },
     shopItemHeight: {
@@ -68,6 +69,11 @@ cc.Class({
     shopPadding: {
       "default": 20,
       tooltip: "商品列表容器的内边距"
+    },
+    // ⭐ 背景透明度配置
+    backgroundOpacity: {
+      "default": 180,
+      tooltip: "商城背景面板的透明度（0-255，180=约70%不透明，128=50%透明）"
     }
   },
   onLoad: function onLoad() {
@@ -169,7 +175,7 @@ cc.Class({
       itemNode.name = "ShopItem_" + shopItem.id;
 
       // ⭐ 关键：先设置商品项大小和位置（在设置内容之前）
-      _this3._layoutShopItem(itemNode, index, shopItems.length);
+      _this3._layoutShopItem(itemNode, index, shopItems.length, shopItem);
 
       // 设置商品数据（包括内部布局）
       _this3.setupShopItem(itemNode, shopItem);
@@ -209,7 +215,7 @@ cc.Class({
     cc.log("[ShopUI] \u5546\u54C1\u9879\u914D\u7F6E: \u5BBD\u5EA6=" + this.shopItemWidth + ", \u9AD8\u5EA6=" + this.shopItemHeight + ", \u95F4\u8DDD=" + this.shopItemSpacing);
   },
   /**
-   * 设置容器背景（白色卡片效果）
+   * 设置容器背景（⭐ 半透明白色卡片效果）
    * @private
    */
   _setupContainerBackground: function _setupContainerBackground() {
@@ -219,22 +225,28 @@ cc.Class({
       bgNode = new cc.Node("Background");
       var graphics = bgNode.addComponent(cc.Graphics);
 
-      // 绘制白色圆角矩形背景
+      // ⭐ 绘制半透明白色圆角矩形背景
       var width = this.itemListContainer.width;
       var height = this.itemListContainer.height;
       var radius = 10; // 圆角半径
 
-      graphics.fillColor = new cc.Color(255, 255, 255, 255);
+      // ⭐ 半透明背景：使用可配置的透明度值
+      // 可以根据需要调整：128=50%透明，180=70%不透明，200=78%不透明，255=完全不透明
+      var opacity = this.backgroundOpacity || 180; // 默认180（约70%不透明）
+      var backgroundColor = new cc.Color(255, 255, 255, opacity);
+      graphics.fillColor = backgroundColor;
       graphics.roundRect(-width / 2, -height / 2, width, height, radius);
       graphics.fill();
 
-      // 设置阴影效果（可选）
+      // ⭐ 设置节点透明度（确保半透明效果）
       bgNode.setContentSize(width, height);
       bgNode.setAnchorPoint(0.5, 0.5);
       bgNode.setPosition(0, 0);
+      bgNode.opacity = opacity; // 节点透明度（与fillColor的alpha值保持一致）
       bgNode.zIndex = -1; // 背景在最下层
 
       this.itemListContainer.addChild(bgNode);
+      cc.log("[ShopUI] \u2713 \u5DF2\u8BBE\u7F6E\u534A\u900F\u660E\u80CC\u666F: alpha=" + backgroundColor.a + ", opacity=" + bgNode.opacity);
     }
   },
   /**
@@ -243,8 +255,12 @@ cc.Class({
    * @param {cc.Node} itemNode - 商品项节点
    * @param {number} index - 商品索引
    * @param {number} totalItems - 商品总数
+   * @param {Object} shopItem - 商品数据（可选，用于设置样式）
    */
-  _layoutShopItem: function _layoutShopItem(itemNode, index, totalItems) {
+  _layoutShopItem: function _layoutShopItem(itemNode, index, totalItems, shopItem) {
+    if (shopItem === void 0) {
+      shopItem = null;
+    }
     // 计算行列位置
     var row = Math.floor(index / this.shopColumns);
     var col = index % this.shopColumns;
@@ -262,6 +278,88 @@ cc.Class({
     itemNode.setContentSize(this.shopItemWidth, this.shopItemHeight);
     itemNode.setAnchorPoint(0.5, 0.5);
     itemNode.setPosition(x, y);
+
+    // ⭐ 为商品项添加容器背景和边框（根据商品类型设置样式）
+    this._setupItemCardBackground(itemNode, shopItem);
+
+    // ⭐ 添加Mask组件，确保内容严格限制在容器内
+    this._setupItemCardMask(itemNode);
+  },
+  /**
+   * 设置商品项容器背景（卡片样式，⭐ 根据商品类型使用不同样式）
+   * @private
+   * @param {cc.Node} itemNode - 商品项节点
+   * @param {Object} shopItem - 商品数据（可选，用于获取类型样式）
+   */
+  _setupItemCardBackground: function _setupItemCardBackground(itemNode, shopItem) {
+    if (shopItem === void 0) {
+      shopItem = null;
+    }
+    // 检查是否已有背景节点
+    var bgNode = itemNode.getChildByName("CardBackground");
+    if (!bgNode) {
+      bgNode = new cc.Node("CardBackground");
+      var graphics = bgNode.addComponent(cc.Graphics);
+
+      // ⭐ 根据商品类型获取样式（如果提供了商品数据）
+      var backgroundColor = new cc.Color(245, 245, 245, 255); // 默认浅灰
+      var borderColor = new cc.Color(200, 200, 200, 255); // 默认灰色边框
+
+      if (shopItem && shopItem.category) {
+        var _ShopConfig = require("ShopConfig");
+        var style = _ShopConfig.getCategoryStyle(shopItem.category);
+        if (style) {
+          backgroundColor = style.backgroundColor;
+          borderColor = style.borderColor;
+        }
+      }
+
+      // 绘制卡片背景（带圆角和边框）
+      var width = itemNode.width;
+      var height = itemNode.height;
+      var radius = 8; // 圆角半径
+      var borderWidth = 2; // 边框宽度
+
+      // 绘制背景
+      graphics.fillColor = backgroundColor;
+      graphics.roundRect(-width / 2, -height / 2, width, height, radius);
+      graphics.fill();
+
+      // 绘制边框
+      graphics.strokeColor = borderColor;
+      graphics.lineWidth = borderWidth;
+      graphics.roundRect(-width / 2, -height / 2, width, height, radius);
+      graphics.stroke();
+
+      // 设置背景节点属性
+      bgNode.setContentSize(width, height);
+      bgNode.setAnchorPoint(0.5, 0.5);
+      bgNode.setPosition(0, 0);
+      bgNode.zIndex = -100; // 背景在最下层
+
+      itemNode.addChild(bgNode);
+      cc.log("[ShopUI] \u2713 \u5DF2\u4E3A\u5546\u54C1\u9879\u6DFB\u52A0\u5BB9\u5668\u80CC\u666F: " + width + "x" + height + ", \u7C7B\u578B=" + (shopItem ? shopItem.category : 'default'));
+    }
+  },
+  /**
+   * 设置商品项容器遮罩（确保内容不超出容器）
+   * @private
+   * @param {cc.Node} itemNode - 商品项节点
+   */
+  _setupItemCardMask: function _setupItemCardMask(itemNode) {
+    // 检查是否已有Mask组件
+    var mask = itemNode.getComponent(cc.Mask);
+    if (!mask) {
+      mask = itemNode.addComponent(cc.Mask);
+      mask.type = cc.Mask.Type.RECT; // 矩形遮罩
+      mask.segements = 1; // 圆角分段数（1表示无圆角，但配合Graphics使用）
+
+      // 设置遮罩大小（略小于容器，确保边框可见）
+      var padding = 1; // 内边距，确保内容不贴边
+      mask.width = itemNode.width - padding * 2;
+      mask.height = itemNode.height - padding * 2;
+      cc.log("[ShopUI] \u2713 \u5DF2\u4E3A\u5546\u54C1\u9879\u6DFB\u52A0\u906E\u7F69: " + mask.width + "x" + mask.height);
+    }
   },
   /**
    * 设置商品项UI
@@ -291,43 +389,61 @@ cc.Class({
     // 设置商品项内部布局
     this._layoutShopItemContent(itemNode, iconNode, nameLabel, priceLabel, descriptionLabel, buyButton);
 
-    // 设置名称
+    // ⭐ 根据商品类型获取样式配置
+    var ShopConfig = require("ShopConfig");
+    var style = shopItem.category ? ShopConfig.getCategoryStyle(shopItem.category) : null;
+    // ⭐ 优化：文字颜色更明显（深色）
+    var nameColor = style ? style.nameColor : new cc.Color(30, 30, 30, 255); // 深黑色，更明显
+    var priceColor = style ? style.priceColor : new cc.Color(255, 215, 0, 255); // 金色保持不变
+    var descColor = style ? style.descColor : new cc.Color(60, 60, 60, 255); // 深灰色，更明显（原来是120）
+
+    // 设置名称（⭐ 根据商品类型使用不同颜色，更明显）
     if (nameLabel) {
       var label = nameLabel.getComponent(cc.Label);
       if (label) {
         label.string = shopItem.name;
-        // 设置字体样式
-        label.fontSize = 24;
-        label.node.color = cc.Color.WHITE;
+        // ⭐ 优化：字体更大，颜色更深
+        label.fontSize = 30; // 从26增加到30
+        label.node.color = nameColor;
         label.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
       }
     }
 
-    // 设置价格
+    // 设置价格（⭐ 根据商品类型使用不同颜色）
     if (priceLabel) {
       var _label = priceLabel.getComponent(cc.Label);
       if (_label) {
         _label.string = shopItem.price + " \u91D1\u5E01";
-        // 设置字体样式（价格更突出）
-        _label.fontSize = 28;
-        _label.node.color = new cc.Color(255, 215, 0, 255); // 金色
+        // ⭐ 优化：字体更大，价格更突出
+        _label.fontSize = 32; // 从28增加到32
+        _label.node.color = priceColor;
         _label.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
       }
     }
 
-    // 设置描述
+    // 设置描述（⭐ 优化：确保文字自动换行且限制在容器内，根据商品类型使用不同颜色，更明显）
     if (descriptionLabel) {
       var _label2 = descriptionLabel.getComponent(cc.Label);
       if (_label2) {
         _label2.string = shopItem.description || "";
-        // 设置字体样式
-        _label2.fontSize = 18;
-        _label2.node.color = new cc.Color(200, 200, 200, 255); // 浅灰色
-        _label2.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
-        _label2.enableWrapText = true; // 允许换行
-        // 设置描述标签宽度（留出左右边距）
-        var descWidth = this.shopItemWidth - 20;
-        descriptionLabel.setContentSize(descWidth, 60);
+        // ⭐ 优化：字体更大，颜色更深，更明显
+        _label2.fontSize = 20; // 从18增加到20
+        _label2.node.color = descColor; // 深灰色(60,60,60)，更明显
+        _label2.horizontalAlign = cc.Label.HorizontalAlign.LEFT; // 左对齐，更易阅读
+        _label2.verticalAlign = cc.Label.VerticalAlign.TOP; // 顶部对齐
+        _label2.enableWrapText = true; // ⭐ 启用自动换行
+        _label2.overflow = cc.Label.Overflow.RESIZE_HEIGHT; // ⭐ 自动调整高度以适应内容
+        // ⭐ 增加行间距（通过增加行高来给文字更多空间）
+        _label2.lineHeight = 26; // 行高：从22增加到26，配合更大的字体
+
+        // ⭐ 设置描述标签尺寸（严格限制在容器内，留出内边距）
+        var padding = 12; // 左右内边距
+        var descWidth = this.shopItemWidth - padding * 2; // 宽度 = 容器宽度 - 左右内边距
+        var maxDescHeight = 60; // 最大高度：从55增加到60，给更大的字体更多空间
+        descriptionLabel.setContentSize(descWidth, maxDescHeight);
+        descriptionLabel.setAnchorPoint(0.5, 1); // 锚点在顶部中心，便于定位
+
+        cc.log("[ShopUI] \u2713 \u63CF\u8FF0\u6807\u7B7E\u5DF2\u8BBE\u7F6E: \u5BBD\u5EA6=" + descWidth + ", \u6700\u5927\u9AD8\u5EA6=" + maxDescHeight + ", \u5B57\u4F53=" + _label2.fontSize + ", \u884C\u9AD8=" + _label2.lineHeight);
       }
     }
 
@@ -386,7 +502,7 @@ cc.Class({
     itemNode._shopItemData = shopItem;
   },
   /**
-   * 布局商品项内部内容（参考专业商城布局：图标->名称->价格->按钮）
+   * 布局商品项内部内容（⭐ 优化版：图标->名称->描述->价格->按钮，严格限制在容器内）
    * @private
    * @param {cc.Node} itemNode - 商品项节点
    * @param {cc.Node} iconNode - 图标节点
@@ -398,66 +514,87 @@ cc.Class({
   _layoutShopItemContent: function _layoutShopItemContent(itemNode, iconNode, nameLabel, priceLabel, descriptionLabel, buyButton) {
     var itemHeight = this.shopItemHeight;
     var itemWidth = this.shopItemWidth;
-    var padding = 12; // 内边距
+    var padding = 12; // 内边距（确保内容不贴边）
 
     // ⭐ 调试：输出布局信息
-    cc.log("[ShopUI] \u5E03\u5C40\u5546\u54C1\u9879\u5185\u5BB9: \u5927\u5C0F=" + itemWidth + "x" + itemHeight);
+    cc.log("[ShopUI] \u5E03\u5C40\u5546\u54C1\u9879\u5185\u5BB9: \u5927\u5C0F=" + itemWidth + "x" + itemHeight + ", \u5185\u8FB9\u8DDD=" + padding);
 
-    // 参考布局：图标在顶部，名称在图标下方，价格在名称下方，按钮在最底部
-    // 移除描述标签（参考图中没有单独的描述区域）
+    // ⭐ 布局顺序（从上到下）：图标 -> 名称 -> 描述 -> 价格 -> 按钮
+    // ⭐ 所有元素都严格限制在容器内（使用相对位置计算）
 
-    // 图标位置（顶部，居中）
+    var currentY = itemHeight / 2 - padding; // 从顶部开始，留出内边距
+
+    // 1. 图标位置（顶部，居中）
     if (iconNode) {
-      iconNode.setPosition(0, itemHeight / 2 - padding - 50); // 距离顶部50px
-      iconNode.setContentSize(80, 80); // 图标大小
+      var iconSize = 70; // 图标大小（略小，为其他内容留出空间）
+      var iconTopMargin = 12; // ⭐ 图标顶部边距：从10增加到12
+      currentY -= iconTopMargin;
+      iconNode.setPosition(0, currentY - iconSize / 2); // 图标中心位置
+      iconNode.setContentSize(iconSize, iconSize);
       iconNode.setAnchorPoint(0.5, 0.5);
       iconNode.active = true;
       iconNode.opacity = 255;
-      cc.log("[ShopUI]   \u56FE\u6807\u4F4D\u7F6E: (0, " + (itemHeight / 2 - padding - 50).toFixed(1) + ")");
+      currentY -= iconSize + 10; // ⭐ 图标高度 + 间距：从8增加到10
+      cc.log("[ShopUI]   \u56FE\u6807\u4F4D\u7F6E: (0, " + (currentY - iconSize / 2).toFixed(1) + "), \u5927\u5C0F=" + iconSize + "x" + iconSize);
     } else {
       cc.warn("[ShopUI]   \u672A\u627E\u5230Icon\u8282\u70B9");
     }
 
-    // 名称位置（图标下方，居中）
+    // 2. 名称位置（图标下方，居中）
     if (nameLabel) {
-      nameLabel.setPosition(0, itemHeight / 2 - padding - 140); // 图标下方约90px
-      nameLabel.setContentSize(itemWidth - padding * 2, 28);
+      var nameHeight = 32; // ⭐ 从28增加到32（配合更大的字体30）
+      var nameMargin = 12; // ⭐ 名称与图标的间距：从6增加到12
+      currentY -= nameMargin;
+      nameLabel.setPosition(0, currentY - nameHeight / 2);
+      nameLabel.setContentSize(itemWidth - padding * 2, nameHeight);
       nameLabel.setAnchorPoint(0.5, 0.5);
       nameLabel.active = true;
-      cc.log("[ShopUI]   \u540D\u79F0\u4F4D\u7F6E: (0, " + (itemHeight / 2 - padding - 140).toFixed(1) + ")");
+      currentY -= nameHeight + 8; // ⭐ 名称高度 + 间距：从4增加到8
+      cc.log("[ShopUI]   \u540D\u79F0\u4F4D\u7F6E: (0, " + (currentY - nameHeight / 2).toFixed(1) + "), \u5927\u5C0F=" + (itemWidth - padding * 2) + "x" + nameHeight);
     } else {
       cc.warn("[ShopUI]   \u672A\u627E\u5230NameLabel\u8282\u70B9");
     }
 
-    // 价格位置（名称下方，居中，带金币图标效果）
+    // 3. 描述位置（名称下方，左对齐，自动换行）
+    if (descriptionLabel) {
+      var descMargin = 10; // ⭐ 描述与名称的间距：从4增加到10
+      var descMaxHeight = 60; // ⭐ 描述最大高度：从55增加到60（配合更大的字体20和行高26）
+      currentY -= descMargin;
+      // ⭐ 锚点在顶部中心，便于文字从上到下排列
+      descriptionLabel.setPosition(0, currentY);
+      descriptionLabel.setContentSize(itemWidth - padding * 2, descMaxHeight);
+      descriptionLabel.setAnchorPoint(0.5, 1); // 顶部中心锚点
+      descriptionLabel.active = true; // ⭐ 显示描述
+      currentY -= descMaxHeight + 8; // ⭐ 描述高度 + 间距：从4增加到8
+      cc.log("[ShopUI]   \u63CF\u8FF0\u4F4D\u7F6E: (0, " + currentY.toFixed(1) + "), \u5927\u5C0F=" + (itemWidth - padding * 2) + "x" + descMaxHeight + ", \u81EA\u52A8\u6362\u884C=\u542F\u7528");
+    }
+
+    // 4. 价格位置（描述下方，居中，金色突出显示）
     if (priceLabel) {
-      priceLabel.setPosition(0, itemHeight / 2 - padding - 175); // 名称下方约35px
-      priceLabel.setContentSize(itemWidth - padding * 2, 30);
+      var priceHeight = 34; // ⭐ 从30增加到34（配合更大的字体32）
+      var priceMargin = 50; // ⭐ 价格与描述的间距：从12增加到18（让价格更靠下）
+      currentY -= priceMargin;
+      priceLabel.setPosition(0, currentY - priceHeight / 2);
+      priceLabel.setContentSize(itemWidth - padding * 2, priceHeight);
       priceLabel.setAnchorPoint(0.5, 0.5);
       priceLabel.active = true;
-      cc.log("[ShopUI]   \u4EF7\u683C\u4F4D\u7F6E: (0, " + (itemHeight / 2 - padding - 175).toFixed(1) + ")");
+      currentY -= priceHeight + 10; // ⭐ 价格高度 + 间距：从8增加到10
+      cc.log("[ShopUI]   \u4EF7\u683C\u4F4D\u7F6E: (0, " + (currentY - priceHeight / 2).toFixed(1) + "), \u5927\u5C0F=" + (itemWidth - padding * 2) + "x" + priceHeight);
     } else {
       cc.warn("[ShopUI]   \u672A\u627E\u5230PriceLabel\u8282\u70B9");
     }
 
-    // 描述位置（隐藏或放在价格下方，小字体）
-    if (descriptionLabel) {
-      // 参考图中没有明显的描述区域，可以隐藏或放在价格下方
-      descriptionLabel.setPosition(0, itemHeight / 2 - padding - 200);
-      descriptionLabel.setContentSize(itemWidth - padding * 2, 40);
-      descriptionLabel.setAnchorPoint(0.5, 0.5);
-      // 可选：隐藏描述
-      descriptionLabel.active = false; // 默认隐藏描述
-    }
-
-    // 购买按钮位置（底部，居中，蓝色按钮样式）
+    // 5. 购买按钮位置（底部，居中，蓝色按钮样式）
     if (buyButton) {
-      buyButton.setPosition(0, -itemHeight / 2 + padding + 25); // 距离底部25px
-      buyButton.setContentSize(itemWidth - padding * 2, 40);
+      var btnHeight = 38;
+      var btnBottomMargin = 10; // 按钮底部边距
+      var btnY = -itemHeight / 2 + padding + btnBottomMargin + btnHeight / 2; // 从底部计算
+      buyButton.setPosition(0, btnY);
+      buyButton.setContentSize(itemWidth - padding * 2, btnHeight);
       buyButton.setAnchorPoint(0.5, 0.5);
       buyButton.active = true;
 
-      // 设置按钮背景颜色（蓝色，参考图）
+      // 设置按钮背景颜色（蓝色）
       var buttonSprite = buyButton.getComponent(cc.Sprite);
       if (!buttonSprite) {
         // 如果没有Sprite组件，添加Graphics组件绘制按钮背景
@@ -466,14 +603,20 @@ cc.Class({
           graphics = buyButton.addComponent(cc.Graphics);
         }
         var btnWidth = itemWidth - padding * 2;
-        var btnHeight = 40;
         graphics.fillColor = new cc.Color(70, 130, 200, 255); // 蓝色
         graphics.roundRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 5);
         graphics.fill();
       }
-      cc.log("[ShopUI]   \u6309\u94AE\u4F4D\u7F6E: (0, " + (-itemHeight / 2 + padding + 25).toFixed(1) + ")");
+      cc.log("[ShopUI]   \u6309\u94AE\u4F4D\u7F6E: (0, " + btnY.toFixed(1) + "), \u5927\u5C0F=" + (itemWidth - padding * 2) + "x" + btnHeight);
     } else {
       cc.warn("[ShopUI]   \u672A\u627E\u5230\u8D2D\u4E70\u6309\u94AE\u8282\u70B9\uFF08\u5C1D\u8BD5\u67E5\u627E\"\u8D2D\u4E70\"\u6216\"BuyButton\"\uFF09");
+    }
+
+    // ⭐ 验证：确保所有内容都在容器内
+    var minY = -itemHeight / 2 + padding;
+    var maxY = itemHeight / 2 - padding;
+    if (currentY < minY) {
+      cc.warn("[ShopUI] \u26A0 \u8B66\u544A\uFF1A\u5185\u5BB9\u53EF\u80FD\u8D85\u51FA\u5BB9\u5668\u5E95\u90E8\u8FB9\u754C\uFF01\u5F53\u524DY=" + currentY.toFixed(1) + ", \u6700\u5C0FY=" + minY.toFixed(1));
     }
   },
   /**

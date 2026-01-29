@@ -1,45 +1,58 @@
 /**
  * 商城配置
  * 定义所有可购买的商品及其价格
+ * ⭐ 支持多种商品类型：消耗品(consumable)、装备(equipment)、材料(material)等
  */
 var ShopConfig = {
     /**
+     * 商品类型常量（便于扩展）
+     */
+    CATEGORY: {
+        CONSUMABLE: "consumable",  // 消耗品（药水等）
+        EQUIPMENT: "equipment",     // 装备（武器、防具等）
+        MATERIAL: "material",       // 材料（用于合成等）
+        SPECIAL: "special"          // 特殊商品
+    },
+
+    /**
      * 获取所有商品列表
-     * @returns {Array} 商品列表 [{ id, name, price, itemId, count, icon, description }, ...]
+     * @returns {Array} 商品列表 [{ id, name, price, itemId, count, icon, description, category }, ...]
      */
     getAllItems() {
         return [
+            // ========== 消耗品类 ==========
             {
                 id: "upgrade_potion_1",
                 name: "升级药水",
                 price: 100,
-                itemId: "upgrade_potion", // 购买后获得的道具ID
-                count: 1, // 购买数量
-                icon: null, // 图标（由ItemIconSetter设置）
+                itemId: "upgrade_potion",
+                count: 1,
+                icon: null,
                 description: "使用后可以提升角色等级",
-                category: "consumable" // 消耗品
+                category: this.CATEGORY.CONSUMABLE
             },
             {
                 id: "upgrade_potion_5",
                 name: "升级药水 x5",
-                price: 450, // 5个打包优惠价
+                price: 450,
                 itemId: "upgrade_potion",
                 count: 5,
                 icon: null,
                 description: "5个升级药水打包，更优惠",
-                category: "consumable"
+                category: this.CATEGORY.CONSUMABLE
             },
             {
                 id: "upgrade_potion_10",
                 name: "升级药水 x10",
-                price: 800, // 10个打包优惠价
+                price: 800,
                 itemId: "upgrade_potion",
                 count: 10,
                 icon: null,
                 description: "10个升级药水打包，超值优惠",
-                category: "consumable"
+                category: this.CATEGORY.CONSUMABLE
             }
-            // 后续可以添加更多商品
+            // ========== 后续扩展示例 ==========
+            // 消耗品示例：
             // {
             //     id: "exp_potion_1",
             //     name: "经验药水",
@@ -47,8 +60,52 @@ var ShopConfig = {
             //     itemId: "exp_potion",
             //     count: 1,
             //     icon: null,
-            //     description: "使用后可以获得经验值",
-            //     category: "consumable"
+            //     description: "使用后可以获得大量经验值",
+            //     category: this.CATEGORY.CONSUMABLE
+            // },
+            // {
+            //     id: "hp_potion_1",
+            //     name: "生命药水",
+            //     price: 30,
+            //     itemId: "hp_potion",
+            //     count: 1,
+            //     icon: null,
+            //     description: "使用后可以恢复生命值",
+            //     category: this.CATEGORY.CONSUMABLE
+            // },
+            // 装备示例：
+            // {
+            //     id: "sword_iron",
+            //     name: "铁剑",
+            //     price: 500,
+            //     itemId: "sword_iron",
+            //     count: 1,
+            //     icon: null,
+            //     description: "基础武器，攻击力+10",
+            //     category: this.CATEGORY.EQUIPMENT,
+            //     equipmentType: "weapon" // 装备类型：武器
+            // },
+            // {
+            //     id: "armor_leather",
+            //     name: "皮甲",
+            //     price: 400,
+            //     itemId: "armor_leather",
+            //     count: 1,
+            //     icon: null,
+            //     description: "基础防具，防御力+5",
+            //     category: this.CATEGORY.EQUIPMENT,
+            //     equipmentType: "armor" // 装备类型：防具
+            // },
+            // 材料示例：
+            // {
+            //     id: "material_iron_ore",
+            //     name: "铁矿石",
+            //     price: 20,
+            //     itemId: "iron_ore",
+            //     count: 1,
+            //     icon: null,
+            //     description: "用于锻造装备的基础材料",
+            //     category: this.CATEGORY.MATERIAL
             // }
         ];
     },
@@ -71,6 +128,55 @@ var ShopConfig = {
     getItemsByCategory(category) {
         const items = this.getAllItems();
         return items.filter(item => item.category === category);
+    },
+
+    /**
+     * 获取所有商品分类列表（用于分类显示）
+     * @returns {Array<string>} 分类列表
+     */
+    getAllCategories() {
+        const items = this.getAllItems();
+        const categories = [...new Set(items.map(item => item.category))];
+        return categories;
+    },
+
+    /**
+     * 根据商品类型获取显示样式配置（⭐ 扩展点：为不同类型商品设置不同样式）
+     * @param {string} category - 商品分类
+     * @returns {Object} 样式配置 { backgroundColor, borderColor, nameColor, priceColor, ... }
+     */
+    getCategoryStyle(category) {
+        const styles = {
+            [this.CATEGORY.CONSUMABLE]: {
+                backgroundColor: new cc.Color(245, 245, 245, 255),  // 浅灰背景
+                borderColor: new cc.Color(200, 200, 200, 255),      // 灰色边框
+                nameColor: new cc.Color(30, 30, 30, 255),           // ⭐ 深黑色名称（更明显）
+                priceColor: new cc.Color(255, 215, 0, 255),         // 金色价格
+                descColor: new cc.Color(60, 60, 60, 255)            // ⭐ 深灰色描述（更明显，从120改为60）
+            },
+            [this.CATEGORY.EQUIPMENT]: {
+                backgroundColor: new cc.Color(240, 248, 255, 255),  // 淡蓝背景
+                borderColor: new cc.Color(100, 149, 237, 255),      // 蓝色边框
+                nameColor: new cc.Color(20, 20, 80, 255),           // ⭐ 更深蓝名称（更明显）
+                priceColor: new cc.Color(255, 140, 0, 255),         // 橙色价格
+                descColor: new cc.Color(50, 90, 130, 255)           // ⭐ 更深蓝描述（更明显）
+            },
+            [this.CATEGORY.MATERIAL]: {
+                backgroundColor: new cc.Color(255, 250, 240, 255), // 米色背景
+                borderColor: new cc.Color(210, 180, 140, 255),      // 棕褐色边框
+                nameColor: new cc.Color(100, 50, 15, 255),          // ⭐ 更深棕色名称（更明显）
+                priceColor: new cc.Color(184, 134, 11, 255),        // 深金价格
+                descColor: new cc.Color(120, 60, 30, 255)           // ⭐ 更深棕色描述（更明显）
+            },
+            [this.CATEGORY.SPECIAL]: {
+                backgroundColor: new cc.Color(255, 245, 238, 255), // 淡粉背景
+                borderColor: new cc.Color(255, 192, 203, 255),     // 粉色边框
+                nameColor: new cc.Color(100, 0, 100, 255),          // ⭐ 更深紫色名称（更明显）
+                priceColor: new cc.Color(255, 20, 147, 255),        // 深粉价格
+                descColor: new cc.Color(140, 60, 160, 255)          // ⭐ 更深紫色描述（更明显）
+            }
+        };
+        return styles[category] || styles[this.CATEGORY.CONSUMABLE]; // 默认使用消耗品样式
     }
 };
 
