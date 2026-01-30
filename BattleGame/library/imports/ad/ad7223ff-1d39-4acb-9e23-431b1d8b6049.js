@@ -223,6 +223,7 @@ cc.Class({
       var ServerConfig = require("ServerConfig");
       var ItemDataAdapter = require("ItemDataAdapter");
       var CharacterDataAdapter = require("CharacterDataAdapter");
+      var SkillDataAdapter = require("SkillDataAdapter"); // ⭐ 技能数据适配器
 
       // 服务器配置
       // 注意：如果服务器未运行，会自动降级到本地模式
@@ -248,6 +249,8 @@ cc.Class({
       // 保存时：先保存到本地（快速响应），然后同步到服务器
       ItemDataAdapter.setStorageMode("hybrid");
       CharacterDataAdapter.setStorageMode("hybrid");
+      SkillDataAdapter.setStorageMode("hybrid"); // ⭐ 技能数据也使用混合模式
+
       cc.log("[MainMenuScene] ✓ 服务器配置已初始化");
       cc.log("[MainMenuScene] \u5355\u4E2A\u89D2\u8272\u6570\u636E\u670D\u52A1\u5668: " + serverBaseURL + " (\u7AEF\u53E33000)");
       cc.log("[MainMenuScene] \u6240\u6709\u89D2\u8272\u6570\u636E\u670D\u52A1\u5668: " + serverBaseURLForAll + " (\u7AEF\u53E33001)");

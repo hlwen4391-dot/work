@@ -6134,11 +6134,6 @@
     "meta": 1768216419655,
     "relativePath": "Scripts\\ecs\\HealthBar.js"
   },
-  "478a1866-f815-4bc7-8f59-6e19e3941d09": {
-    "asset": 1768273702619,
-    "meta": 1768273704775,
-    "relativePath": "Scripts\\system\\SkillConfig.js"
-  },
   "53dec2c6-5d1a-44d7-9c44-9c3ae6bcea7c": {
     "asset": 1768286902138,
     "meta": 1768287220307,
@@ -6195,8 +6190,8 @@
     "relativePath": "Scripts\\system\\BattleSystem.js"
   },
   "09b1dbc8-462d-48c0-9f57-54cd3f4f0d71": {
-    "asset": 1769572619744,
-    "meta": 1769572619747,
+    "asset": 1769767312398,
+    "meta": 1769767312400,
     "relativePath": "Scenes\\CharacterViewScene.fire"
   },
   "fe798d59-199e-4633-9f42-c00df6972a8d": {
@@ -6229,11 +6224,6 @@
     "meta": 1769156830346,
     "relativePath": "Scripts\\game\\UnitDataConfig.js"
   },
-  "7a9030ef-91a3-4255-905f-61b577d31726": {
-    "asset": 1769160917085,
-    "meta": 1769162866539,
-    "relativePath": "Scripts\\game\\ItemConfig.js"
-  },
   "177e31d5-99fc-436c-9d20-22748a0e74cd": {
     "asset": 1769161896910,
     "meta": 1769162866607,
@@ -6254,20 +6244,10 @@
     "meta": 1769166088349,
     "relativePath": "Items\\升级药水.png"
   },
-  "87faa17a-570a-400a-8f90-6096e7a66028": {
-    "asset": 1769166333881,
-    "meta": 1769166353971,
-    "relativePath": "Scripts\\ecs\\ItemIconSetter.js"
-  },
   "1574e97c-0591-419d-958c-f10b48371bb9": {
     "asset": 1769166692297,
     "meta": 1769166848427,
     "relativePath": "Scripts\\ecs\\BuffComponent.js"
-  },
-  "f6e729e9-2304-42bb-95b4-419e391cedae": {
-    "asset": 1769410406745,
-    "meta": 1769169277092,
-    "relativePath": "Scripts\\system\\ItemSystem.js"
   },
   "2d64c1d9-2164-4c38-85f2-e7035366a729": {
     "asset": 1769410424294,
@@ -6278,16 +6258,6 @@
     "asset": 1769411873743,
     "meta": 1769415378719,
     "relativePath": "Scripts\\ecs\\SelectSceneUI.js"
-  },
-  "a2d9e750-37c5-4e8d-9546-5b880b1440df": {
-    "asset": 1769411895027,
-    "meta": 1769415378888,
-    "relativePath": "Scripts\\game\\BattleController.js"
-  },
-  "81480544-a24c-4b77-9022-adea692041c6": {
-    "asset": 1769420879912,
-    "meta": 1769421149332,
-    "relativePath": "Scripts\\system\\CharacterDataManager.js"
   },
   "ab3febc0-22d8-4930-ae74-3e567c8fa320": {
     "asset": 1769425439220,
@@ -6319,14 +6289,9 @@
     "meta": 1769507407265,
     "relativePath": "头像\\法师头像 (2).png"
   },
-  "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
-    "asset": 1769572167561,
-    "meta": 1769572175064,
-    "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
-  },
   "cf6ac42d-564d-4151-9b6a-4f37bab8f00a": {
-    "asset": 1769671158288,
-    "meta": 1769671158294,
+    "asset": 1769766348586,
+    "meta": 1769766348590,
     "relativePath": "Scenes\\ShopScene.fire"
   },
   "2777fbe0-2c92-4a08-9b11-f26333247139": {
@@ -6354,24 +6319,74 @@
     "meta": 1769590032040,
     "relativePath": "Scripts\\system\\CoinManager.js"
   },
-  "ad7223ff-1d39-4acb-9e23-431b1d8b6049": {
-    "asset": 1769590343116,
-    "meta": 1769590358772,
-    "relativePath": "Scripts\\game\\MainMenuScene.js"
-  },
   "56e2a783-d036-43ca-80bb-fe8cb6cb9c98": {
     "asset": 1769667645941,
     "meta": 1769667646013,
     "relativePath": "Background\\商城背景.png"
   },
-  "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
-    "asset": 1769669860953,
-    "meta": 1769669865349,
-    "relativePath": "Scripts\\game\\ShopConfig.js"
+  "a2d9e750-37c5-4e8d-9546-5b880b1440df": {
+    "asset": 1769678405195,
+    "meta": 1769679506956,
+    "relativePath": "Scripts\\game\\BattleController.js"
+  },
+  "ad7223ff-1d39-4acb-9e23-431b1d8b6049": {
+    "asset": 1769678405017,
+    "meta": 1769679507054,
+    "relativePath": "Scripts\\game\\MainMenuScene.js"
+  },
+  "cb747e60-6dc8-4f9f-8a8a-f2c60117ce06": {
+    "asset": 1769678405195,
+    "meta": 1769679507135,
+    "relativePath": "Scripts\\system\\SkillDataManager.js"
+  },
+  "81480544-a24c-4b77-9022-adea692041c6": {
+    "asset": 1769753883952,
+    "meta": 1769753910132,
+    "relativePath": "Scripts\\system\\CharacterDataManager.js"
+  },
+  "74393551-ef47-40a5-944f-c26d61d97e1e": {
+    "asset": 1769755295949,
+    "meta": 1769755295993,
+    "relativePath": "Items\\技能卷轴图片.png"
+  },
+  "478a1866-f815-4bc7-8f59-6e19e3941d09": {
+    "asset": 1769757294570,
+    "meta": 1769758799563,
+    "relativePath": "Scripts\\system\\SkillConfig.js"
+  },
+  "87faa17a-570a-400a-8f90-6096e7a66028": {
+    "asset": 1769759017773,
+    "meta": 1769759081931,
+    "relativePath": "Scripts\\ecs\\ItemIconSetter.js"
+  },
+  "f6e729e9-2304-42bb-95b4-419e391cedae": {
+    "asset": 1769761743815,
+    "meta": 1769761884535,
+    "relativePath": "Scripts\\system\\ItemSystem.js"
+  },
+  "c38239ba-4ff9-46f1-ab60-c9e6620dd1f0": {
+    "asset": 1769761813453,
+    "meta": 1769761884614,
+    "relativePath": "Scripts\\system\\SkillDataAdapter.js"
   },
   "d788163b-e3ab-4c9f-962e-67e90a9edb5d": {
-    "asset": 1769670849924,
-    "meta": 1769670899723,
+    "asset": 1769764707744,
+    "meta": 1769765379617,
     "relativePath": "Scripts\\ecs\\ShopUI.js"
+  },
+  "7a9030ef-91a3-4255-905f-61b577d31726": {
+    "asset": 1769765949343,
+    "meta": 1769765973652,
+    "relativePath": "Scripts\\game\\ItemConfig.js"
+  },
+  "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
+    "asset": 1769765952220,
+    "meta": 1769765973681,
+    "relativePath": "Scripts\\game\\ShopConfig.js"
+  },
+  "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
+    "asset": 1769766938194,
+    "meta": 1769766989373,
+    "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
   }
 }

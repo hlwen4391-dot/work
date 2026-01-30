@@ -11,11 +11,13 @@ const DATA_DIR = path.join(__dirname, 'data');
 const CHARACTERS_FILE = path.join(DATA_DIR, 'characters.json');
 const INVENTORY_FILE = path.join(DATA_DIR, 'inventory.json');
 const COINS_FILE = path.join(DATA_DIR, 'coins.json');
+const SKILLS_FILE = path.join(DATA_DIR, 'skills.json'); // ⭐ 技能数据文件
 
 // 内存中的数据存储
 let charactersData = {}; // { userId: { characterName: data } }
 let inventoryData = {}; // { userId: items[] }
 let coinsData = {}; // { userId: coins }
+let skillsData = {}; // ⭐ { userId: { characterName: skills[] } }
 
 // 创建两个独立的Express应用实例
 const app = express(); // 端口3000：单个角色、保存、道具、管理
@@ -83,6 +85,21 @@ async function loadData() {
                 throw error;
             }
         }
+
+        // ⭐ 加载技能数据
+        try {
+            const skillsContent = await fs.readFile(SKILLS_FILE, 'utf8');
+            skillsData = JSON.parse(skillsContent);
+            console.log('[数据加载] 技能数据已加载');
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                // 文件不存在，使用空对象
+                skillsData = {};
+                console.log('[数据加载] 技能数据文件不存在，使用空数据');
+            } else {
+                throw error;
+            }
+        }
     } catch (error) {
         console.error('[数据加载] 加载数据失败:', error);
     }
@@ -113,6 +130,16 @@ async function saveCoinsData() {
         console.log('[数据保存] 金币数据已保存');
     } catch (error) {
         console.error('[数据保存] 保存金币数据失败:', error);
+    }
+}
+
+// ⭐ 保存技能数据到文件
+async function saveSkillsData() {
+    try {
+        await fs.writeFile(SKILLS_FILE, JSON.stringify(skillsData, null, 2), 'utf8');
+        console.log('[数据保存] 技能数据已保存');
+    } catch (error) {
+        console.error('[数据保存] 保存技能数据失败:', error);
     }
 }
 
@@ -173,9 +200,19 @@ app.get('/api/characters/:characterName', authenticateToken, async (req, res) =>
             });
         }
 
+        // ⭐ 获取技能数据
+        const userSkills = skillsData[userId] || {};
+        const characterSkills = userSkills[characterName] || [];
+
+        // 合并角色数据和技能数据
+        const responseData = {
+            ...characterData,
+            skills: characterSkills
+        };
+
         res.json({
             success: true,
-            data: characterData
+            data: responseData
         });
     } catch (error) {
         console.error('获取角色数据失败:', error);
@@ -198,7 +235,7 @@ app.put('/api/characters/:characterName', authenticateToken, async (req, res) =>
             charactersData[userId] = {};
         }
 
-        // 保存到内存
+        // 保存到内存（包含技能数据）
         charactersData[userId][characterName] = {
             level: data.level,
             exp: data.exp,
@@ -208,6 +245,7 @@ app.put('/api/characters/:characterName', authenticateToken, async (req, res) =>
             baseSpeed: data.baseSpeed,
             baseCrit: data.baseCrit,
             baseMiss: data.baseMiss,
+            skills: data.skills || [], // ⭐ 保存技能数据
             saveTime: data.saveTime || Date.now()
         };
 
@@ -216,12 +254,92 @@ app.put('/api/characters/:characterName', authenticateToken, async (req, res) =>
             console.error('保存角色数据到文件失败:', err);
         });
 
+        // ⭐ 如果请求中包含技能数据，也保存技能数据
+        if (data.skills && Array.isArray(data.skills)) {
+            if (!skillsData[userId]) {
+                skillsData[userId] = {};
+            }
+            skillsData[userId][characterName] = data.skills;
+            // 异步保存技能数据到文件
+            saveSkillsData().catch(err => {
+                console.error('保存技能数据到文件失败:', err);
+            });
+        }
+
         res.json({
             success: true,
             message: "保存成功"
         });
     } catch (error) {
         console.error('保存角色数据失败:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// ⭐ ========== 技能数据API ==========
+
+// GET /api/characters/:characterName/skills - 获取角色技能列表
+app.get('/api/characters/:characterName/skills', authenticateToken, async (req, res) => {
+    try {
+        const { characterName } = req.params;
+        const userId = req.user.id;
+
+        // 从内存中获取技能数据
+        const userSkills = skillsData[userId] || {};
+        const characterSkills = userSkills[characterName] || [];
+
+        res.json({
+            success: true,
+            data: {
+                characterName: characterName,
+                skills: characterSkills
+            }
+        });
+    } catch (error) {
+        console.error('获取技能数据失败:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// PUT /api/characters/:characterName/skills - 保存角色技能列表
+app.put('/api/characters/:characterName/skills', authenticateToken, async (req, res) => {
+    try {
+        const { characterName } = req.params;
+        const userId = req.user.id;
+        const { skills } = req.body;
+
+        if (!Array.isArray(skills)) {
+            return res.status(400).json({
+                success: false,
+                message: "技能数据必须是数组"
+            });
+        }
+
+        // 确保用户数据对象存在
+        if (!skillsData[userId]) {
+            skillsData[userId] = {};
+        }
+
+        // 保存到内存
+        skillsData[userId][characterName] = skills;
+
+        // 异步保存到文件（不阻塞响应）
+        saveSkillsData().catch(err => {
+            console.error('保存技能数据到文件失败:', err);
+        });
+
+        res.json({
+            success: true,
+            message: "技能数据保存成功"
+        });
+    } catch (error) {
+        console.error('保存技能数据失败:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -290,7 +408,8 @@ app.get('/api/admin/data', (req, res) => {
         data: {
             characters: charactersData,
             inventory: inventoryData,
-            coins: coinsData // 添加金币数据
+            coins: coinsData, // 金币数据
+            skills: skillsData // ⭐ 技能数据
         }
     });
 });
@@ -299,9 +418,12 @@ app.get('/api/admin/data', (req, res) => {
 app.post('/api/admin/reset', async (req, res) => {
     charactersData = {};
     inventoryData = {};
+    coinsData = {};
+    skillsData = {}; // ⭐ 清空技能数据
     await saveCharactersData();
     await saveInventoryData();
     await saveCoinsData();
+    await saveSkillsData(); // ⭐ 保存空技能数据到文件
     res.json({
         success: true,
         message: "所有数据已重置"
@@ -529,6 +651,8 @@ async function startServer() {
         console.log(`  POST /api/coins/add               - 增加金币`);
         console.log(`  POST /api/coins/spend            - 减少金币`);
         console.log(`  POST /api/shop/purchase          - 购买商品`);
+        console.log(`  GET  /api/characters/:name/skills - 获取角色技能列表`);
+        console.log(`  PUT  /api/characters/:name/skills - 保存角色技能列表`);
         console.log(`  GET  /api/admin/data             - 查看所有数据（调试）`);
         console.log(`  POST /api/admin/reset             - 重置所有数据（测试）`);
         console.log(`========================================\n`);
@@ -626,6 +750,7 @@ async function startServer() {
         await saveCharactersData();
         await saveInventoryData();
         await saveCoinsData();
+        await saveSkillsData(); // ⭐ 自动保存技能数据
         console.log('[自动保存] 数据已自动保存到文件');
     }, 30000); // 30秒
 
@@ -635,6 +760,7 @@ async function startServer() {
         await saveCharactersData();
         await saveInventoryData();
         await saveCoinsData();
+        await saveSkillsData(); // ⭐ 关闭时保存技能数据
         console.log('[关闭] 数据已保存，服务器关闭');
         process.exit(0);
     });
@@ -644,6 +770,7 @@ async function startServer() {
         await saveCharactersData();
         await saveInventoryData();
         await saveCoinsData();
+        await saveSkillsData(); // ⭐ 关闭时保存技能数据
         console.log('[关闭] 数据已保存，服务器关闭');
         process.exit(0);
     });

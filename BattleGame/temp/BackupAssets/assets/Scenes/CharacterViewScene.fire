@@ -1439,9 +1439,38 @@
       "__id__": 27
     },
     "_enabled": true,
-    "upgradePotionIcon": {
-      "__uuid__": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f"
-    },
+    "itemIcons": [
+      {
+        "__uuid__": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "2f3c7c8b-97e6-43aa-9667-3e76f50f9d60"
+      },
+      {
+        "__uuid__": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f"
+      },
+      {
+        "__uuid__": "c93025b8-95cb-42e2-a1d1-b39b75d8a42f"
+      }
+    ],
     "_id": "4cRs6cdilJvKrxyIt+OGo3"
   },
   {
@@ -1491,13 +1520,13 @@
     ],
     "monsterIcons": [
       {
+        "__uuid__": "4551669b-4c7a-44c1-9ae2-d33ed4edf5a6"
+      },
+      {
         "__uuid__": "16d8c2f7-84f8-4602-b2d9-044da4114309"
       },
       {
         "__uuid__": "8a8f5b7b-dff2-4f64-b043-c09d9d9dc162"
-      },
-      {
-        "__uuid__": "4551669b-4c7a-44c1-9ae2-d33ed4edf5a6"
       }
     ],
     "heroPrefabs": [
@@ -1513,13 +1542,13 @@
     ],
     "monsterPrefabs": [
       {
+        "__uuid__": "c1e28402-b037-4db8-993f-779f565ccdbe"
+      },
+      {
         "__uuid__": "b5cd0db7-0729-46ad-b087-71594b497ed9"
       },
       {
         "__uuid__": "982a88ae-f63e-4d70-897a-f0798fe5c4ce"
-      },
-      {
-        "__uuid__": "c1e28402-b037-4db8-993f-779f565ccdbe"
       }
     ],
     "avatarSpacing": 100,

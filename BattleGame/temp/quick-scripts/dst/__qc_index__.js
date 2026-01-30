@@ -65,10 +65,13 @@ require('./assets/Scripts/system/CombatSystem');
 require('./assets/Scripts/system/DeathSystem');
 require('./assets/Scripts/system/ItemDataAdapter');
 require('./assets/Scripts/system/ItemDataManager');
+require('./assets/Scripts/system/ItemSystem');
 require('./assets/Scripts/system/LevelConfig');
 require('./assets/Scripts/system/LevelSystem');
 require('./assets/Scripts/system/ServerConfig');
 require('./assets/Scripts/system/SkillConfig');
+require('./assets/Scripts/system/SkillDataAdapter');
+require('./assets/Scripts/system/SkillDataManager');
 require('./assets/Scripts/system/SkillSystem');
 require('./assets/Scripts/system/TeamRef');
 

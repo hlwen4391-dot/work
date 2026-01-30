@@ -129,6 +129,7 @@
         <button onclick="loadSingleCharacter()">👤 获取单个角色数据（端口3000）</button>
         <button onclick="loadCoins()">💰 获取金币数据</button>
         <button onclick="loadShopConfig()">🛒 查看商城配置</button>
+        <button onclick="loadCharacterSkills()">⚔️ 获取角色技能</button>
         <button onclick="resetData()" class="reset">🗑️ 重置所有数据</button>
         <div id="status" class="status"></div>
     </div>
@@ -175,6 +176,19 @@
         <pre id="shopConfig">点击"查看商品配置"按钮加载...</pre>
     </div>
 
+    <div class="container">
+        <h2>⚔️ 角色技能数据（从端口3000获取）</h2>
+        <div style="margin-bottom: 10px;">
+            <input type="text" id="skillCharacterName" placeholder="输入角色名称（如：战士）" style="padding: 5px 10px; width: 200px; margin-right: 10px;">
+            <button onclick="loadCharacterSkills()">🔍 查询技能</button>
+            <button onclick="loadAllCharacterSkills()" style="margin-left: 10px;">📋 获取所有角色技能</button>
+        </div>
+        <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
+            💡 提示：技能数据存储在服务器的 <code>data/skills.json</code> 文件中。每个角色的技能列表包含技能ID、名称、冷却时间等信息。
+        </p>
+        <pre id="characterSkills">输入角色名称后点击"查询技能"按钮...</pre>
+    </div>
+
     <script>
         // 从localStorage加载配置
         let API_BASE = localStorage.getItem('serverUrl') || 'http://localhost:3000/api';
@@ -218,6 +232,30 @@
                         JSON.stringify(result.data.characters, null, 2);
                     document.getElementById('inventory').textContent = 
                         JSON.stringify(result.data.inventory, null, 2);
+                    
+                    // 显示技能数据（如果存在）
+                    if (result.data.skills) {
+                        const skillsDisplay = {
+                            skills: result.data.skills,
+                            formatted: Object.keys(result.data.skills).map(userId => {
+                                const userSkills = result.data.skills[userId];
+                                return {
+                                    userId: userId,
+                                    characters: Object.keys(userSkills).map(characterName => ({
+                                        characterName: characterName,
+                                        skills: userSkills[characterName],
+                                        skillCount: userSkills[characterName].length
+                                    }))
+                                };
+                            }),
+                            timestamp: new Date().toLocaleString('zh-CN')
+                        };
+                        // 如果技能数据容器存在，显示技能数据
+                        const skillsContainer = document.getElementById('characterSkills');
+                        if (skillsContainer && skillsContainer.textContent.includes('点击')) {
+                            skillsContainer.textContent = JSON.stringify(skillsDisplay, null, 2);
+                        }
+                    }
                     
                     // 显示金币数据（如果存在）
                     if (result.data.coins) {
@@ -403,8 +441,30 @@
 
                 if (result.success) {
                     if (result.data) {
+                        // 如果角色数据中包含技能，也尝试加载技能数据
+                        let displayData = { ...result.data };
+                        
+                        // 尝试加载技能数据
+                        try {
+                            const skillsResponse = await fetch(`${API_BASE}/characters/${encodeURIComponent(characterName)}/skills`, {
+                                headers: {
+                                    'Authorization': 'Bearer 1'
+                                }
+                            });
+                            
+                            if (skillsResponse.ok) {
+                                const skillsResult = await skillsResponse.json();
+                                if (skillsResult.success && skillsResult.data && skillsResult.data.skills) {
+                                    displayData.skills = skillsResult.data.skills;
+                                }
+                            }
+                        } catch (e) {
+                            // 技能加载失败不影响角色数据显示
+                            console.warn('加载技能数据失败:', e);
+                        }
+                        
                         document.getElementById('singleCharacter').textContent = 
-                            JSON.stringify(result.data, null, 2);
+                            JSON.stringify(displayData, null, 2);
                         showStatus(`✅ 角色"${characterName}"数据加载成功！（端口3000）`, 'success');
                     } else {
                         document.getElementById('singleCharacter').textContent = 
@@ -450,6 +510,124 @@
             } catch (error) {
                 showStatus(`❌ 重置失败: ${error.message}`, 'error');
                 console.error('重置数据失败:', error);
+            }
+        }
+
+        // 获取角色技能数据
+        async function loadCharacterSkills() {
+            const characterName = document.getElementById('skillCharacterName').value.trim();
+            
+            if (!characterName) {
+                showStatus('❌ 请输入角色名称！', 'error');
+                return;
+            }
+
+            try {
+                showStatus(`正在从端口3000获取角色"${characterName}"的技能数据...`, 'info');
+                
+                const response = await fetch(`${API_BASE}/characters/${encodeURIComponent(characterName)}/skills`, {
+                    headers: {
+                        'Authorization': 'Bearer 1'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.data && result.data.skills && result.data.skills.length > 0) {
+                        const skillsDisplay = {
+                            characterName: result.data.characterName,
+                            skills: result.data.skills,
+                            skillCount: result.data.skills.length,
+                            formatted: result.data.skills.map(skill => ({
+                                id: skill.id,
+                                name: skill.name,
+                                cooldown: skill.cooldown,
+                                requireRage: skill.requireRage || 0,
+                                isUltimate: skill.isUltimate || false,
+                                description: `技能ID: ${skill.id}, 冷却时间: ${skill.cooldown}秒${skill.requireRage > 0 ? `, 需要怒气: ${skill.requireRage}` : ''}`
+                            })),
+                            timestamp: new Date().toLocaleString('zh-CN')
+                        };
+                        document.getElementById('characterSkills').textContent = 
+                            JSON.stringify(skillsDisplay, null, 2);
+                        showStatus(`✅ 角色"${characterName}"技能数据加载成功！共 ${result.data.skills.length} 个技能`, 'success');
+                    } else {
+                        document.getElementById('characterSkills').textContent = 
+                            `角色"${characterName}"没有技能数据\n\n💡 技能数据会在游戏中保存角色时自动写入。请先进入游戏（选人/战斗等）触发一次角色保存，再查询。`;
+                        showStatus(`⚠️ 角色"${characterName}"暂无技能数据。请先进入游戏并触发一次角色保存。`, 'info');
+                    }
+                } else {
+                    throw new Error(result.message || '加载失败');
+                }
+            } catch (error) {
+                showStatus(`❌ 加载技能数据失败: ${error.message}\n请确保端口3000的服务器正在运行！`, 'error');
+                console.error('加载技能数据失败:', error);
+                
+                document.getElementById('characterSkills').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 端口3000是否已启动\n3. 角色名称是否正确\n4. /api/characters/:name/skills 端点是否已注册`;
+            }
+        }
+
+        // 获取所有角色的技能数据
+        async function loadAllCharacterSkills() {
+            try {
+                showStatus('正在从端口3000获取所有角色技能数据...', 'info');
+                
+                // 先获取所有角色数据，然后获取每个角色的技能
+                const charactersResponse = await fetch(`${API_BASE}/admin/data`);
+                
+                if (!charactersResponse.ok) {
+                    throw new Error(`HTTP ${charactersResponse.status}: ${charactersResponse.statusText}`);
+                }
+                
+                const charactersResult = await charactersResponse.json();
+                
+                if (!charactersResult.success || !charactersResult.data.skills) {
+                    throw new Error('无法获取技能数据');
+                }
+                
+                const skillsData = charactersResult.data.skills;
+                const userId = '1'; // 默认用户ID
+                
+                if (skillsData[userId]) {
+                    const allSkillsDisplay = {
+                        userId: userId,
+                        characters: Object.keys(skillsData[userId]).map(characterName => ({
+                            characterName: characterName,
+                            skills: skillsData[userId][characterName],
+                            skillCount: skillsData[userId][characterName].length,
+                            formatted: skillsData[userId][characterName].map(skill => ({
+                                id: skill.id,
+                                name: skill.name,
+                                cooldown: skill.cooldown,
+                                requireRage: skill.requireRage || 0,
+                                isUltimate: skill.isUltimate || false
+                            }))
+                        })),
+                        totalCharacters: Object.keys(skillsData[userId]).length,
+                        totalSkills: Object.values(skillsData[userId]).reduce((sum, skills) => sum + skills.length, 0),
+                        timestamp: new Date().toLocaleString('zh-CN')
+                    };
+                    
+                    document.getElementById('characterSkills').textContent = 
+                        JSON.stringify(allSkillsDisplay, null, 2);
+                    showStatus(`✅ 所有角色技能数据加载成功！共 ${allSkillsDisplay.totalCharacters} 个角色，${allSkillsDisplay.totalSkills} 个技能`, 'success');
+                } else {
+                    document.getElementById('characterSkills').textContent = 
+                        `用户ID ${userId} 没有技能数据\n\n💡 为什么没有数据？\n技能数据会在「游戏中保存角色」时自动写入服务器。\n\n请先：\n1. 启动游戏，进入主菜单\n2. 进入选人/战斗等会保存角色数据的场景\n3. 触发一次角色保存（如升级、战斗结束等）\n4. 再回到本页面点击「获取所有角色技能」或「查询技能」即可看到数据`;
+                    showStatus(`⚠️ 用户ID ${userId} 暂无技能数据。请先进入游戏并触发一次角色保存。`, 'info');
+                }
+            } catch (error) {
+                showStatus(`❌ 加载所有技能数据失败: ${error.message}`, 'error');
+                console.error('加载所有技能数据失败:', error);
+                
+                document.getElementById('characterSkills').textContent = 
+                    `错误: ${error.message}\n\n请检查：\n1. 服务器是否正在运行（node server.js）\n2. 端口3000是否已启动\n3. /api/admin/data 端点是否包含技能数据`;
             }
         }
 

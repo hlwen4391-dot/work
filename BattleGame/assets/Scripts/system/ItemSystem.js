@@ -5,6 +5,8 @@
 const ItemConfig = require("ItemConfig");
 const ItemDataManager = require("ItemDataManager");
 const LevelSystem = require("LevelSystem");
+const SkillDataManager = require("SkillDataManager");
+const { getSkillById } = require("SkillConfig");
 
 var ItemSystem = {
     /**
@@ -41,22 +43,32 @@ var ItemSystem = {
 
         // 根据道具效果类型执行相应逻辑
         let result = null;
+        const effectType = String(itemConfig.effectType || "").toLowerCase();
 
-        switch (itemConfig.effectType) {
-            case ItemConfig.EffectType.LEVEL_UP:
+        switch (effectType) {
+            case "level_up":
                 result = this._useLevelUpItem(characterNode, itemConfig);
                 break;
-            case ItemConfig.EffectType.EXP:
+            case "exp":
                 result = this._useExpItem(characterNode, itemConfig);
                 break;
-            case ItemConfig.EffectType.HP:
+            case "hp":
                 result = this._useHpItem(characterNode, itemConfig);
                 break;
+            case "skill_scroll":
+                result = await this._useSkillScrollItem(characterNode, itemConfig);
+                break;
             default:
-                return {
-                    success: false,
-                    message: `未知的道具效果类型: ${itemConfig.effectType}`
-                };
+                // 兜底：若有 skillId 且非其他已知类型，按技能卷轴处理（避免热更新/缓存导致未匹配）
+                if (itemConfig.skillId != null && itemConfig.skillId !== undefined) {
+                    result = await this._useSkillScrollItem(characterNode, itemConfig);
+                } else {
+                    return {
+                        success: false,
+                        message: `未知的道具效果类型: ${itemConfig.effectType}`
+                    };
+                }
+                break;
         }
 
         // 如果使用成功，减少道具数量（全局道具栏）
@@ -140,15 +152,14 @@ var ItemSystem = {
 
         // 直接保存数据，而不是通过saveCharacterLevel（因为节点名称可能不匹配）
         // 重要：保存基础属性时，必须保持原有的基础属性不变（基础属性不应该因为升级而改变）
-        const CharacterDataManager = require("CharacterDataManager");
         const UnitDataConfig = require("UnitDataConfig");
         const existingData = CharacterDataManager.loadCharacterLevel(characterName);
-        
+
         // 基础属性应该在第一次创建角色时保存，之后不应该改变
         // 如果已有保存的数据，使用原有的基础属性（保持不变）
         // 如果没有保存的数据，需要从UnitDataConfig中获取原始基础属性
         let baseHp, baseAttack, baseDefense, baseSpeed, baseCrit, baseMiss;
-        
+
         if (existingData && existingData.baseHp) {
             // 已有保存的数据，使用原有的基础属性（保持不变）
             baseHp = existingData.baseHp;
@@ -163,7 +174,7 @@ var ItemSystem = {
             // 查找角色配置
             const allUnits = [...(UnitDataConfig.heros || []), ...(UnitDataConfig.monsters || [])];
             const unitConfig = allUnits.find(u => u.name === characterName);
-            
+
             if (unitConfig) {
                 // 从配置中获取基础属性
                 baseHp = unitConfig.hp || 100;
@@ -184,7 +195,7 @@ var ItemSystem = {
                 cc.warn(`[ItemSystem] 未找到角色配置 ${characterName}，使用当前baseHp=${baseHp}`);
             }
         }
-        
+
         const data = {
             level: stats.level,
             exp: stats.exp,
@@ -196,7 +207,7 @@ var ItemSystem = {
             baseMiss: baseMiss,
             saveTime: Date.now()
         };
-        
+
         cc.log(`[ItemSystem] 保存角色数据: ${characterName}, 等级=${data.level}, baseHp=${data.baseHp}, baseAttack=${data.baseAttack}`);
 
         const saveSuccess = CharacterDataManager.saveCharacterData(characterName, data);
@@ -270,6 +281,75 @@ var ItemSystem = {
             oldHp: oldHp,
             newHp: newHp,
             healAmount: newHp - oldHp
+        };
+    },
+
+    /**
+     * 使用技能卷轴：解锁对应技能并写入角色技能列表，更新节点 SkillComponent
+     * @private
+     * @param {cc.Node} characterNode - 角色节点
+     * @param {Object} itemConfig - 道具配置（须含 skillId）
+     * @returns {Promise<Object>} 使用结果
+     */
+    async _useSkillScrollItem(characterNode, itemConfig) {
+        const skillId = itemConfig.skillId;
+        if (skillId == null || skillId === undefined) {
+            return { success: false, message: "卷轴未绑定技能" };
+        }
+
+        const skillConfig = getSkillById(skillId);
+        if (!skillConfig) {
+            return { success: false, message: `未找到技能配置: ${skillId}` };
+        }
+
+        let characterName = characterNode.name;
+        if (characterNode._originalCharacterName) {
+            characterName = characterNode._originalCharacterName;
+        } else if (characterName.startsWith("Display_")) {
+            characterName = characterName.replace("Display_", "");
+        }
+
+        let savedSkills = SkillDataManager.loadCharacterSkills(characterName);//TODO: 从服务器加载技能数据
+        if (savedSkills && savedSkills.then) {
+            savedSkills = await savedSkills;
+        }
+        savedSkills = savedSkills || [];
+
+        const alreadyHas = savedSkills.some(s => s.id === skillId);
+        if (alreadyHas) {
+            return { success: false, message: "已学会该技能" };
+        }
+
+        const newEntry = {
+            id: skillConfig.id,
+            name: skillConfig.name,
+            cooldown: skillConfig.cooldown,
+            requireRage: skillConfig.requireRage !== undefined && skillConfig.requireRage !== null ? skillConfig.requireRage : 0,
+            isUltimate: (skillConfig.requireRage > 0)
+        };
+        const newList = [...savedSkills, newEntry];
+
+        let saveResult = SkillDataManager.saveCharacterSkills(characterName, newList);
+        if (saveResult && saveResult.then) {
+            saveResult = await saveResult;
+        }
+        if (!saveResult) {
+            return { success: false, message: "保存技能数据失败" };
+        }
+
+        const skillComp = characterNode.getComponent("SkillComponent");
+        if (skillComp) {
+            const fullConfigs = newList.map(s => {
+                const cfg = getSkillById(s.id);
+                return cfg ? { ...cfg, requireRage: s.requireRage } : null;
+            }).filter(Boolean);
+            skillComp.init(fullConfigs);
+        }
+
+        return {
+            success: true,
+            message: "技能学习成功",
+            skillName: skillConfig.name
         };
     }
 };

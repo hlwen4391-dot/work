@@ -74,6 +74,26 @@ cc.Class({
     backgroundOpacity: {
       "default": 180,
       tooltip: "商城背景面板的透明度（0-255，180=约70%不透明，128=50%透明）"
+    },
+    // ⭐ 翻页相关配置
+    itemsPerPage: {
+      "default": 8,
+      tooltip: "每页显示的商品数量"
+    },
+    prevPageButton: {
+      "default": null,
+      type: cc.Node,
+      tooltip: "上一页按钮节点"
+    },
+    nextPageButton: {
+      "default": null,
+      type: cc.Node,
+      tooltip: "下一页按钮节点"
+    },
+    pageLabel: {
+      "default": null,
+      type: cc.Label,
+      tooltip: "页码显示标签（可选，显示当前页/总页数）"
     }
   },
   onLoad: function onLoad() {
@@ -86,6 +106,17 @@ cc.Class({
     if (this.refreshButton) {
       this.refreshButton.on(cc.Node.EventType.TOUCH_END, this.refresh, this);
     }
+
+    // 绑定翻页按钮事件
+    if (this.prevPageButton) {
+      this.prevPageButton.on(cc.Node.EventType.TOUCH_END, this.goToPrevPage, this);
+    }
+    if (this.nextPageButton) {
+      this.nextPageButton.on(cc.Node.EventType.TOUCH_END, this.goToNextPage, this);
+    }
+
+    // 初始化当前页码
+    this.currentPage = 0;
   },
   /**
    * 初始化商城UI
@@ -147,7 +178,7 @@ cc.Class({
     }))();
   },
   /**
-   * 加载商品列表
+   * 加载商品列表（支持翻页）
    */
   loadShopItems: function loadShopItems() {
     var _this3 = this;
@@ -160,31 +191,53 @@ cc.Class({
       return;
     }
 
+    // 获取所有商品
+    var allShopItems = ShopConfig.getAllItems();
+    var totalItems = allShopItems.length;
+    var itemsPerPage = this.itemsPerPage || 8;
+    var totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+    // 确保当前页码在有效范围内
+    if (this.currentPage < 0) {
+      this.currentPage = 0;
+    } else if (this.currentPage >= totalPages) {
+      this.currentPage = totalPages - 1;
+    }
+
+    // 计算当前页的商品范围
+    var startIndex = this.currentPage * itemsPerPage;
+    var endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    var currentPageItems = allShopItems.slice(startIndex, endIndex);
+
     // 清空现有商品
     this.itemListContainer.removeAllChildren();
 
-    // 获取所有商品
-    var shopItems = ShopConfig.getAllItems();
+    // 设置容器布局（网格布局，基于当前页商品数）
+    this._setupContainerLayout(currentPageItems.length);
 
-    // 设置容器布局（网格布局）
-    this._setupContainerLayout(shopItems.length);
-
-    // 为每个商品创建UI项
-    shopItems.forEach(function (shopItem, index) {
+    // 为当前页的每个商品创建UI项
+    currentPageItems.forEach(function (shopItem, index) {
       var itemNode = cc.instantiate(_this3.shopItemPrefab);
       itemNode.name = "ShopItem_" + shopItem.id;
 
       // ⭐ 关键：先设置商品项大小和位置（在设置内容之前）
-      _this3._layoutShopItem(itemNode, index, shopItems.length, shopItem);
+      // 注意：这里的index是当前页内的索引，不是全局索引
+      _this3._layoutShopItem(itemNode, index, currentPageItems.length, shopItem);
 
       // 设置商品数据（包括内部布局）
       _this3.setupShopItem(itemNode, shopItem);
 
       // 添加到容器
       _this3.itemListContainer.addChild(itemNode);
-      cc.log("[ShopUI] \u521B\u5EFA\u5546\u54C1\u9879 " + index + ": " + shopItem.name + ", \u4F4D\u7F6E: (" + itemNode.x + ", " + itemNode.y + "), \u5927\u5C0F: " + itemNode.width + " x " + itemNode.height);
+      cc.log("[ShopUI] \u521B\u5EFA\u5546\u54C1\u9879 " + (startIndex + index) + ": " + shopItem.name + ", \u4F4D\u7F6E: (" + itemNode.x + ", " + itemNode.y + "), \u5927\u5C0F: " + itemNode.width + " x " + itemNode.height);
     });
-    cc.log("[ShopUI] \u5DF2\u52A0\u8F7D " + shopItems.length + " \u4E2A\u5546\u54C1");
+
+    // 更新翻页按钮状态
+    this.updatePageButtons();
+
+    // 更新页码显示
+    this.updatePageLabel();
+    cc.log("[ShopUI] \u5DF2\u52A0\u8F7D\u7B2C " + (this.currentPage + 1) + "/" + totalPages + " \u9875\uFF0C\u663E\u793A " + currentPageItems.length + " \u4E2A\u5546\u54C1\uFF08\u5171 " + totalItems + " \u4E2A\uFF09");
   },
   /**
    * 设置容器布局（参考专业商城布局）
@@ -447,20 +500,27 @@ cc.Class({
       }
     }
 
-    // 设置图标（如果有）
+    // 设置图标：优先用商品自身 icon，否则按 itemId 从 ItemConfig 取（与道具栏一致）
     if (iconNode) {
-      if (shopItem.icon) {
-        var sprite = iconNode.getComponent(cc.Sprite);
-        if (sprite) {
-          sprite.spriteFrame = shopItem.icon;
+      var iconSpriteFrame = shopItem.icon;
+      if (!iconSpriteFrame && shopItem.itemId) {
+        var ItemConfig = require("ItemConfig");
+        var itemConfig = ItemConfig.getItemById(shopItem.itemId);
+        if (itemConfig && itemConfig.icon) {
+          iconSpriteFrame = itemConfig.icon;
         }
       }
-      // 设置图标大小和位置
+      if (iconSpriteFrame) {
+        var sprite = iconNode.getComponent(cc.Sprite);
+        if (sprite) {
+          sprite.spriteFrame = iconSpriteFrame;
+        }
+      }
       iconNode.setContentSize(80, 80);
       iconNode.setAnchorPoint(0.5, 0.5);
     }
 
-    // 设置购买按钮（参考专业商城样式：蓝色按钮，白色文字）
+    // 设置购买按钮（保持原始背景，黑色文字）
     if (buyButton) {
       var button = buyButton.getComponent(cc.Button);
       if (button) {
@@ -472,7 +532,7 @@ cc.Class({
           var labelComp = _label3.addComponent(cc.Label);
           labelComp.string = "购买"; // 按钮文字改为"购买"
           labelComp.fontSize = 18;
-          labelComp.node.color = cc.Color.WHITE;
+          labelComp.node.color = cc.Color.BLACK; // 黑色文字
           labelComp.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
           labelComp.verticalAlign = cc.Label.VerticalAlign.CENTER;
           _label3.setContentSize(buyButton.width, buyButton.height);
@@ -484,7 +544,7 @@ cc.Class({
           if (_labelComp) {
             _labelComp.string = "购买"; // 按钮文字改为"购买"
             _labelComp.fontSize = 18;
-            _labelComp.node.color = cc.Color.WHITE;
+            _labelComp.node.color = cc.Color.BLACK; // 黑色文字
             _labelComp.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
             _labelComp.verticalAlign = cc.Label.VerticalAlign.CENTER;
           }
@@ -584,7 +644,7 @@ cc.Class({
       cc.warn("[ShopUI]   \u672A\u627E\u5230PriceLabel\u8282\u70B9");
     }
 
-    // 5. 购买按钮位置（底部，居中，蓝色按钮样式）
+    // 5. 购买按钮位置（底部，居中，使用原始背景）
     if (buyButton) {
       var btnHeight = 38;
       var btnBottomMargin = 10; // 按钮底部边距
@@ -594,19 +654,7 @@ cc.Class({
       buyButton.setAnchorPoint(0.5, 0.5);
       buyButton.active = true;
 
-      // 设置按钮背景颜色（蓝色）
-      var buttonSprite = buyButton.getComponent(cc.Sprite);
-      if (!buttonSprite) {
-        // 如果没有Sprite组件，添加Graphics组件绘制按钮背景
-        var graphics = buyButton.getComponent(cc.Graphics);
-        if (!graphics) {
-          graphics = buyButton.addComponent(cc.Graphics);
-        }
-        var btnWidth = itemWidth - padding * 2;
-        graphics.fillColor = new cc.Color(70, 130, 200, 255); // 蓝色
-        graphics.roundRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 5);
-        graphics.fill();
-      }
+      // 不绘制按钮背景，使用Prefab中设置的原始背景
       cc.log("[ShopUI]   \u6309\u94AE\u4F4D\u7F6E: (0, " + btnY.toFixed(1) + "), \u5927\u5C0F=" + (itemWidth - padding * 2) + "x" + btnHeight);
     } else {
       cc.warn("[ShopUI]   \u672A\u627E\u5230\u8D2D\u4E70\u6309\u94AE\u8282\u70B9\uFF08\u5C1D\u8BD5\u67E5\u627E\"\u8D2D\u4E70\"\u6216\"BuyButton\"\uFF09");
@@ -758,8 +806,9 @@ cc.Class({
             _context4.next = 3;
             return _this6.updateCoinDisplay();
           case 3:
+            _this6.currentPage = 0; // 重置到第一页
             _this6.loadShopItems();
-          case 4:
+          case 5:
           case "end":
             return _context4.stop();
         }
@@ -773,6 +822,84 @@ cc.Class({
     cc.log("[ShopUI] 返回按钮点击");
     // 返回主菜单场景
     cc.director.loadScene("MainMenu");
+  },
+  /**
+   * 翻页：跳转到指定页码
+   * @param {number} page - 页码（从0开始）
+   */
+  goToPage: function goToPage(page) {
+    var allShopItems = ShopConfig.getAllItems();
+    var totalItems = allShopItems.length;
+    var itemsPerPage = this.itemsPerPage || 8;
+    var totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    if (page < 0 || page >= totalPages) {
+      cc.warn("[ShopUI] \u65E0\u6548\u7684\u9875\u7801: " + page + "\uFF0C\u603B\u9875\u6570: " + totalPages);
+      return;
+    }
+    this.currentPage = page;
+    this.loadShopItems();
+  },
+  /**
+   * 翻页：上一页
+   */
+  goToPrevPage: function goToPrevPage() {
+    if (this.currentPage > 0) {
+      this.goToPage(this.currentPage - 1);
+    }
+  },
+  /**
+   * 翻页：下一页
+   */
+  goToNextPage: function goToNextPage() {
+    var allShopItems = ShopConfig.getAllItems();
+    var totalItems = allShopItems.length;
+    var itemsPerPage = this.itemsPerPage || 8;
+    var totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    if (this.currentPage < totalPages - 1) {
+      this.goToPage(this.currentPage + 1);
+    }
+  },
+  /**
+   * 更新翻页按钮状态（禁用/启用）
+   */
+  updatePageButtons: function updatePageButtons() {
+    var allShopItems = ShopConfig.getAllItems();
+    var totalItems = allShopItems.length;
+    var itemsPerPage = this.itemsPerPage || 8;
+    var totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+    // 更新上一页按钮
+    if (this.prevPageButton) {
+      var prevButton = this.prevPageButton.getComponent(cc.Button);
+      if (prevButton) {
+        prevButton.interactable = this.currentPage > 0;
+      }
+      // 更新按钮透明度（禁用时半透明）
+      this.prevPageButton.opacity = this.currentPage > 0 ? 255 : 128;
+    }
+
+    // 更新下一页按钮
+    if (this.nextPageButton) {
+      var nextButton = this.nextPageButton.getComponent(cc.Button);
+      if (nextButton) {
+        nextButton.interactable = this.currentPage < totalPages - 1;
+      }
+      // 更新按钮透明度（禁用时半透明）
+      this.nextPageButton.opacity = this.currentPage < totalPages - 1 ? 255 : 128;
+    }
+  },
+  /**
+   * 更新页码显示标签
+   */
+  updatePageLabel: function updatePageLabel() {
+    if (!this.pageLabel) {
+      return;
+    }
+    var allShopItems = ShopConfig.getAllItems();
+    var totalItems = allShopItems.length;
+    var itemsPerPage = this.itemsPerPage || 8;
+    var totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    this.pageLabel.string = this.currentPage + 1 + " / " + totalPages;
   }
 });
 

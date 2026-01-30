@@ -71,6 +71,27 @@ cc.Class({
         backgroundOpacity: {
             default: 180,
             tooltip: "商城背景面板的透明度（0-255，180=约70%不透明，128=50%透明）"
+        },
+
+        // ⭐ 翻页相关配置
+        itemsPerPage: {
+            default: 8,
+            tooltip: "每页显示的商品数量"
+        },
+        prevPageButton: {
+            default: null,
+            type: cc.Node,
+            tooltip: "上一页按钮节点"
+        },
+        nextPageButton: {
+            default: null,
+            type: cc.Node,
+            tooltip: "下一页按钮节点"
+        },
+        pageLabel: {
+            default: null,
+            type: cc.Label,
+            tooltip: "页码显示标签（可选，显示当前页/总页数）"
         }
     },
 
@@ -84,6 +105,17 @@ cc.Class({
         if (this.refreshButton) {
             this.refreshButton.on(cc.Node.EventType.TOUCH_END, this.refresh, this);
         }
+
+        // 绑定翻页按钮事件
+        if (this.prevPageButton) {
+            this.prevPageButton.on(cc.Node.EventType.TOUCH_END, this.goToPrevPage, this);
+        }
+        if (this.nextPageButton) {
+            this.nextPageButton.on(cc.Node.EventType.TOUCH_END, this.goToNextPage, this);
+        }
+
+        // 初始化当前页码
+        this.currentPage = 0;
     },
 
     /**
@@ -118,7 +150,7 @@ cc.Class({
     },
 
     /**
-     * 加载商品列表
+     * 加载商品列表（支持翻页）
      */
     loadShopItems() {
         if (!this.itemListContainer) {
@@ -131,22 +163,38 @@ cc.Class({
             return;
         }
 
+        // 获取所有商品
+        const allShopItems = ShopConfig.getAllItems();
+        const totalItems = allShopItems.length;
+        const itemsPerPage = this.itemsPerPage || 8;
+        const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        // 确保当前页码在有效范围内
+        if (this.currentPage < 0) {
+            this.currentPage = 0;
+        } else if (this.currentPage >= totalPages) {
+            this.currentPage = totalPages - 1;
+        }
+
+        // 计算当前页的商品范围
+        const startIndex = this.currentPage * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        const currentPageItems = allShopItems.slice(startIndex, endIndex);
+
         // 清空现有商品
         this.itemListContainer.removeAllChildren();
 
-        // 获取所有商品
-        const shopItems = ShopConfig.getAllItems();
+        // 设置容器布局（网格布局，基于当前页商品数）
+        this._setupContainerLayout(currentPageItems.length);
 
-        // 设置容器布局（网格布局）
-        this._setupContainerLayout(shopItems.length);
-
-        // 为每个商品创建UI项
-        shopItems.forEach((shopItem, index) => {
+        // 为当前页的每个商品创建UI项
+        currentPageItems.forEach((shopItem, index) => {
             const itemNode = cc.instantiate(this.shopItemPrefab);
             itemNode.name = `ShopItem_${shopItem.id}`;
 
             // ⭐ 关键：先设置商品项大小和位置（在设置内容之前）
-            this._layoutShopItem(itemNode, index, shopItems.length, shopItem);
+            // 注意：这里的index是当前页内的索引，不是全局索引
+            this._layoutShopItem(itemNode, index, currentPageItems.length, shopItem);
 
             // 设置商品数据（包括内部布局）
             this.setupShopItem(itemNode, shopItem);
@@ -154,10 +202,16 @@ cc.Class({
             // 添加到容器
             this.itemListContainer.addChild(itemNode);
 
-            cc.log(`[ShopUI] 创建商品项 ${index}: ${shopItem.name}, 位置: (${itemNode.x}, ${itemNode.y}), 大小: ${itemNode.width} x ${itemNode.height}`);
+            cc.log(`[ShopUI] 创建商品项 ${startIndex + index}: ${shopItem.name}, 位置: (${itemNode.x}, ${itemNode.y}), 大小: ${itemNode.width} x ${itemNode.height}`);
         });
 
-        cc.log(`[ShopUI] 已加载 ${shopItems.length} 个商品`);
+        // 更新翻页按钮状态
+        this.updatePageButtons();
+
+        // 更新页码显示
+        this.updatePageLabel();
+
+        cc.log(`[ShopUI] 已加载第 ${this.currentPage + 1}/${totalPages} 页，显示 ${currentPageItems.length} 个商品（共 ${totalItems} 个）`);
     },
 
     /**
@@ -423,20 +477,27 @@ cc.Class({
             }
         }
 
-        // 设置图标（如果有）
+        // 设置图标：优先用商品自身 icon，否则按 itemId 从 ItemConfig 取（与道具栏一致）
         if (iconNode) {
-            if (shopItem.icon) {
-                const sprite = iconNode.getComponent(cc.Sprite);
-                if (sprite) {
-                    sprite.spriteFrame = shopItem.icon;
+            let iconSpriteFrame = shopItem.icon;
+            if (!iconSpriteFrame && shopItem.itemId) {
+                const ItemConfig = require("ItemConfig");
+                const itemConfig = ItemConfig.getItemById(shopItem.itemId);
+                if (itemConfig && itemConfig.icon) {
+                    iconSpriteFrame = itemConfig.icon;
                 }
             }
-            // 设置图标大小和位置
+            if (iconSpriteFrame) {
+                const sprite = iconNode.getComponent(cc.Sprite);
+                if (sprite) {
+                    sprite.spriteFrame = iconSpriteFrame;
+                }
+            }
             iconNode.setContentSize(80, 80);
             iconNode.setAnchorPoint(0.5, 0.5);
         }
 
-        // 设置购买按钮（参考专业商城样式：蓝色按钮，白色文字）
+        // 设置购买按钮（保持原始背景，黑色文字）
         if (buyButton) {
             const button = buyButton.getComponent(cc.Button);
             if (button) {
@@ -448,7 +509,7 @@ cc.Class({
                     const labelComp = label.addComponent(cc.Label);
                     labelComp.string = "购买"; // 按钮文字改为"购买"
                     labelComp.fontSize = 18;
-                    labelComp.node.color = cc.Color.WHITE;
+                    labelComp.node.color = cc.Color.BLACK; // 黑色文字
                     labelComp.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
                     labelComp.verticalAlign = cc.Label.VerticalAlign.CENTER;
                     label.setContentSize(buyButton.width, buyButton.height);
@@ -460,7 +521,7 @@ cc.Class({
                     if (labelComp) {
                         labelComp.string = "购买"; // 按钮文字改为"购买"
                         labelComp.fontSize = 18;
-                        labelComp.node.color = cc.Color.WHITE;
+                        labelComp.node.color = cc.Color.BLACK; // 黑色文字
                         labelComp.horizontalAlign = cc.Label.HorizontalAlign.CENTER;
                         labelComp.verticalAlign = cc.Label.VerticalAlign.CENTER;
                     }
@@ -561,7 +622,7 @@ cc.Class({
             cc.warn(`[ShopUI]   未找到PriceLabel节点`);
         }
 
-        // 5. 购买按钮位置（底部，居中，蓝色按钮样式）
+        // 5. 购买按钮位置（底部，居中，使用原始背景）
         if (buyButton) {
             const btnHeight = 38;
             const btnBottomMargin = 10; // 按钮底部边距
@@ -571,19 +632,7 @@ cc.Class({
             buyButton.setAnchorPoint(0.5, 0.5);
             buyButton.active = true;
 
-            // 设置按钮背景颜色（蓝色）
-            const buttonSprite = buyButton.getComponent(cc.Sprite);
-            if (!buttonSprite) {
-                // 如果没有Sprite组件，添加Graphics组件绘制按钮背景
-                let graphics = buyButton.getComponent(cc.Graphics);
-                if (!graphics) {
-                    graphics = buyButton.addComponent(cc.Graphics);
-                }
-                const btnWidth = itemWidth - padding * 2;
-                graphics.fillColor = new cc.Color(70, 130, 200, 255); // 蓝色
-                graphics.roundRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 5);
-                graphics.fill();
-            }
+            // 不绘制按钮背景，使用Prefab中设置的原始背景
             cc.log(`[ShopUI]   按钮位置: (0, ${btnY.toFixed(1)}), 大小=${itemWidth - padding * 2}x${btnHeight}`);
         } else {
             cc.warn(`[ShopUI]   未找到购买按钮节点（尝试查找"购买"或"BuyButton"）`);
@@ -687,6 +736,7 @@ cc.Class({
     async refresh() {
         cc.log("[ShopUI] 刷新商城数据");
         await this.updateCoinDisplay();
+        this.currentPage = 0; // 重置到第一页
         this.loadShopItems();
     },
 
@@ -697,5 +747,93 @@ cc.Class({
         cc.log("[ShopUI] 返回按钮点击");
         // 返回主菜单场景
         cc.director.loadScene("MainMenu");
+    },
+
+    /**
+     * 翻页：跳转到指定页码
+     * @param {number} page - 页码（从0开始）
+     */
+    goToPage(page) {
+        const allShopItems = ShopConfig.getAllItems();
+        const totalItems = allShopItems.length;
+        const itemsPerPage = this.itemsPerPage || 8;
+        const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        if (page < 0 || page >= totalPages) {
+            cc.warn(`[ShopUI] 无效的页码: ${page}，总页数: ${totalPages}`);
+            return;
+        }
+
+        this.currentPage = page;
+        this.loadShopItems();
+    },
+
+    /**
+     * 翻页：上一页
+     */
+    goToPrevPage() {
+        if (this.currentPage > 0) {
+            this.goToPage(this.currentPage - 1);
+        }
+    },
+
+    /**
+     * 翻页：下一页
+     */
+    goToNextPage() {
+        const allShopItems = ShopConfig.getAllItems();
+        const totalItems = allShopItems.length;
+        const itemsPerPage = this.itemsPerPage || 8;
+        const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        if (this.currentPage < totalPages - 1) {
+            this.goToPage(this.currentPage + 1);
+        }
+    },
+
+    /**
+     * 更新翻页按钮状态（禁用/启用）
+     */
+    updatePageButtons() {
+        const allShopItems = ShopConfig.getAllItems();
+        const totalItems = allShopItems.length;
+        const itemsPerPage = this.itemsPerPage || 8;
+        const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        // 更新上一页按钮
+        if (this.prevPageButton) {
+            const prevButton = this.prevPageButton.getComponent(cc.Button);
+            if (prevButton) {
+                prevButton.interactable = this.currentPage > 0;
+            }
+            // 更新按钮透明度（禁用时半透明）
+            this.prevPageButton.opacity = this.currentPage > 0 ? 255 : 128;
+        }
+
+        // 更新下一页按钮
+        if (this.nextPageButton) {
+            const nextButton = this.nextPageButton.getComponent(cc.Button);
+            if (nextButton) {
+                nextButton.interactable = this.currentPage < totalPages - 1;
+            }
+            // 更新按钮透明度（禁用时半透明）
+            this.nextPageButton.opacity = this.currentPage < totalPages - 1 ? 255 : 128;
+        }
+    },
+
+    /**
+     * 更新页码显示标签
+     */
+    updatePageLabel() {
+        if (!this.pageLabel) {
+            return;
+        }
+
+        const allShopItems = ShopConfig.getAllItems();
+        const totalItems = allShopItems.length;
+        const itemsPerPage = this.itemsPerPage || 8;
+        const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        this.pageLabel.string = `${this.currentPage + 1} / ${totalPages}`;
     }
 });

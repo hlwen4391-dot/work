@@ -105,6 +105,22 @@ var CharacterDataManager = {
             saveTime: Date.now()
         };
 
+        // ⭐ 同时保存技能数据（服务器/混合模式下会一起同步）
+        try {
+            const skillComp = characterNode.getComponent("SkillComponent");
+            if (skillComp && skillComp.skills && skillComp.skills.length > 0) {
+                data.skills = skillComp.skills.map(s => ({
+                    id: s.id,
+                    name: s.skillName,
+                    cooldown: s.cooldown,
+                    requireRage: s.requireRage || 0,
+                    isUltimate: s.isUltimate || false
+                }));
+            }
+        } catch (e) {
+            // 无 SkillComponent 或 require 失败时不影响保存
+        }
+
         return this.saveCharacterData(characterName, data);
     },
 

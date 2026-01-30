@@ -261,8 +261,23 @@ var SkillConfig = {
 
 };
 
+/**
+ * 根据技能ID获取完整技能配置（供卷轴、存档等使用）
+ * @param {number} skillId - 技能ID（与 SkillEnum 一致）
+ * @returns {Object|null} 技能配置对象，未找到返回 null
+ */
+function getSkillById(skillId) {
+    for (const key of Object.keys(SkillConfig)) {
+        if (SkillConfig[key].id === skillId) {
+            return SkillConfig[key];
+        }
+    }
+    return null;
+}
+
 module.exports = {
     SkillEnum: SkillEnum,
-    SkillConfig: SkillConfig
+    SkillConfig: SkillConfig,
+    getSkillById: getSkillById
 };
 

@@ -50,6 +50,135 @@ var ShopConfig = {
                 icon: null,
                 description: "10个升级药水打包，超值优惠",
                 category: this.CATEGORY.CONSUMABLE
+            },
+            // ========== 技能卷轴（特殊商品） ==========
+            {
+                id: "shop_scroll_fireball",
+                name: "火球术卷轴",
+                price: 200,
+                itemId: "scroll_fireball",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：火球术",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 3
+            },
+            {
+                id: "shop_scroll_beast_rage",
+                name: "兽化狂暴卷轴",
+                price: 250,
+                itemId: "scroll_beast_rage",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：兽化狂暴",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 7
+            },
+            {
+                id: "shop_scroll_heal_allies",
+                name: "治疗术卷轴",
+                price: 300,
+                itemId: "scroll_heal_allies",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：群体治疗",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 9
+            },
+            {
+                id: "shop_scroll_stun",
+                name: "盾击卷轴",
+                price: 180,
+                itemId: "scroll_stun",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：盾击",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 2
+            },
+            {
+                id: "shop_scroll_war_cry",
+                name: "战吼卷轴",
+                price: 350,
+                itemId: "scroll_war_cry",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：战吼",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 5
+            },
+            {
+                id: "shop_scroll_shield_allies",
+                name: "群体护盾卷轴",
+                price: 320,
+                itemId: "scroll_shield_allies",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：群体护盾",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 6
+            },
+            {
+                id: "shop_scroll_cleanse_allies",
+                name: "净化术卷轴",
+                price: 380,
+                itemId: "scroll_cleanse_allies",
+                count: 1,
+                icon: null,
+                description: "使用后学会技能：净化术",
+                category: this.CATEGORY.SPECIAL,
+                skillId: 10
+            },
+            // ========== 消耗品类（新增） ==========
+            {
+                id: "exp_potion_1",
+                name: "经验药水",
+                price: 50,
+                itemId: "exp_potion",
+                count: 1,
+                icon: null,
+                description: "使用后获得100点经验值",
+                category: this.CATEGORY.CONSUMABLE
+            },
+            {
+                id: "exp_potion_5",
+                name: "经验药水 x5",
+                price: 220,
+                itemId: "exp_potion",
+                count: 5,
+                icon: null,
+                description: "5个经验药水打包，更优惠",
+                category: this.CATEGORY.CONSUMABLE
+            },
+            {
+                id: "hp_potion_1",
+                name: "生命药水",
+                price: 30,
+                itemId: "hp_potion",
+                count: 1,
+                icon: null,
+                description: "使用后恢复50点生命值",
+                category: this.CATEGORY.CONSUMABLE
+            },
+            {
+                id: "hp_potion_5",
+                name: "生命药水 x5",
+                price: 130,
+                itemId: "hp_potion",
+                count: 5,
+                icon: null,
+                description: "5个生命药水打包，更优惠",
+                category: this.CATEGORY.CONSUMABLE
+            },
+            {
+                id: "hp_potion_10",
+                name: "生命药水 x10",
+                price: 240,
+                itemId: "hp_potion",
+                count: 10,
+                icon: null,
+                description: "10个生命药水打包，超值优惠",
+                category: this.CATEGORY.CONSUMABLE
             }
             // ========== 后续扩展示例 ==========
             // 消耗品示例：

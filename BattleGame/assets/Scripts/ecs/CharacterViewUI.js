@@ -909,6 +909,9 @@ cc.Class({
 
         if (result.success) {
             cc.log(`[CharacterViewUI] ✓ 使用道具成功: ${item.name} - ${result.message}`);
+            if (result.skillName) {
+                cc.log(`[CharacterViewUI] 角色已学会技能: ${result.skillName}`);
+            }
 
             // 刷新道具栏显示
             await this._updateInventory();
@@ -918,7 +921,7 @@ cc.Class({
                 this._showStatsPanel(this.currentUnitData);
             }
 
-            // TODO: 可以显示使用成功的提示UI
+            // TODO: 可以显示使用成功的提示UI（如 Toast 显示「技能学习成功」）
         } else {
             cc.warn(`[CharacterViewUI] ✗ 使用道具失败: ${item.name} - ${result.message}`);
             // TODO: 可以显示错误提示UI
@@ -1027,13 +1030,20 @@ cc.Class({
      * @param {number} index - 索引
      */
     _createAvatar(unitData, team, index) {
+        if (!unitData || !unitData.name) {
+            cc.error(`[CharacterViewUI] _createAvatar: unitData无效`, unitData);
+            return;
+        }
+        
         // 实例化头像Prefab
         const avatarNode = cc.instantiate(this.avatarPrefab);
         avatarNode.name = `Avatar_${unitData.name}`;
 
-        // 保存单位数据到节点
-        avatarNode._unitData = unitData;
+        // 保存单位数据到节点（浅拷贝，保留Prefab引用）
+        avatarNode._unitData = Object.assign({}, unitData);
         avatarNode._team = team;
+        
+        cc.log(`[CharacterViewUI] 创建头像: name=${unitData.name}, team=${team}, index=${index}, prefab=${unitData.prefab ? unitData.prefab.name : 'null'}`);
 
         // 添加到容器
         this.avatarListContainer.addChild(avatarNode);
@@ -1059,9 +1069,13 @@ cc.Class({
             }
         }
 
-        // 绑定点击事件
+        // 绑定点击事件（从节点获取unitData，避免闭包引用问题）
         avatarNode.on(cc.Node.EventType.TOUCH_END, () => {
-            this._onAvatarClick(unitData, team);
+            // 优先从节点获取unitData（确保数据正确）
+            const nodeUnitData = avatarNode._unitData || unitData;
+            const nodeTeam = avatarNode._team || team;
+            cc.log(`[CharacterViewUI] 头像点击事件触发: 节点名称=${avatarNode.name}, unitData.name=${nodeUnitData.name}, team=${nodeTeam}`);
+            this._onAvatarClick(nodeUnitData, nodeTeam);
         }, this);
 
         // 确保可以接收触摸事件
@@ -1075,7 +1089,11 @@ cc.Class({
      * @param {string} team - 队伍类型
      */
     _onAvatarClick(unitData, team) {
-        cc.log(`[CharacterViewUI] 点击头像: ${unitData.name}`);
+        if (!unitData) {
+            cc.error(`[CharacterViewUI] 点击头像失败: unitData为空`);
+            return;
+        }
+        cc.log(`[CharacterViewUI] 点击头像: ${unitData.name}, team=${team}, prefab=${unitData.prefab ? unitData.prefab.name : 'null'}`);
         this._displayCharacterPrefab(unitData);
     },
 

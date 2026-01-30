@@ -16,7 +16,8 @@ var ItemConfig = {
         HP: "hp",                // 恢复生命值
         ATTACK: "attack",         // 增加攻击力
         DEFENSE: "defense",       // 增加防御力
-        LEVEL_UP: "level_up"      // 直接升级
+        LEVEL_UP: "level_up",     // 直接升级
+        SKILL_SCROLL: "skill_scroll"  // 技能卷轴（使用后解锁对应技能）
     },
 
     // 所有道具配置列表
@@ -33,6 +34,124 @@ var ItemConfig = {
             maxStack: 99, // 最大堆叠数量
             rarity: "common", // 稀有度：普通
             price: 100 // 价格（金币）
+        },
+        // 技能卷轴：使用后为当前角色解锁对应技能（skillId 与 SkillConfig/SkillEnum 一致）
+        {
+            id: "scroll_fireball",
+            name: "火球术卷轴",
+            displayName: "火球术卷轴",
+            description: "使用后学会技能：火球术",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 3, // SkillEnum.fireball
+            maxStack: 99,
+            rarity: "uncommon",
+            price: 200
+        },
+        {
+            id: "scroll_beast_rage",
+            name: "兽化狂暴卷轴",
+            displayName: "兽化狂暴卷轴",
+            description: "使用后学会技能：兽化狂暴",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 7, // SkillEnum.beastRage
+            maxStack: 99,
+            rarity: "uncommon",
+            price: 250
+        },
+        {
+            id: "scroll_heal_allies",
+            name: "治疗术卷轴",
+            displayName: "治疗术卷轴",
+            description: "使用后学会技能：群体治疗",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 9, // SkillEnum.healAllies
+            maxStack: 99,
+            rarity: "rare",
+            price: 300
+        },
+        {
+            id: "scroll_stun",
+            name: "盾击卷轴",
+            displayName: "盾击卷轴",
+            description: "使用后学会技能：盾击",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 2, // SkillEnum.stunSkill
+            maxStack: 99,
+            rarity: "uncommon",
+            price: 180
+        },
+        {
+            id: "scroll_war_cry",
+            name: "战吼卷轴",
+            displayName: "战吼卷轴",
+            description: "使用后学会技能：战吼",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 5, // SkillEnum.warCry
+            maxStack: 99,
+            rarity: "rare",
+            price: 350
+        },
+        {
+            id: "scroll_shield_allies",
+            name: "群体护盾卷轴",
+            displayName: "群体护盾卷轴",
+            description: "使用后学会技能：群体护盾",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 6, // SkillEnum.shieldAllies
+            maxStack: 99,
+            rarity: "rare",
+            price: 320
+        },
+        {
+            id: "scroll_cleanse_allies",
+            name: "净化术卷轴",
+            displayName: "净化术卷轴",
+            description: "使用后学会技能：净化术",
+            icon: null,
+            type: "consumable",
+            effectType: "skill_scroll",
+            skillId: 10, // SkillEnum.cleanseAllies
+            maxStack: 99,
+            rarity: "rare",
+            price: 380
+        },
+        {
+            id: "exp_potion",
+            name: "经验药水",
+            displayName: "经验药水",
+            description: "使用后获得100点经验值",
+            icon: null,
+            type: "consumable",
+            effectType: "exp",
+            effectValue: 100,
+            maxStack: 99,
+            rarity: "common",
+            price: 50
+        },
+        {
+            id: "hp_potion",
+            name: "生命药水",
+            displayName: "生命药水",
+            description: "使用后恢复50点生命值",
+            icon: null,
+            type: "consumable",
+            effectType: "hp",
+            effectValue: 50,
+            maxStack: 99,
+            rarity: "common",
+            price: 30
         }
         // 后续可以在这里添加更多道具
         // {

@@ -902,27 +902,30 @@ cc.Class({
           case 9:
             result = _context3.sent;
             if (!result.success) {
-              _context3.next = 17;
+              _context3.next = 18;
               break;
             }
             cc.log("[CharacterViewUI] \u2713 \u4F7F\u7528\u9053\u5177\u6210\u529F: " + item.name + " - " + result.message);
+            if (result.skillName) {
+              cc.log("[CharacterViewUI] \u89D2\u8272\u5DF2\u5B66\u4F1A\u6280\u80FD: " + result.skillName);
+            }
 
             // 刷新道具栏显示
-            _context3.next = 14;
+            _context3.next = 15;
             return _this8._updateInventory();
-          case 14:
+          case 15:
             // 更新角色属性显示（如果属性面板已打开）
             if (_this8.statsPanel && _this8.statsPanel.active && _this8.currentUnitData) {
               _this8._showStatsPanel(_this8.currentUnitData);
             }
 
-            // TODO: 可以显示使用成功的提示UI
-            _context3.next = 18;
+            // TODO: 可以显示使用成功的提示UI（如 Toast 显示「技能学习成功」）
+            _context3.next = 19;
             break;
-          case 17:
+          case 18:
             cc.warn("[CharacterViewUI] \u2717 \u4F7F\u7528\u9053\u5177\u5931\u8D25: " + item.name + " - " + result.message);
             // TODO: 可以显示错误提示UI
-          case 18:
+          case 19:
           case "end":
             return _context3.stop();
         }
@@ -1067,13 +1070,19 @@ cc.Class({
    */
   _createAvatar: function _createAvatar(unitData, team, index) {
     var _this10 = this;
+    if (!unitData || !unitData.name) {
+      cc.error("[CharacterViewUI] _createAvatar: unitData\u65E0\u6548", unitData);
+      return;
+    }
+
     // 实例化头像Prefab
     var avatarNode = cc.instantiate(this.avatarPrefab);
     avatarNode.name = "Avatar_" + unitData.name;
 
-    // 保存单位数据到节点
-    avatarNode._unitData = unitData;
+    // 保存单位数据到节点（浅拷贝，保留Prefab引用）
+    avatarNode._unitData = Object.assign({}, unitData);
     avatarNode._team = team;
+    cc.log("[CharacterViewUI] \u521B\u5EFA\u5934\u50CF: name=" + unitData.name + ", team=" + team + ", index=" + index + ", prefab=" + (unitData.prefab ? unitData.prefab.name : 'null'));
 
     // 添加到容器
     this.avatarListContainer.addChild(avatarNode);
@@ -1099,9 +1108,13 @@ cc.Class({
       }
     }
 
-    // 绑定点击事件
+    // 绑定点击事件（从节点获取unitData，避免闭包引用问题）
     avatarNode.on(cc.Node.EventType.TOUCH_END, function () {
-      _this10._onAvatarClick(unitData, team);
+      // 优先从节点获取unitData（确保数据正确）
+      var nodeUnitData = avatarNode._unitData || unitData;
+      var nodeTeam = avatarNode._team || team;
+      cc.log("[CharacterViewUI] \u5934\u50CF\u70B9\u51FB\u4E8B\u4EF6\u89E6\u53D1: \u8282\u70B9\u540D\u79F0=" + avatarNode.name + ", unitData.name=" + nodeUnitData.name + ", team=" + nodeTeam);
+      _this10._onAvatarClick(nodeUnitData, nodeTeam);
     }, this);
 
     // 确保可以接收触摸事件
@@ -1114,7 +1127,11 @@ cc.Class({
    * @param {string} team - 队伍类型
    */
   _onAvatarClick: function _onAvatarClick(unitData, team) {
-    cc.log("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF: " + unitData.name);
+    if (!unitData) {
+      cc.error("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF\u5931\u8D25: unitData\u4E3A\u7A7A");
+      return;
+    }
+    cc.log("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF: " + unitData.name + ", team=" + team + ", prefab=" + (unitData.prefab ? unitData.prefab.name : 'null'));
     this._displayCharacterPrefab(unitData);
   },
   /**

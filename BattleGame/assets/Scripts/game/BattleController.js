@@ -955,9 +955,50 @@ cc.Class({
             node._originalCharacterName = data.name;
         }
 
+        // ⭐ 初始化技能（优先从服务器加载，否则使用data中的技能）
+        let skillsToInit = data.skills || [];
+
+        // 尝试从服务器加载技能数据
+        try {
+            const SkillDataManager = require("SkillDataManager");
+            const characterName = data.name || node.name;
+            const savedSkills = await SkillDataManager.loadCharacterSkills(characterName);
+
+            if (savedSkills && savedSkills.length > 0) {
+                // ⭐ 将保存的技能ID转换为完整的技能配置
+                const { SkillConfig } = require("SkillConfig");
+                skillsToInit = savedSkills.map(skillData => {
+                    // 根据技能ID从SkillConfig中获取完整配置
+                    const skillId = skillData.id;
+                    let skillConfig = null;
+
+                    // 查找对应的技能配置
+                    Object.keys(SkillConfig).forEach(key => {
+                        if (SkillConfig[key].id === skillId) {
+                            skillConfig = SkillConfig[key];
+                        }
+                    });
+
+                    if (skillConfig) {
+                        return {
+                            ...skillConfig,
+                            requireRage: skillData.requireRage || skillConfig.requireRage || 0
+                        };
+                    } else {
+                        cc.warn(`[BattleController] 未找到技能配置: id=${skillId}`);
+                        return null;
+                    }
+                }).filter(skill => skill !== null); // 过滤掉未找到的技能
+
+                cc.log(`[BattleController] ✓ 从服务器加载技能: ${characterName}, 数量=${skillsToInit.length}`);
+            }
+        } catch (error) {
+            cc.warn(`[BattleController] 加载技能数据失败，使用默认技能: ${error.message}`);
+        }
+
         // 初始化技能
-        if (data.skills && data.skills.length > 0) {
-            skills.init(data.skills);
+        if (skillsToInit && skillsToInit.length > 0) {
+            skills.init(skillsToInit);
         }
 
         // 设置队伍
