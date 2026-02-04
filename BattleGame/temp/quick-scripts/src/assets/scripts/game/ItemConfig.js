@@ -21,18 +21,16 @@ var ItemConfig = {
   // 道具效果类型枚举
   EffectType: {
     EXP: "exp",
-    // 增加经验值
     HP: "hp",
-    // 恢复生命值
     ATTACK: "attack",
-    // 增加攻击力
     DEFENSE: "defense",
-    // 增加防御力
+    SPEED: "speed",
+    // 增加速度
     LEVEL_UP: "level_up",
-    // 直接升级
-    SKILL_SCROLL: "skill_scroll" // 技能卷轴（使用后解锁对应技能）
+    SKILL_SCROLL: "skill_scroll"
   },
-
+  /** 装备槽位顺序，与装备栏 3 格对应：0=武器 1=防具 2=鞋子 */
+  EQUIPMENT_SLOTS: ["weapon", "armor", "shoes"],
   // 所有道具配置列表
   items: [{
     id: "upgrade_potion",
@@ -169,6 +167,47 @@ var ItemConfig = {
     maxStack: 99,
     rarity: "common",
     price: 30
+  },
+  // 装备：可穿戴到装备栏
+  {
+    id: "war_hammer",
+    name: "战锤",
+    displayName: "装备战锤",
+    description: "装备后攻击力+15",
+    icon: null,
+    type: "equipment",
+    effectType: "attack",
+    effectValue: 15,
+    maxStack: 1,
+    rarity: "uncommon",
+    price: 500,
+    equipmentSlot: "weapon"
+  }, {
+    id: "iron_armor",
+    name: "铁甲",
+    displayName: "铁甲",
+    description: "装备后防御力+10",
+    icon: null,
+    type: "equipment",
+    effectType: "defense",
+    effectValue: 10,
+    maxStack: 1,
+    rarity: "uncommon",
+    price: 400,
+    equipmentSlot: "armor"
+  }, {
+    id: "leather_boots",
+    name: "皮靴",
+    displayName: "皮靴",
+    description: "装备后速度+2",
+    icon: null,
+    type: "equipment",
+    effectType: "speed",
+    effectValue: 2,
+    maxStack: 1,
+    rarity: "common",
+    price: 200,
+    equipmentSlot: "shoes"
   }
   // 后续可以在这里添加更多道具
   // {

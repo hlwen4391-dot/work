@@ -27,6 +27,20 @@ cc.Class({
             tooltip: "道具栏容器节点（网格布局，显示在人物原型下方）"
         },
 
+        // 装备栏容器（3个格子，可放在道具栏上方或下方）
+        equipmentContainer: {
+            default: null,
+            type: cc.Node,
+            tooltip: "装备栏容器节点（3个格子：如武器/防具/饰品）"
+        },
+
+        // 装备格子Prefab（不填则使用 itemSlotPrefab）
+        equipmentSlotPrefab: {
+            default: null,
+            type: cc.Prefab,
+            tooltip: "装备格子Prefab，留空则使用道具格子Prefab"
+        },
+
         // 道具项Prefab（用于创建道具格子）
         itemSlotPrefab: {
             default: null,
@@ -178,6 +192,11 @@ cc.Class({
             this._initInventory();
         }, 0);
 
+        // 初始化装备栏（3个格子）
+        this.scheduleOnce(() => {
+            this._initEquipmentBar();
+        }, 0.05);
+
         // 设置道具图标（如果ItemIconSetter组件已设置）
         this._setupItemIcons();
 
@@ -191,10 +210,23 @@ cc.Class({
             this.statsPanel.active = false;
         }
 
+        // 拖拽状态（装备从道具栏拖到装备栏 / 从装备栏拖回）
+        this._dragSprite = null;
+        this._draggingItem = null;
+        this._draggingSlot = null;
+        this._draggingFromEquipment = null;
+        this._dragIconSize = null;
+        this._dragStartCanvasPos = null; // 拖拽开始时原始图标在 Canvas 下的坐标（用于从原位置“拽出来”）
+
         // 绑定点击事件（点击任意地方关闭属性面板）
         // 使用Canvas或场景根节点来捕获点击事件
         const canvas = cc.find("Canvas");
         if (canvas) {
+            // 先绑定拖拽相关事件（优先级更高）
+            canvas.on(cc.Node.EventType.TOUCH_MOVE, this._onGlobalTouchMove, this);
+            canvas.on(cc.Node.EventType.TOUCH_END, this._onGlobalTouchEnd, this);
+            canvas.on(cc.Node.EventType.TOUCH_CANCEL, this._onGlobalTouchEnd, this);
+            // 点击关闭面板事件（在拖拽事件之后，避免冲突）
             canvas.on(cc.Node.EventType.TOUCH_END, this._onCanvasClick, this);
         }
     },
@@ -593,7 +625,7 @@ cc.Class({
                 const graphics = bgNode.addComponent(cc.Graphics);
 
                 // 绘制背景（半透明灰色）
-                graphics.fillColor = new cc.Color(60, 60, 60, 200);
+                graphics.fillColor = new cc.Color(60, 60, 60, 80);
                 const slotSize = slotNode.getContentSize().width;
                 graphics.rect(-slotSize / 2, -slotSize / 2, slotSize, slotSize);
                 graphics.fill();
@@ -716,6 +748,489 @@ cc.Class({
     },
 
     /**
+     * 初始化装备栏（3个格子）
+     * @private
+     */
+    _initEquipmentBar() {
+        if (!this.equipmentContainer) {
+            cc.warn("[CharacterViewUI] 未设置equipmentContainer，跳过装备栏初始化");
+            return;
+        }
+
+        const prefab = this.equipmentSlotPrefab || this.itemSlotPrefab;
+        if (!prefab) {
+            cc.warn("[CharacterViewUI] 未设置equipmentSlotPrefab且无itemSlotPrefab，跳过装备栏初始化");
+            return;
+        }
+
+        const slotCount = 3;
+        const slotSize = this.itemSlotSize || 80;
+        const spacing = 10;
+
+        this.equipmentContainer.removeAllChildren();
+        this.equipmentContainer.active = true;
+        this.equipmentContainer.opacity = 255;
+        this.equipmentContainer.setAnchorPoint(0.5, 0.5);
+
+        const totalHeight = slotCount * slotSize + (slotCount - 1) * spacing;
+        this.equipmentContainer.setContentSize(slotSize, totalHeight);
+
+        for (let i = 0; i < slotCount; i++) {
+            const slotNode = cc.instantiate(prefab);
+            if (!slotNode) {
+                cc.error(`[CharacterViewUI] 无法实例化装备格子 Prefab (索引: ${i})`);
+                continue;
+            }
+
+            const ItemConfig = require("ItemConfig");
+            const slotTypes = ItemConfig.EQUIPMENT_SLOTS || ["weapon", "armor", "shoes"];
+            slotNode.name = `EquipmentSlot_${i}`;
+            slotNode._slotIndex = i;
+            slotNode._slotType = slotTypes[i] || "weapon";
+            slotNode._isEquipment = true;
+            slotNode.active = true;
+            slotNode.opacity = 255;
+            slotNode.setContentSize(slotSize, slotSize);
+            slotNode.setAnchorPoint(0.5, 0.5);
+            slotNode.setScale(0.8, 0.8, 0.8);
+
+            this.equipmentContainer.addChild(slotNode);
+            this._initItemSlot(slotNode, i);
+        }
+
+        this._layoutEquipmentBar();
+        cc.log(`[CharacterViewUI] 装备栏初始化完成，共 ${slotCount} 个格子`);
+    },
+
+    /**
+     * 装备栏布局（3个格子纵向排列）
+     * @private
+     */
+    _layoutEquipmentBar() {
+        if (!this.equipmentContainer || this.equipmentContainer.children.length === 0) {
+            return;
+        }
+
+        const slotSize = this.itemSlotSize || 80;
+        const scale = 0.8;
+        const displaySize = slotSize * scale;
+        const spacing = 10;
+        const slots = this.equipmentContainer.children;
+        const totalHeight = slots.length * displaySize + (slots.length - 1) * spacing;
+
+        this.equipmentContainer.setContentSize(displaySize, totalHeight);
+        const startY = totalHeight / 2 - displaySize / 2;
+
+        slots.forEach((slotNode, index) => {
+            const y = startY - index * (displaySize + spacing);
+            slotNode.setPosition(0, y);
+            slotNode.setContentSize(slotSize, slotSize);
+            slotNode.setAnchorPoint(0.5, 0.5);
+            slotNode.setScale(0.8, 0.8, 0.8);
+            this._ensureSlotVisible(slotNode, index);
+            this._addSlotBorder(slotNode, slotSize);
+
+            // 让装备栏格子里的 Icon 节点尺寸适配格子大小
+            const iconNode = slotNode.getChildByName("Icon");
+            if (iconNode) {
+                iconNode.setContentSize(slotSize, slotSize);
+                iconNode.setAnchorPoint(0.5, 0.5);
+                const sp = iconNode.getComponent(cc.Sprite);
+                if (sp) {
+                    sp.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+                }
+            }
+        });
+    },
+
+    /**
+     * 更新装备栏显示（按当前角色从 EquipmentDataManager 加载，每位英雄独立）
+     * @private
+     */
+    async _updateEquipmentBar() {
+        if (!this.equipmentContainer || !this.currentUnitData) {
+            return;
+        }
+
+        const EquipmentDataManager = require("EquipmentDataManager");
+        const ItemConfig = require("ItemConfig");
+        const { slots: equipmentSlots } = await EquipmentDataManager.getEquipment(this.currentUnitData.name);
+        const slotNodes = this.equipmentContainer.children;
+
+        for (let i = 0; i < slotNodes.length; i++) {
+            const slotNode = slotNodes[i];
+            const itemId = equipmentSlots[i] || null;
+            if (itemId) {
+                const config = ItemConfig.getItemById(itemId);
+                const itemData = config ? {
+                    id: config.id,
+                    name: config.displayName || config.name,
+                    icon: config.icon,
+                    count: 1,
+                    config: config
+                } : null;
+                if (itemData) {
+                    this._setEquipmentSlot(slotNode, itemData, i);
+                } else {
+                    this._initItemSlot(slotNode, i);
+                    slotNode._isEmpty = true;
+                    slotNode._itemData = null;
+                }
+            } else {
+                this._initItemSlot(slotNode, i);
+                slotNode._isEmpty = true;
+                slotNode._itemData = null;
+            }
+        }
+    },
+
+    /**
+     * 设置装备格子内容（带拖拽卸下）
+     * @private
+     */
+    _setEquipmentSlot(slotNode, itemData, slotIndex) {
+        const iconNode = slotNode.getChildByName("Icon") || slotNode;
+        const countLabel = slotNode.getChildByName("CountLabel");
+
+        if (iconNode && itemData.icon) {
+            const sprite = iconNode.getComponent(cc.Sprite);
+            if (sprite) {
+                sprite.spriteFrame = itemData.icon;
+                // 确保图标按格子大小缩放显示
+                sprite.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+            }
+            // 将 Icon 节点本身缩放到与格子一致
+            const slotSize = this.itemSlotSize || slotNode.width || 80;
+            iconNode.setContentSize(slotSize, slotSize);
+            iconNode.setAnchorPoint(0.5, 0.5);
+            iconNode.opacity = 255;
+        } else if (iconNode) {
+            const sprite = iconNode.getComponent(cc.Sprite);
+            if (sprite) sprite.spriteFrame = null;
+            iconNode.opacity = 255;
+        }
+        if (countLabel) {
+            const label = countLabel.getComponent(cc.Label);
+            if (label) label.string = "";
+        }
+
+        slotNode._itemData = itemData;
+        slotNode._isEmpty = false;
+        slotNode._slotIndex = slotIndex;
+        slotNode._slotType = slotNode._slotType || (require("ItemConfig").EQUIPMENT_SLOTS || ["weapon", "armor", "shoes"])[slotIndex];
+
+        slotNode.off(cc.Node.EventType.TOUCH_START);
+        slotNode.on(cc.Node.EventType.TOUCH_START, (e) => {
+            e.stopPropagation();
+            this._draggingFromEquipment = slotNode;
+            this._draggingItem = itemData;
+            this._dragIconSize = this._getSlotIconDisplaySize(slotNode);
+            // 记录原始图标在 Canvas 下的位置（用于从原格子“拽出来”）
+            const iconNode = slotNode.getChildByName("Icon") || slotNode;
+            const canvas = cc.find("Canvas");
+            if (canvas && iconNode && iconNode.isValid && iconNode.convertToWorldSpaceAR && canvas.convertToNodeSpaceAR) {
+                const worldPos = iconNode.convertToWorldSpaceAR(cc.v2(0, 0));
+                this._dragStartCanvasPos = canvas.convertToNodeSpaceAR(worldPos);
+            } else {
+                this._dragStartCanvasPos = null;
+            }
+        }, this);
+    },
+
+    /**
+     * 获取触摸点下的格子节点（装备栏或道具栏）
+     * @param {cc.Event.EventTouch} event
+     * @returns {{ node: cc.Node, isEquipment: boolean, slotIndex: number, slotType?: string }|null}
+     */
+    _getNodeUnderTouch(event) {
+        if (!event || !event.touch) return null;
+
+        // 获取UI坐标（相对于Canvas）
+        let uiPos = null;
+        if (event.getUILocation) {
+            uiPos = event.getUILocation();
+        } else if (event.touch && event.touch.getUILocation) {
+            uiPos = event.touch.getUILocation();
+        } else {
+            // 降级方案：使用屏幕坐标
+            const screenPos = event.getLocation();
+            const canvas = cc.find("Canvas");
+            if (canvas && canvas.getComponent(cc.Camera)) {
+                const camera = canvas.getComponent(cc.Camera);
+                uiPos = camera.getScreenToWorldPoint(screenPos);
+            } else {
+                uiPos = screenPos;
+            }
+        }
+
+        if (!uiPos) return null;
+        const worldPos = cc.v2(uiPos.x, uiPos.y);
+
+        if (this.equipmentContainer && this.equipmentContainer.children) {
+            const slots = this.equipmentContainer.children;
+            for (let i = 0; i < slots.length; i++) {
+                const slot = slots[i];
+                if (!slot || !slot.parent) continue;
+                try {
+                    const localPos = slot.parent.convertToNodeSpaceAR(worldPos);
+                    const rect = slot.getBoundingBox();
+                    if (rect && rect.contains && rect.contains(localPos)) {
+                        return { node: slot, isEquipment: true, slotIndex: i, slotType: slot._slotType };
+                    }
+                } catch (e) {
+                    // 忽略转换错误
+                }
+            }
+        }
+        if (this.inventoryContainer && this.inventoryContainer.children) {
+            const slots = this.inventoryContainer.children;
+            for (let i = 0; i < slots.length; i++) {
+                const slot = slots[i];
+                if (!slot || !slot.parent) continue;
+                try {
+                    const localPos = slot.parent.convertToNodeSpaceAR(worldPos);
+                    const rect = slot.getBoundingBox();
+                    if (rect && rect.contains && rect.contains(localPos)) {
+                        return { node: slot, isEquipment: false, slotIndex: i };
+                    }
+                } catch (e) {
+                    // 忽略转换错误
+                }
+            }
+        }
+        return null;
+    },
+
+    _onGlobalTouchMove(event) {
+        if (!this._draggingItem && !this._draggingFromEquipment) return;
+        if (!event || !event.touch) return;
+
+        const canvas = cc.find("Canvas");
+        if (!canvas) return;
+
+        // 获取 UI 坐标，再统一转换到 Canvas 本地坐标系
+        let uiPos = null;
+        if (event.getUILocation) {
+            uiPos = event.getUILocation();
+        } else if (event.touch && event.touch.getUILocation) {
+            uiPos = event.touch.getUILocation();
+        } else {
+            const screenPos = event.getLocation();
+            if (canvas.getComponent(cc.Camera)) {
+                const camera = canvas.getComponent(cc.Camera);
+                uiPos = camera.getScreenToWorldPoint(screenPos);
+            } else {
+                uiPos = screenPos;
+            }
+        }
+        if (!uiPos) return;
+
+        const canvasPos = canvas.convertToNodeSpaceAR(cc.v2(uiPos.x, uiPos.y));
+
+        // 只有移动超过一定距离才开始创建拖拽图标（避免轻触就“冒出”拖拽节点）
+        const DRAG_START_DISTANCE = 8;
+        if (!this._dragSprite && this._dragStartCanvasPos) {
+            const dx = canvasPos.x - this._dragStartCanvasPos.x;
+            const dy = canvasPos.y - this._dragStartCanvasPos.y;
+            if ((dx * dx + dy * dy) < DRAG_START_DISTANCE * DRAG_START_DISTANCE) {
+                return;
+            }
+        }
+
+        if (!this._dragSprite) {
+            this._dragSprite = new cc.Node("DragIcon");
+            const sp = this._dragSprite.addComponent(cc.Sprite);
+            const item = this._draggingItem || (this._draggingFromEquipment && this._draggingFromEquipment._itemData);
+            if (item && item.icon) sp.spriteFrame = item.icon;
+            // 让拖拽图标尺寸与格子内 Icon 的显示尺寸一致（包含父节点缩放）
+            const sourceSlot = this._draggingSlot || this._draggingFromEquipment;
+            const iconSize = this._dragIconSize || this._getSlotIconDisplaySize(sourceSlot);
+            this._dragSprite.setContentSize(iconSize.width, iconSize.height);
+            this._dragSprite.setAnchorPoint(0.5, 0.5);
+            this._dragSprite.setScale(1, 1);
+            if (sp) {
+                sp.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+            }
+            canvas.addChild(this._dragSprite);
+            // 从原始图标位置开始，而不是触摸位置
+            const startPos = this._dragStartCanvasPos || canvasPos;
+            this._dragSprite.setPosition(startPos);
+        } else {
+            // 跟随手指移动（Canvas 坐标系）
+            this._dragSprite.setPosition(canvasPos);
+        }
+    },
+
+    async _onGlobalTouchEnd(event) {
+        if (!event) return;
+
+        const wasDragging = !!this._dragSprite;
+        if (this._dragSprite) {
+            this._dragSprite.destroy();
+            this._dragSprite = null;
+        }
+
+        const hadDragState = this._draggingItem || this._draggingFromEquipment;
+        if (!hadDragState) return; // 没有拖拽状态，不处理
+
+        // 阻止事件冒泡，避免触发点击关闭面板
+        if (event.stopPropagation) event.stopPropagation();
+
+        const target = this._getNodeUnderTouch(event);
+        const characterName = this.currentUnitData ? this.currentUnitData.name : null;
+
+        try {
+            if (this._draggingFromEquipment && characterName) {
+                const slotNode = this._draggingFromEquipment;
+                const slotIndex = slotNode._slotIndex;
+                const itemData = slotNode._itemData;
+                this._draggingFromEquipment = null;
+                this._draggingItem = null;
+                if (!itemData || !wasDragging) {
+                    this._clearDragState();
+                    return;
+                }
+                const EquipmentDataManager = require("EquipmentDataManager");
+                const ItemDataManager = require("ItemDataManager");
+                // 装备占用背包数量：卸下时需要把装备还回背包
+                await EquipmentDataManager.unequipSlot(characterName, slotIndex);
+                await ItemDataManager.addItem(itemData.id, 1);
+                await this._updateEquipmentBar();
+                await this._updateInventory();
+                await this._applyEquipmentBonusesToDisplay();
+                return;
+            }
+
+            if (this._draggingSlot && this._draggingItem && characterName) {
+                const item = this._draggingItem;
+                const ItemConfig = require("ItemConfig");
+                const cfg = item.config || ItemConfig.getItemById(item.id);
+                const itemToEquip = this._draggingItem;
+                this._draggingSlot = null;
+                this._draggingItem = null;
+                if (!cfg || cfg.type !== "equipment" || !cfg.equipmentSlot) {
+                    this._clearDragState();
+                    return;
+                }
+                if (wasDragging && target && target.isEquipment && target.slotType === cfg.equipmentSlot) {
+                    const EquipmentDataManager = require("EquipmentDataManager");
+                    const ItemDataManager = require("ItemDataManager");
+                    const slotIndex = target.slotIndex;
+                    const current = await EquipmentDataManager.getEquipment(characterName);
+
+                    // 如果目标槽位本来就是这件装备，直接忽略这次拖拽，不消耗背包道具
+                    if (current && current.slots && current.slots[slotIndex] === itemToEquip.id) {
+                        cc.log(`[CharacterViewUI] 槽位 ${slotIndex} 已经是装备 ${itemToEquip.id}，拖拽忽略`);
+                        this._clearDragState();
+                        return;
+                    }
+
+                    // ✅ 新增：同一角色不能装备两件完全相同的装备（同一个 itemId）
+                    if (current && current.slots && current.slots.some((id, idx) => idx !== slotIndex && id === itemToEquip.id)) {
+                        cc.warn(`[CharacterViewUI] 角色 ${characterName} 已经装备了相同的装备(${itemToEquip.id})，本次拖拽不生效`);
+                        this._clearDragState();
+                        return;
+                    }
+
+                    // 如果该槽位原来有装备，先把旧装备还回背包
+                    const prevItemId = current.slots[slotIndex];
+                    if (prevItemId) {
+                        await ItemDataManager.addItem(prevItemId, 1);
+                    }
+
+                    // 检查背包里是否还有可以装备的数量
+                    const count = await ItemDataManager.getItemCount(itemToEquip.id);
+                    if (count <= 0) {
+                        this._clearDragState();
+                        return;
+                    }
+
+                    // 从背包扣除一件，再写入装备栏
+                    await ItemDataManager.removeItem(itemToEquip.id, 1);
+                    const ok = await EquipmentDataManager.setEquipmentSlot(characterName, slotIndex, itemToEquip.id);
+                    if (!ok) {
+                        // 理论上不会进来（前面已做重复检查），为了安全，把扣掉的道具补回去
+                        await ItemDataManager.addItem(itemToEquip.id, 1);
+                        this._clearDragState();
+                        return;
+                    }
+
+                    await this._updateEquipmentBar();
+                    await this._updateInventory();
+                    await this._applyEquipmentBonusesToDisplay();
+                }
+                return;
+            }
+        } catch (e) {
+            cc.error("[CharacterViewUI] 拖拽处理错误:", e.message);
+        } finally {
+            this._clearDragState();
+        }
+    },
+
+    /**
+     * 清除拖拽状态
+     * @private
+     */
+    _clearDragState() {
+        this._draggingSlot = null;
+        this._draggingItem = null;
+        this._draggingFromEquipment = null;
+        this._dragIconSize = null;
+        this._dragStartCanvasPos = null;
+    },
+
+    /**
+     * 获取某个格子中 Icon 节点的“实际显示尺寸”（考虑父节点缩放）。
+     * 用于拖拽时让 DragIcon 与格子内图标保持同样大小。
+     * @private
+     * @param {cc.Node} slotNode
+     * @returns {{width:number,height:number}}
+     */
+    _getSlotIconDisplaySize(slotNode) {
+        const slotSize = this.itemSlotSize || 80;
+        const fallback = { width: slotSize * 0.8, height: slotSize * 0.8 };
+        if (!slotNode || !slotNode.isValid) return fallback;
+
+        const iconNode = slotNode.getChildByName("Icon") || slotNode;
+        if (!iconNode || !iconNode.isValid) return fallback;
+
+        // 优先用世界包围盒拿到“最终显示尺寸”（包含缩放）
+        try {
+            if (iconNode.getBoundingBoxToWorld) {
+                const rect = iconNode.getBoundingBoxToWorld();
+                if (rect && rect.width > 0 && rect.height > 0) {
+                    return { width: rect.width, height: rect.height };
+                }
+            }
+        } catch (e) {
+            // 忽略
+        }
+
+        // 兜底：用内容尺寸 * slotNode 缩放
+        const raw = iconNode.getContentSize ? iconNode.getContentSize() : null;
+        const w = raw && raw.width ? raw.width : slotSize;
+        const h = raw && raw.height ? raw.height : slotSize;
+        const sx = typeof slotNode.scaleX === "number" ? slotNode.scaleX : 1;
+        const sy = typeof slotNode.scaleY === "number" ? slotNode.scaleY : 1;
+        return { width: w * sx, height: h * sy };
+    },
+
+    /**
+     * 将当前角色的装备加成应用到当前显示的人物原型上
+     */
+    async _applyEquipmentBonusesToDisplay() {
+        if (!this.currentDisplayPrefab || !this.currentUnitData) return;
+        const stats = this.currentDisplayPrefab.getComponent("StatsComponent");
+        if (!stats || !stats.applyEquipmentBonuses) return;
+        const bonuses = await this._getEquipmentBonuses(this.currentUnitData.name);
+        stats.applyEquipmentBonuses(bonuses);
+        if (this.statsPanel && this.statsPanel.active) {
+            this._showStatsPanel(this.currentUnitData);
+        }
+    },
+
+    /**
      * 设置道具格子内容
      * @private
      * @param {cc.Node} slotNode - 道具格子节点
@@ -757,25 +1272,44 @@ cc.Class({
         slotNode._itemData = item;
         slotNode._isEmpty = false;
 
-        // 记录触摸开始时间（用于区分点击和长按）
+        // 记录触摸开始时间（用于区分点击和长按）；装备类道具记录拖拽起点
         slotNode._touchStartTime = null;
+        slotNode._touchStartPos = null;
         slotNode.off(cc.Node.EventType.TOUCH_START);
         slotNode.on(cc.Node.EventType.TOUCH_START, (event) => {
             slotNode._touchStartTime = Date.now();
+            slotNode._touchStartPos = event.getLocation();
+            const cfg = item.config || (item.id && require("ItemConfig").getItemById(item.id));
+            if (cfg && cfg.type === "equipment") {
+                this._draggingSlot = slotNode;
+                this._draggingItem = item;
+                this._dragIconSize = this._getSlotIconDisplaySize(slotNode);
+                // 记录原始图标在 Canvas 下的位置（用于从原格子“拽出来”）
+                const iconNode = slotNode.getChildByName("Icon") || slotNode;
+                const canvas = cc.find("Canvas");
+                if (canvas && iconNode && iconNode.isValid && iconNode.convertToWorldSpaceAR && canvas.convertToNodeSpaceAR) {
+                    const worldPos = iconNode.convertToWorldSpaceAR(cc.v2(0, 0));
+                    this._dragStartCanvasPos = canvas.convertToNodeSpaceAR(worldPos);
+                } else {
+                    this._dragStartCanvasPos = null;
+                }
+            }
         }, this);
 
-        // 绑定触摸结束事件（处理左键点击和长按）
-        slotNode.off(cc.Node.EventType.TOUCH_END); // 先移除旧的事件
+        // 绑定触摸结束事件（处理左键点击和长按；若正在拖拽则不再触发点击）
+        slotNode.off(cc.Node.EventType.TOUCH_END);
         slotNode.on(cc.Node.EventType.TOUCH_END, (event) => {
+            if (this._dragSprite) {
+                slotNode._touchStartTime = null;
+                return;
+            }
             const pressTime = slotNode._touchStartTime ? (Date.now() - slotNode._touchStartTime) : 0;
-            const LONG_PRESS_TIME = 500; // 长按500毫秒
+            const LONG_PRESS_TIME = 500;
 
             if (pressTime >= LONG_PRESS_TIME) {
-                // 长按：显示道具信息（移动设备上模拟右键）
                 event.stopPropagation();
                 this._showItemTooltipOnTouch(slotNode, item, event);
             } else if (pressTime > 0 && pressTime < LONG_PRESS_TIME) {
-                // 短按：使用道具（左键点击）
                 event.stopPropagation();
                 this._onItemSlotClick(slotNode, item);
             }
@@ -1034,7 +1568,7 @@ cc.Class({
             cc.error(`[CharacterViewUI] _createAvatar: unitData无效`, unitData);
             return;
         }
-        
+
         // 实例化头像Prefab
         const avatarNode = cc.instantiate(this.avatarPrefab);
         avatarNode.name = `Avatar_${unitData.name}`;
@@ -1042,7 +1576,7 @@ cc.Class({
         // 保存单位数据到节点（浅拷贝，保留Prefab引用）
         avatarNode._unitData = Object.assign({}, unitData);
         avatarNode._team = team;
-        
+
         cc.log(`[CharacterViewUI] 创建头像: name=${unitData.name}, team=${team}, index=${index}, prefab=${unitData.prefab ? unitData.prefab.name : 'null'}`);
 
         // 添加到容器
@@ -1088,7 +1622,7 @@ cc.Class({
      * @param {Object} unitData - 单位数据
      * @param {string} team - 队伍类型
      */
-    _onAvatarClick(unitData, team) {
+    async _onAvatarClick(unitData, team) {
         if (!unitData) {
             cc.error(`[CharacterViewUI] 点击头像失败: unitData为空`);
             return;
@@ -1102,7 +1636,7 @@ cc.Class({
      * @private
      * @param {Object} unitData - 单位数据
      */
-    _displayCharacterPrefab(unitData) {
+    async _displayCharacterPrefab(unitData) {
         if (!this.characterDisplayArea) {
             cc.warn("[CharacterViewUI] 未设置characterDisplayArea，无法显示人物原型");
             return;
@@ -1122,8 +1656,9 @@ cc.Class({
         // 保存当前单位数据
         this.currentUnitData = unitData;
 
-        // 更新道具栏显示
-        this._updateInventory();
+        // 更新道具栏与装备栏（每位英雄装备独立）
+        await this._updateInventory();
+        await this._updateEquipmentBar();
 
         // 如果有Prefab，实例化并显示
         if (unitData.prefab) {
@@ -1237,6 +1772,35 @@ cc.Class({
             stats.rage = 0;
             stats.updateRageBar();
         }
+
+        // 应用装备加成（每位英雄独立装备，属性同步更新）
+        const bonuses = await this._getEquipmentBonuses(unitData.name);
+        if (stats.applyEquipmentBonuses) {
+            stats.applyEquipmentBonuses(bonuses);
+        }
+    },
+
+    /**
+     * 根据角色装备计算属性加成
+     * @param {string} characterName - 角色名称
+     * @returns {Promise<{ attack: number, defense: number, speed: number }>}
+     */
+    async _getEquipmentBonuses(characterName) {
+        const EquipmentDataManager = require("EquipmentDataManager");
+        const ItemConfig = require("ItemConfig");
+        const { slots } = await EquipmentDataManager.getEquipment(characterName);
+        const bonuses = { attack: 0, defense: 0, speed: 0 };
+        for (const itemId of slots) {
+            if (!itemId) continue;
+            const cfg = ItemConfig.getItemById(itemId);
+            if (!cfg || !cfg.effectType) continue;
+            const t = String(cfg.effectType).toLowerCase();
+            const v = cfg.effectValue || 0;
+            if (t === "attack") bonuses.attack += v;
+            else if (t === "defense") bonuses.defense += v;
+            else if (t === "speed") bonuses.speed += v;
+        }
+        return bonuses;
     },
 
     /**

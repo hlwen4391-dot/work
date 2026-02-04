@@ -53,7 +53,7 @@ var CoinManager = {
             return response.json();
           case 9:
             data = _context.sent;
-            return _context.abrupt("return", data.coins || _this.DEFAULT_COINS);
+            return _context.abrupt("return", data.coins !== undefined && data.coins !== null ? data.coins : _this.DEFAULT_COINS);
           case 13:
             _context.prev = 13;
             _context.t0 = _context["catch"](1);

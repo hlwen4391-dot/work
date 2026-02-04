@@ -52,6 +52,8 @@ require('./assets/Scripts/system/CharacterDataManager');
 require('./assets/Scripts/system/CoinManager');
 require('./assets/Scripts/system/CombatSystem');
 require('./assets/Scripts/system/DeathSystem');
+require('./assets/Scripts/system/EquipmentDataAdapter');
+require('./assets/Scripts/system/EquipmentDataManager');
 require('./assets/Scripts/system/ItemDataAdapter');
 require('./assets/Scripts/system/ItemDataManager');
 require('./assets/Scripts/system/ItemSystem');

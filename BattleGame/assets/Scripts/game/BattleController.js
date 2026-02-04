@@ -942,6 +942,18 @@ cc.Class({
         // 这会调用_applyLevelBonus，根据等级计算实际属性值（maxHp, attack等）
         LevelSystem.initLevel(node, initialLevel, initialExp, false);
 
+        // ⭐ 应用装备属性加成（战斗中使用的 Stats 也要带上装备效果）
+        try {
+            const characterName = data.name || node._originalCharacterName || node.name;
+            if (characterName && stats.applyEquipmentBonuses) {
+                const bonuses = await this._getEquipmentBonuses(characterName);
+                stats.applyEquipmentBonuses(bonuses);
+                cc.log(`[BattleController] 已为 ${characterName} 应用装备加成:`, bonuses);
+            }
+        } catch (e) {
+            cc.warn(`[BattleController] 应用装备加成时出错: ${e.message}`);
+        }
+
         // 设置当前生命值为最大生命值（满血）
         stats.hp = stats.maxHp;
 
@@ -1010,6 +1022,44 @@ cc.Class({
         }
 
         cc.log(`✅ [BattleController] ${node.name} 初始化成功 (${teamName}) - Lv.${stats.level}, HP:${stats.hp}, ATK:${stats.attack}, DEF:${stats.defense}, SPD:${stats.speed}`);
+    },
+
+    /**
+     * 根据角色装备计算属性加成（攻/防/速），供战斗初始化使用
+     * @param {string} characterName
+     * @returns {Promise<{attack:number, defense:number, speed:number}>}
+     * @private
+     */
+    async _getEquipmentBonuses(characterName) {
+        const bonuses = { attack: 0, defense: 0, speed: 0 };
+        if (!characterName) {
+            return bonuses;
+        }
+
+        try {
+            const EquipmentDataManager = require("EquipmentDataManager");
+            const ItemConfig = require("ItemConfig");
+            const { slots } = await EquipmentDataManager.getEquipment(characterName);
+            if (!slots || !Array.isArray(slots)) {
+                return bonuses;
+            }
+
+            for (const itemId of slots) {
+                if (!itemId) continue;
+                const cfg = ItemConfig.getItemById(itemId);
+                if (!cfg || !cfg.effectType) continue;
+
+                const t = String(cfg.effectType).toLowerCase();
+                const v = cfg.effectValue || 0;
+                if (t === "attack") bonuses.attack += v;
+                else if (t === "defense") bonuses.defense += v;
+                else if (t === "speed") bonuses.speed += v;
+            }
+        } catch (e) {
+            cc.warn(`[BattleController] 计算装备加成失败(${characterName}): ${e.message}`);
+        }
+
+        return bonuses;
     },
 
     update() {

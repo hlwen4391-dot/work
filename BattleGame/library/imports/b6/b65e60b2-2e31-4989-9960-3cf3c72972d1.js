@@ -4,6 +4,9 @@ cc._RF.push(module, 'b65e6CyLjFJiZlgPPPHKXLR', 'CharacterViewUI');
 
 "use strict";
 
+function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, defineProperty = Object.defineProperty || function (obj, key, desc) { obj[key] = desc.value; }, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self, context) }), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == typeof value && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; defineProperty(this, "_invoke", { value: function value(method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; } function maybeInvokeDelegate(delegate, context) { var methodName = context.method, method = delegate.iterator[methodName]; if (undefined === method) return context.delegate = null, "throw" === methodName && delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method) || "return" !== methodName && (context.method = "throw", context.arg = new TypeError("The iterator does not provide a '" + methodName + "' method")), ContinueSentinel; var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, defineProperty(Gp, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), defineProperty(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (val) { var object = Object(val), keys = []; for (var key in object) keys.push(key); return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -31,6 +34,18 @@ cc.Class({
       "default": null,
       type: cc.Node,
       tooltip: "道具栏容器节点（网格布局，显示在人物原型下方）"
+    },
+    // 装备栏容器（3个格子，可放在道具栏上方或下方）
+    equipmentContainer: {
+      "default": null,
+      type: cc.Node,
+      tooltip: "装备栏容器节点（3个格子：如武器/防具/饰品）"
+    },
+    // 装备格子Prefab（不填则使用 itemSlotPrefab）
+    equipmentSlotPrefab: {
+      "default": null,
+      type: cc.Prefab,
+      tooltip: "装备格子Prefab，留空则使用道具格子Prefab"
     },
     // 道具项Prefab（用于创建道具格子）
     itemSlotPrefab: {
@@ -172,6 +187,11 @@ cc.Class({
       _this._initInventory();
     }, 0);
 
+    // 初始化装备栏（3个格子）
+    this.scheduleOnce(function () {
+      _this._initEquipmentBar();
+    }, 0.05);
+
     // 设置道具图标（如果ItemIconSetter组件已设置）
     this._setupItemIcons();
 
@@ -194,10 +214,23 @@ cc.Class({
       this.statsPanel.active = false;
     }
 
+    // 拖拽状态（装备从道具栏拖到装备栏 / 从装备栏拖回）
+    this._dragSprite = null;
+    this._draggingItem = null;
+    this._draggingSlot = null;
+    this._draggingFromEquipment = null;
+    this._dragIconSize = null;
+    this._dragStartCanvasPos = null; // 拖拽开始时原始图标在 Canvas 下的坐标（用于从原位置“拽出来”）
+
     // 绑定点击事件（点击任意地方关闭属性面板）
     // 使用Canvas或场景根节点来捕获点击事件
     var canvas = cc.find("Canvas");
     if (canvas) {
+      // 先绑定拖拽相关事件（优先级更高）
+      canvas.on(cc.Node.EventType.TOUCH_MOVE, this._onGlobalTouchMove, this);
+      canvas.on(cc.Node.EventType.TOUCH_END, this._onGlobalTouchEnd, this);
+      canvas.on(cc.Node.EventType.TOUCH_CANCEL, this._onGlobalTouchEnd, this);
+      // 点击关闭面板事件（在拖拽事件之后，避免冲突）
       canvas.on(cc.Node.EventType.TOUCH_END, this._onCanvasClick, this);
     }
   },
@@ -577,7 +610,7 @@ cc.Class({
         var graphics = bgNode.addComponent(cc.Graphics);
 
         // 绘制背景（半透明灰色）
-        graphics.fillColor = new cc.Color(60, 60, 60, 200);
+        graphics.fillColor = new cc.Color(60, 60, 60, 80);
         var slotSize = slotNode.getContentSize().width;
         graphics.rect(-slotSize / 2, -slotSize / 2, slotSize, slotSize);
         graphics.fill();
@@ -710,13 +743,600 @@ cc.Class({
     }))();
   },
   /**
+   * 初始化装备栏（3个格子）
+   * @private
+   */
+  _initEquipmentBar: function _initEquipmentBar() {
+    if (!this.equipmentContainer) {
+      cc.warn("[CharacterViewUI] 未设置equipmentContainer，跳过装备栏初始化");
+      return;
+    }
+    var prefab = this.equipmentSlotPrefab || this.itemSlotPrefab;
+    if (!prefab) {
+      cc.warn("[CharacterViewUI] 未设置equipmentSlotPrefab且无itemSlotPrefab，跳过装备栏初始化");
+      return;
+    }
+    var slotCount = 3;
+    var slotSize = this.itemSlotSize || 80;
+    var spacing = 10;
+    this.equipmentContainer.removeAllChildren();
+    this.equipmentContainer.active = true;
+    this.equipmentContainer.opacity = 255;
+    this.equipmentContainer.setAnchorPoint(0.5, 0.5);
+    var totalHeight = slotCount * slotSize + (slotCount - 1) * spacing;
+    this.equipmentContainer.setContentSize(slotSize, totalHeight);
+    for (var i = 0; i < slotCount; i++) {
+      var slotNode = cc.instantiate(prefab);
+      if (!slotNode) {
+        cc.error("[CharacterViewUI] \u65E0\u6CD5\u5B9E\u4F8B\u5316\u88C5\u5907\u683C\u5B50 Prefab (\u7D22\u5F15: " + i + ")");
+        continue;
+      }
+      var ItemConfig = require("ItemConfig");
+      var slotTypes = ItemConfig.EQUIPMENT_SLOTS || ["weapon", "armor", "shoes"];
+      slotNode.name = "EquipmentSlot_" + i;
+      slotNode._slotIndex = i;
+      slotNode._slotType = slotTypes[i] || "weapon";
+      slotNode._isEquipment = true;
+      slotNode.active = true;
+      slotNode.opacity = 255;
+      slotNode.setContentSize(slotSize, slotSize);
+      slotNode.setAnchorPoint(0.5, 0.5);
+      slotNode.setScale(0.8, 0.8, 0.8);
+      this.equipmentContainer.addChild(slotNode);
+      this._initItemSlot(slotNode, i);
+    }
+    this._layoutEquipmentBar();
+    cc.log("[CharacterViewUI] \u88C5\u5907\u680F\u521D\u59CB\u5316\u5B8C\u6210\uFF0C\u5171 " + slotCount + " \u4E2A\u683C\u5B50");
+  },
+  /**
+   * 装备栏布局（3个格子纵向排列）
+   * @private
+   */
+  _layoutEquipmentBar: function _layoutEquipmentBar() {
+    var _this7 = this;
+    if (!this.equipmentContainer || this.equipmentContainer.children.length === 0) {
+      return;
+    }
+    var slotSize = this.itemSlotSize || 80;
+    var scale = 0.8;
+    var displaySize = slotSize * scale;
+    var spacing = 10;
+    var slots = this.equipmentContainer.children;
+    var totalHeight = slots.length * displaySize + (slots.length - 1) * spacing;
+    this.equipmentContainer.setContentSize(displaySize, totalHeight);
+    var startY = totalHeight / 2 - displaySize / 2;
+    slots.forEach(function (slotNode, index) {
+      var y = startY - index * (displaySize + spacing);
+      slotNode.setPosition(0, y);
+      slotNode.setContentSize(slotSize, slotSize);
+      slotNode.setAnchorPoint(0.5, 0.5);
+      slotNode.setScale(0.8, 0.8, 0.8);
+      _this7._ensureSlotVisible(slotNode, index);
+      _this7._addSlotBorder(slotNode, slotSize);
+
+      // 让装备栏格子里的 Icon 节点尺寸适配格子大小
+      var iconNode = slotNode.getChildByName("Icon");
+      if (iconNode) {
+        iconNode.setContentSize(slotSize, slotSize);
+        iconNode.setAnchorPoint(0.5, 0.5);
+        var sp = iconNode.getComponent(cc.Sprite);
+        if (sp) {
+          sp.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+        }
+      }
+    });
+  },
+  /**
+   * 更新装备栏显示（按当前角色从 EquipmentDataManager 加载，每位英雄独立）
+   * @private
+   */
+  _updateEquipmentBar: function _updateEquipmentBar() {
+    var _this8 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+      var EquipmentDataManager, ItemConfig, _yield$EquipmentDataM, equipmentSlots, slotNodes, i, slotNode, itemId, config, itemData;
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) switch (_context3.prev = _context3.next) {
+          case 0:
+            if (!(!_this8.equipmentContainer || !_this8.currentUnitData)) {
+              _context3.next = 2;
+              break;
+            }
+            return _context3.abrupt("return");
+          case 2:
+            EquipmentDataManager = require("EquipmentDataManager");
+            ItemConfig = require("ItemConfig");
+            _context3.next = 6;
+            return EquipmentDataManager.getEquipment(_this8.currentUnitData.name);
+          case 6:
+            _yield$EquipmentDataM = _context3.sent;
+            equipmentSlots = _yield$EquipmentDataM.slots;
+            slotNodes = _this8.equipmentContainer.children;
+            for (i = 0; i < slotNodes.length; i++) {
+              slotNode = slotNodes[i];
+              itemId = equipmentSlots[i] || null;
+              if (itemId) {
+                config = ItemConfig.getItemById(itemId);
+                itemData = config ? {
+                  id: config.id,
+                  name: config.displayName || config.name,
+                  icon: config.icon,
+                  count: 1,
+                  config: config
+                } : null;
+                if (itemData) {
+                  _this8._setEquipmentSlot(slotNode, itemData, i);
+                } else {
+                  _this8._initItemSlot(slotNode, i);
+                  slotNode._isEmpty = true;
+                  slotNode._itemData = null;
+                }
+              } else {
+                _this8._initItemSlot(slotNode, i);
+                slotNode._isEmpty = true;
+                slotNode._itemData = null;
+              }
+            }
+          case 10:
+          case "end":
+            return _context3.stop();
+        }
+      }, _callee3);
+    }))();
+  },
+  /**
+   * 设置装备格子内容（带拖拽卸下）
+   * @private
+   */
+  _setEquipmentSlot: function _setEquipmentSlot(slotNode, itemData, slotIndex) {
+    var _this9 = this;
+    var iconNode = slotNode.getChildByName("Icon") || slotNode;
+    var countLabel = slotNode.getChildByName("CountLabel");
+    if (iconNode && itemData.icon) {
+      var sprite = iconNode.getComponent(cc.Sprite);
+      if (sprite) {
+        sprite.spriteFrame = itemData.icon;
+        // 确保图标按格子大小缩放显示
+        sprite.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+      }
+      // 将 Icon 节点本身缩放到与格子一致
+      var slotSize = this.itemSlotSize || slotNode.width || 80;
+      iconNode.setContentSize(slotSize, slotSize);
+      iconNode.setAnchorPoint(0.5, 0.5);
+      iconNode.opacity = 255;
+    } else if (iconNode) {
+      var _sprite = iconNode.getComponent(cc.Sprite);
+      if (_sprite) _sprite.spriteFrame = null;
+      iconNode.opacity = 255;
+    }
+    if (countLabel) {
+      var label = countLabel.getComponent(cc.Label);
+      if (label) label.string = "";
+    }
+    slotNode._itemData = itemData;
+    slotNode._isEmpty = false;
+    slotNode._slotIndex = slotIndex;
+    slotNode._slotType = slotNode._slotType || (require("ItemConfig").EQUIPMENT_SLOTS || ["weapon", "armor", "shoes"])[slotIndex];
+    slotNode.off(cc.Node.EventType.TOUCH_START);
+    slotNode.on(cc.Node.EventType.TOUCH_START, function (e) {
+      e.stopPropagation();
+      _this9._draggingFromEquipment = slotNode;
+      _this9._draggingItem = itemData;
+      _this9._dragIconSize = _this9._getSlotIconDisplaySize(slotNode);
+      // 记录原始图标在 Canvas 下的位置（用于从原格子“拽出来”）
+      var iconNode = slotNode.getChildByName("Icon") || slotNode;
+      var canvas = cc.find("Canvas");
+      if (canvas && iconNode && iconNode.isValid && iconNode.convertToWorldSpaceAR && canvas.convertToNodeSpaceAR) {
+        var worldPos = iconNode.convertToWorldSpaceAR(cc.v2(0, 0));
+        _this9._dragStartCanvasPos = canvas.convertToNodeSpaceAR(worldPos);
+      } else {
+        _this9._dragStartCanvasPos = null;
+      }
+    }, this);
+  },
+  /**
+   * 获取触摸点下的格子节点（装备栏或道具栏）
+   * @param {cc.Event.EventTouch} event
+   * @returns {{ node: cc.Node, isEquipment: boolean, slotIndex: number, slotType?: string }|null}
+   */
+  _getNodeUnderTouch: function _getNodeUnderTouch(event) {
+    if (!event || !event.touch) return null;
+
+    // 获取UI坐标（相对于Canvas）
+    var uiPos = null;
+    if (event.getUILocation) {
+      uiPos = event.getUILocation();
+    } else if (event.touch && event.touch.getUILocation) {
+      uiPos = event.touch.getUILocation();
+    } else {
+      // 降级方案：使用屏幕坐标
+      var screenPos = event.getLocation();
+      var canvas = cc.find("Canvas");
+      if (canvas && canvas.getComponent(cc.Camera)) {
+        var camera = canvas.getComponent(cc.Camera);
+        uiPos = camera.getScreenToWorldPoint(screenPos);
+      } else {
+        uiPos = screenPos;
+      }
+    }
+    if (!uiPos) return null;
+    var worldPos = cc.v2(uiPos.x, uiPos.y);
+    if (this.equipmentContainer && this.equipmentContainer.children) {
+      var slots = this.equipmentContainer.children;
+      for (var i = 0; i < slots.length; i++) {
+        var slot = slots[i];
+        if (!slot || !slot.parent) continue;
+        try {
+          var localPos = slot.parent.convertToNodeSpaceAR(worldPos);
+          var rect = slot.getBoundingBox();
+          if (rect && rect.contains && rect.contains(localPos)) {
+            return {
+              node: slot,
+              isEquipment: true,
+              slotIndex: i,
+              slotType: slot._slotType
+            };
+          }
+        } catch (e) {
+          // 忽略转换错误
+        }
+      }
+    }
+    if (this.inventoryContainer && this.inventoryContainer.children) {
+      var _slots = this.inventoryContainer.children;
+      for (var _i2 = 0; _i2 < _slots.length; _i2++) {
+        var _slot = _slots[_i2];
+        if (!_slot || !_slot.parent) continue;
+        try {
+          var _localPos = _slot.parent.convertToNodeSpaceAR(worldPos);
+          var _rect = _slot.getBoundingBox();
+          if (_rect && _rect.contains && _rect.contains(_localPos)) {
+            return {
+              node: _slot,
+              isEquipment: false,
+              slotIndex: _i2
+            };
+          }
+        } catch (e) {
+          // 忽略转换错误
+        }
+      }
+    }
+    return null;
+  },
+  _onGlobalTouchMove: function _onGlobalTouchMove(event) {
+    if (!this._draggingItem && !this._draggingFromEquipment) return;
+    if (!event || !event.touch) return;
+    var canvas = cc.find("Canvas");
+    if (!canvas) return;
+
+    // 获取 UI 坐标，再统一转换到 Canvas 本地坐标系
+    var uiPos = null;
+    if (event.getUILocation) {
+      uiPos = event.getUILocation();
+    } else if (event.touch && event.touch.getUILocation) {
+      uiPos = event.touch.getUILocation();
+    } else {
+      var screenPos = event.getLocation();
+      if (canvas.getComponent(cc.Camera)) {
+        var camera = canvas.getComponent(cc.Camera);
+        uiPos = camera.getScreenToWorldPoint(screenPos);
+      } else {
+        uiPos = screenPos;
+      }
+    }
+    if (!uiPos) return;
+    var canvasPos = canvas.convertToNodeSpaceAR(cc.v2(uiPos.x, uiPos.y));
+
+    // 只有移动超过一定距离才开始创建拖拽图标（避免轻触就“冒出”拖拽节点）
+    var DRAG_START_DISTANCE = 8;
+    if (!this._dragSprite && this._dragStartCanvasPos) {
+      var dx = canvasPos.x - this._dragStartCanvasPos.x;
+      var dy = canvasPos.y - this._dragStartCanvasPos.y;
+      if (dx * dx + dy * dy < DRAG_START_DISTANCE * DRAG_START_DISTANCE) {
+        return;
+      }
+    }
+    if (!this._dragSprite) {
+      this._dragSprite = new cc.Node("DragIcon");
+      var sp = this._dragSprite.addComponent(cc.Sprite);
+      var item = this._draggingItem || this._draggingFromEquipment && this._draggingFromEquipment._itemData;
+      if (item && item.icon) sp.spriteFrame = item.icon;
+      // 让拖拽图标尺寸与格子内 Icon 的显示尺寸一致（包含父节点缩放）
+      var sourceSlot = this._draggingSlot || this._draggingFromEquipment;
+      var iconSize = this._dragIconSize || this._getSlotIconDisplaySize(sourceSlot);
+      this._dragSprite.setContentSize(iconSize.width, iconSize.height);
+      this._dragSprite.setAnchorPoint(0.5, 0.5);
+      this._dragSprite.setScale(1, 1);
+      if (sp) {
+        sp.sizeMode = cc.Sprite.SizeMode.CUSTOM;
+      }
+      canvas.addChild(this._dragSprite);
+      // 从原始图标位置开始，而不是触摸位置
+      var startPos = this._dragStartCanvasPos || canvasPos;
+      this._dragSprite.setPosition(startPos);
+    } else {
+      // 跟随手指移动（Canvas 坐标系）
+      this._dragSprite.setPosition(canvasPos);
+    }
+  },
+  _onGlobalTouchEnd: function _onGlobalTouchEnd(event) {
+    var _this10 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
+      var wasDragging, hadDragState, target, characterName, slotNode, slotIndex, itemData, EquipmentDataManager, ItemDataManager, item, ItemConfig, cfg, itemToEquip, _EquipmentDataManager, _ItemDataManager, _slotIndex, current, prevItemId, count, ok;
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+        while (1) switch (_context4.prev = _context4.next) {
+          case 0:
+            if (event) {
+              _context4.next = 2;
+              break;
+            }
+            return _context4.abrupt("return");
+          case 2:
+            wasDragging = !!_this10._dragSprite;
+            if (_this10._dragSprite) {
+              _this10._dragSprite.destroy();
+              _this10._dragSprite = null;
+            }
+            hadDragState = _this10._draggingItem || _this10._draggingFromEquipment;
+            if (hadDragState) {
+              _context4.next = 7;
+              break;
+            }
+            return _context4.abrupt("return");
+          case 7:
+            // 没有拖拽状态，不处理
+
+            // 阻止事件冒泡，避免触发点击关闭面板
+            if (event.stopPropagation) event.stopPropagation();
+            target = _this10._getNodeUnderTouch(event);
+            characterName = _this10.currentUnitData ? _this10.currentUnitData.name : null;
+            _context4.prev = 10;
+            if (!(_this10._draggingFromEquipment && characterName)) {
+              _context4.next = 33;
+              break;
+            }
+            slotNode = _this10._draggingFromEquipment;
+            slotIndex = slotNode._slotIndex;
+            itemData = slotNode._itemData;
+            _this10._draggingFromEquipment = null;
+            _this10._draggingItem = null;
+            if (!(!itemData || !wasDragging)) {
+              _context4.next = 20;
+              break;
+            }
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 20:
+            EquipmentDataManager = require("EquipmentDataManager");
+            ItemDataManager = require("ItemDataManager"); // 装备占用背包数量：卸下时需要把装备还回背包
+            _context4.next = 24;
+            return EquipmentDataManager.unequipSlot(characterName, slotIndex);
+          case 24:
+            _context4.next = 26;
+            return ItemDataManager.addItem(itemData.id, 1);
+          case 26:
+            _context4.next = 28;
+            return _this10._updateEquipmentBar();
+          case 28:
+            _context4.next = 30;
+            return _this10._updateInventory();
+          case 30:
+            _context4.next = 32;
+            return _this10._applyEquipmentBonusesToDisplay();
+          case 32:
+            return _context4.abrupt("return");
+          case 33:
+            if (!(_this10._draggingSlot && _this10._draggingItem && characterName)) {
+              _context4.next = 85;
+              break;
+            }
+            item = _this10._draggingItem;
+            ItemConfig = require("ItemConfig");
+            cfg = item.config || ItemConfig.getItemById(item.id);
+            itemToEquip = _this10._draggingItem;
+            _this10._draggingSlot = null;
+            _this10._draggingItem = null;
+            if (!(!cfg || cfg.type !== "equipment" || !cfg.equipmentSlot)) {
+              _context4.next = 43;
+              break;
+            }
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 43:
+            if (!(wasDragging && target && target.isEquipment && target.slotType === cfg.equipmentSlot)) {
+              _context4.next = 84;
+              break;
+            }
+            _EquipmentDataManager = require("EquipmentDataManager");
+            _ItemDataManager = require("ItemDataManager");
+            _slotIndex = target.slotIndex;
+            _context4.next = 49;
+            return _EquipmentDataManager.getEquipment(characterName);
+          case 49:
+            current = _context4.sent;
+            if (!(current && current.slots && current.slots[_slotIndex] === itemToEquip.id)) {
+              _context4.next = 54;
+              break;
+            }
+            cc.log("[CharacterViewUI] \u69FD\u4F4D " + _slotIndex + " \u5DF2\u7ECF\u662F\u88C5\u5907 " + itemToEquip.id + "\uFF0C\u62D6\u62FD\u5FFD\u7565");
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 54:
+            if (!(current && current.slots && current.slots.some(function (id, idx) {
+              return idx !== _slotIndex && id === itemToEquip.id;
+            }))) {
+              _context4.next = 58;
+              break;
+            }
+            cc.warn("[CharacterViewUI] \u89D2\u8272 " + characterName + " \u5DF2\u7ECF\u88C5\u5907\u4E86\u76F8\u540C\u7684\u88C5\u5907(" + itemToEquip.id + ")\uFF0C\u672C\u6B21\u62D6\u62FD\u4E0D\u751F\u6548");
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 58:
+            // 如果该槽位原来有装备，先把旧装备还回背包
+            prevItemId = current.slots[_slotIndex];
+            if (!prevItemId) {
+              _context4.next = 62;
+              break;
+            }
+            _context4.next = 62;
+            return _ItemDataManager.addItem(prevItemId, 1);
+          case 62:
+            _context4.next = 64;
+            return _ItemDataManager.getItemCount(itemToEquip.id);
+          case 64:
+            count = _context4.sent;
+            if (!(count <= 0)) {
+              _context4.next = 68;
+              break;
+            }
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 68:
+            _context4.next = 70;
+            return _ItemDataManager.removeItem(itemToEquip.id, 1);
+          case 70:
+            _context4.next = 72;
+            return _EquipmentDataManager.setEquipmentSlot(characterName, _slotIndex, itemToEquip.id);
+          case 72:
+            ok = _context4.sent;
+            if (ok) {
+              _context4.next = 78;
+              break;
+            }
+            _context4.next = 76;
+            return _ItemDataManager.addItem(itemToEquip.id, 1);
+          case 76:
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 78:
+            _context4.next = 80;
+            return _this10._updateEquipmentBar();
+          case 80:
+            _context4.next = 82;
+            return _this10._updateInventory();
+          case 82:
+            _context4.next = 84;
+            return _this10._applyEquipmentBonusesToDisplay();
+          case 84:
+            return _context4.abrupt("return");
+          case 85:
+            _context4.next = 90;
+            break;
+          case 87:
+            _context4.prev = 87;
+            _context4.t0 = _context4["catch"](10);
+            cc.error("[CharacterViewUI] 拖拽处理错误:", _context4.t0.message);
+          case 90:
+            _context4.prev = 90;
+            _this10._clearDragState();
+            return _context4.finish(90);
+          case 93:
+          case "end":
+            return _context4.stop();
+        }
+      }, _callee4, null, [[10, 87, 90, 93]]);
+    }))();
+  },
+  /**
+   * 清除拖拽状态
+   * @private
+   */
+  _clearDragState: function _clearDragState() {
+    this._draggingSlot = null;
+    this._draggingItem = null;
+    this._draggingFromEquipment = null;
+    this._dragIconSize = null;
+    this._dragStartCanvasPos = null;
+  },
+  /**
+   * 获取某个格子中 Icon 节点的“实际显示尺寸”（考虑父节点缩放）。
+   * 用于拖拽时让 DragIcon 与格子内图标保持同样大小。
+   * @private
+   * @param {cc.Node} slotNode
+   * @returns {{width:number,height:number}}
+   */
+  _getSlotIconDisplaySize: function _getSlotIconDisplaySize(slotNode) {
+    var slotSize = this.itemSlotSize || 80;
+    var fallback = {
+      width: slotSize * 0.8,
+      height: slotSize * 0.8
+    };
+    if (!slotNode || !slotNode.isValid) return fallback;
+    var iconNode = slotNode.getChildByName("Icon") || slotNode;
+    if (!iconNode || !iconNode.isValid) return fallback;
+
+    // 优先用世界包围盒拿到“最终显示尺寸”（包含缩放）
+    try {
+      if (iconNode.getBoundingBoxToWorld) {
+        var rect = iconNode.getBoundingBoxToWorld();
+        if (rect && rect.width > 0 && rect.height > 0) {
+          return {
+            width: rect.width,
+            height: rect.height
+          };
+        }
+      }
+    } catch (e) {
+      // 忽略
+    }
+
+    // 兜底：用内容尺寸 * slotNode 缩放
+    var raw = iconNode.getContentSize ? iconNode.getContentSize() : null;
+    var w = raw && raw.width ? raw.width : slotSize;
+    var h = raw && raw.height ? raw.height : slotSize;
+    var sx = typeof slotNode.scaleX === "number" ? slotNode.scaleX : 1;
+    var sy = typeof slotNode.scaleY === "number" ? slotNode.scaleY : 1;
+    return {
+      width: w * sx,
+      height: h * sy
+    };
+  },
+  /**
+   * 将当前角色的装备加成应用到当前显示的人物原型上
+   */
+  _applyEquipmentBonusesToDisplay: function _applyEquipmentBonusesToDisplay() {
+    var _this11 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
+      var stats, bonuses;
+      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+        while (1) switch (_context5.prev = _context5.next) {
+          case 0:
+            if (!(!_this11.currentDisplayPrefab || !_this11.currentUnitData)) {
+              _context5.next = 2;
+              break;
+            }
+            return _context5.abrupt("return");
+          case 2:
+            stats = _this11.currentDisplayPrefab.getComponent("StatsComponent");
+            if (!(!stats || !stats.applyEquipmentBonuses)) {
+              _context5.next = 5;
+              break;
+            }
+            return _context5.abrupt("return");
+          case 5:
+            _context5.next = 7;
+            return _this11._getEquipmentBonuses(_this11.currentUnitData.name);
+          case 7:
+            bonuses = _context5.sent;
+            stats.applyEquipmentBonuses(bonuses);
+            if (_this11.statsPanel && _this11.statsPanel.active) {
+              _this11._showStatsPanel(_this11.currentUnitData);
+            }
+          case 10:
+          case "end":
+            return _context5.stop();
+        }
+      }, _callee5);
+    }))();
+  },
+  /**
    * 设置道具格子内容
    * @private
    * @param {cc.Node} slotNode - 道具格子节点
    * @param {Object} item - 道具数据 { id, name, icon, count }
    */
   _setItemSlot: function _setItemSlot(slotNode, item) {
-    var _this7 = this;
+    var _this12 = this;
     if (!item || !item.count || item.count <= 0) {
       // 道具不存在或数量为0，清空格子
       this._initItemSlot(slotNode, slotNode._slotIndex);
@@ -752,27 +1372,45 @@ cc.Class({
     slotNode._itemData = item;
     slotNode._isEmpty = false;
 
-    // 记录触摸开始时间（用于区分点击和长按）
+    // 记录触摸开始时间（用于区分点击和长按）；装备类道具记录拖拽起点
     slotNode._touchStartTime = null;
+    slotNode._touchStartPos = null;
     slotNode.off(cc.Node.EventType.TOUCH_START);
     slotNode.on(cc.Node.EventType.TOUCH_START, function (event) {
       slotNode._touchStartTime = Date.now();
+      slotNode._touchStartPos = event.getLocation();
+      var cfg = item.config || item.id && require("ItemConfig").getItemById(item.id);
+      if (cfg && cfg.type === "equipment") {
+        _this12._draggingSlot = slotNode;
+        _this12._draggingItem = item;
+        _this12._dragIconSize = _this12._getSlotIconDisplaySize(slotNode);
+        // 记录原始图标在 Canvas 下的位置（用于从原格子“拽出来”）
+        var _iconNode = slotNode.getChildByName("Icon") || slotNode;
+        var canvas = cc.find("Canvas");
+        if (canvas && _iconNode && _iconNode.isValid && _iconNode.convertToWorldSpaceAR && canvas.convertToNodeSpaceAR) {
+          var worldPos = _iconNode.convertToWorldSpaceAR(cc.v2(0, 0));
+          _this12._dragStartCanvasPos = canvas.convertToNodeSpaceAR(worldPos);
+        } else {
+          _this12._dragStartCanvasPos = null;
+        }
+      }
     }, this);
 
-    // 绑定触摸结束事件（处理左键点击和长按）
-    slotNode.off(cc.Node.EventType.TOUCH_END); // 先移除旧的事件
+    // 绑定触摸结束事件（处理左键点击和长按；若正在拖拽则不再触发点击）
+    slotNode.off(cc.Node.EventType.TOUCH_END);
     slotNode.on(cc.Node.EventType.TOUCH_END, function (event) {
+      if (_this12._dragSprite) {
+        slotNode._touchStartTime = null;
+        return;
+      }
       var pressTime = slotNode._touchStartTime ? Date.now() - slotNode._touchStartTime : 0;
-      var LONG_PRESS_TIME = 500; // 长按500毫秒
-
+      var LONG_PRESS_TIME = 500;
       if (pressTime >= LONG_PRESS_TIME) {
-        // 长按：显示道具信息（移动设备上模拟右键）
         event.stopPropagation();
-        _this7._showItemTooltipOnTouch(slotNode, item, event);
+        _this12._showItemTooltipOnTouch(slotNode, item, event);
       } else if (pressTime > 0 && pressTime < LONG_PRESS_TIME) {
-        // 短按：使用道具（左键点击）
         event.stopPropagation();
-        _this7._onItemSlotClick(slotNode, item);
+        _this12._onItemSlotClick(slotNode, item);
       }
       slotNode._touchStartTime = null;
     }, this);
@@ -875,34 +1513,34 @@ cc.Class({
    * @param {Object} item - 道具数据
    */
   _onItemSlotClick: function _onItemSlotClick(slotNode, item) {
-    var _this8 = this;
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+    var _this13 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6() {
       var ItemSystem, result;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) switch (_context3.prev = _context3.next) {
+      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+        while (1) switch (_context6.prev = _context6.next) {
           case 0:
             if (!(!item || !item.config)) {
-              _context3.next = 3;
+              _context6.next = 3;
               break;
             }
             cc.warn("[CharacterViewUI] 无效的道具数据");
-            return _context3.abrupt("return");
+            return _context6.abrupt("return");
           case 3:
-            if (_this8.currentDisplayPrefab) {
-              _context3.next = 6;
+            if (_this13.currentDisplayPrefab) {
+              _context6.next = 6;
               break;
             }
             cc.warn("[CharacterViewUI] 请先选择一个角色");
             // 可以显示提示给用户
-            return _context3.abrupt("return");
+            return _context6.abrupt("return");
           case 6:
             ItemSystem = require("ItemSystem"); // 使用道具
-            _context3.next = 9;
-            return ItemSystem.useItem(_this8.currentDisplayPrefab, item.id);
+            _context6.next = 9;
+            return ItemSystem.useItem(_this13.currentDisplayPrefab, item.id);
           case 9:
-            result = _context3.sent;
+            result = _context6.sent;
             if (!result.success) {
-              _context3.next = 18;
+              _context6.next = 18;
               break;
             }
             cc.log("[CharacterViewUI] \u2713 \u4F7F\u7528\u9053\u5177\u6210\u529F: " + item.name + " - " + result.message);
@@ -911,25 +1549,25 @@ cc.Class({
             }
 
             // 刷新道具栏显示
-            _context3.next = 15;
-            return _this8._updateInventory();
+            _context6.next = 15;
+            return _this13._updateInventory();
           case 15:
             // 更新角色属性显示（如果属性面板已打开）
-            if (_this8.statsPanel && _this8.statsPanel.active && _this8.currentUnitData) {
-              _this8._showStatsPanel(_this8.currentUnitData);
+            if (_this13.statsPanel && _this13.statsPanel.active && _this13.currentUnitData) {
+              _this13._showStatsPanel(_this13.currentUnitData);
             }
 
             // TODO: 可以显示使用成功的提示UI（如 Toast 显示「技能学习成功」）
-            _context3.next = 19;
+            _context6.next = 19;
             break;
           case 18:
             cc.warn("[CharacterViewUI] \u2717 \u4F7F\u7528\u9053\u5177\u5931\u8D25: " + item.name + " - " + result.message);
             // TODO: 可以显示错误提示UI
           case 19:
           case "end":
-            return _context3.stop();
+            return _context6.stop();
         }
-      }, _callee3);
+      }, _callee6);
     }))();
   },
   /**
@@ -960,37 +1598,37 @@ cc.Class({
    * @private
    */
   _initDefaultItems: function _initDefaultItems() {
-    var _this9 = this;
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
+    var _this14 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7() {
       var ItemDataManager, INIT_FLAG_KEY, hasInitialized, currentCount, success;
-      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
-        while (1) switch (_context4.prev = _context4.next) {
+      return _regeneratorRuntime().wrap(function _callee7$(_context7) {
+        while (1) switch (_context7.prev = _context7.next) {
           case 0:
             ItemDataManager = require("ItemDataManager"); // 检查是否已经初始化过道具（使用localStorage标志）
             INIT_FLAG_KEY = "character_view_items_initialized";
             hasInitialized = cc.sys.localStorage.getItem(INIT_FLAG_KEY);
             if (!hasInitialized) {
-              _context4.next = 6;
+              _context7.next = 6;
               break;
             }
             // 已经初始化过，不再自动添加道具
             cc.log("[CharacterViewUI] 道具已初始化过，跳过自动添加");
-            return _context4.abrupt("return");
+            return _context7.abrupt("return");
           case 6:
-            _context4.next = 8;
+            _context7.next = 8;
             return ItemDataManager.getItemCount("upgrade_potion");
           case 8:
-            currentCount = _context4.sent;
+            currentCount = _context7.sent;
             if (!(currentCount === 0)) {
-              _context4.next = 24;
+              _context7.next = 24;
               break;
             }
-            _context4.next = 12;
+            _context7.next = 12;
             return ItemDataManager.addItem("upgrade_potion", 10);
           case 12:
-            success = _context4.sent;
+            success = _context7.sent;
             if (!success) {
-              _context4.next = 21;
+              _context7.next = 21;
               break;
             }
             cc.log("[CharacterViewUI] ✓ 首次进入，已添加10个升级药水到全局道具栏");
@@ -999,19 +1637,19 @@ cc.Class({
             cc.sys.localStorage.setItem(INIT_FLAG_KEY, "true");
 
             // 如果当前已选中角色，刷新道具栏显示
-            if (!_this9.currentUnitData) {
-              _context4.next = 19;
+            if (!_this14.currentUnitData) {
+              _context7.next = 19;
               break;
             }
-            _context4.next = 19;
-            return _this9._updateInventory();
+            _context7.next = 19;
+            return _this14._updateInventory();
           case 19:
-            _context4.next = 22;
+            _context7.next = 22;
             break;
           case 21:
             cc.error("[CharacterViewUI] ✗ 添加升级药水失败");
           case 22:
-            _context4.next = 26;
+            _context7.next = 26;
             break;
           case 24:
             // 如果已有升级药水，也标记为已初始化（可能是从其他地方添加的）
@@ -1019,9 +1657,9 @@ cc.Class({
             cc.log("[CharacterViewUI] \u5168\u5C40\u9053\u5177\u680F\u5DF2\u6709 " + currentCount + " \u4E2A\u5347\u7EA7\u836F\u6C34\uFF0C\u6807\u8BB0\u4E3A\u5DF2\u521D\u59CB\u5316");
           case 26:
           case "end":
-            return _context4.stop();
+            return _context7.stop();
         }
-      }, _callee4);
+      }, _callee7);
     }))();
   },
   /**
@@ -1031,17 +1669,17 @@ cc.Class({
    * @returns {Promise<Array>|Array} 道具列表 [{ id, name, icon, count }, ...]（服务器模式下返回Promise）
    */
   _getCharacterItems: function _getCharacterItems(characterName) {
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8() {
       var ItemDataManager, itemsWithConfig;
-      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
-        while (1) switch (_context5.prev = _context5.next) {
+      return _regeneratorRuntime().wrap(function _callee8$(_context8) {
+        while (1) switch (_context8.prev = _context8.next) {
           case 0:
             ItemDataManager = require("ItemDataManager"); // 获取全局道具（所有角色共享，忽略characterName参数）
-            _context5.next = 3;
+            _context8.next = 3;
             return ItemDataManager.getAllItemsWithConfig();
           case 3:
-            itemsWithConfig = _context5.sent;
-            return _context5.abrupt("return", itemsWithConfig.filter(function (item) {
+            itemsWithConfig = _context8.sent;
+            return _context8.abrupt("return", itemsWithConfig.filter(function (item) {
               return item.count > 0;
             }) // 只显示数量大于0的道具
             .map(function (item) {
@@ -1056,9 +1694,9 @@ cc.Class({
             }));
           case 5:
           case "end":
-            return _context5.stop();
+            return _context8.stop();
         }
-      }, _callee5);
+      }, _callee8);
     }))();
   },
   /**
@@ -1069,7 +1707,7 @@ cc.Class({
    * @param {number} index - 索引
    */
   _createAvatar: function _createAvatar(unitData, team, index) {
-    var _this10 = this;
+    var _this15 = this;
     if (!unitData || !unitData.name) {
       cc.error("[CharacterViewUI] _createAvatar: unitData\u65E0\u6548", unitData);
       return;
@@ -1114,7 +1752,7 @@ cc.Class({
       var nodeUnitData = avatarNode._unitData || unitData;
       var nodeTeam = avatarNode._team || team;
       cc.log("[CharacterViewUI] \u5934\u50CF\u70B9\u51FB\u4E8B\u4EF6\u89E6\u53D1: \u8282\u70B9\u540D\u79F0=" + avatarNode.name + ", unitData.name=" + nodeUnitData.name + ", team=" + nodeTeam);
-      _this10._onAvatarClick(nodeUnitData, nodeTeam);
+      _this15._onAvatarClick(nodeUnitData, nodeTeam);
     }, this);
 
     // 确保可以接收触摸事件
@@ -1127,12 +1765,26 @@ cc.Class({
    * @param {string} team - 队伍类型
    */
   _onAvatarClick: function _onAvatarClick(unitData, team) {
-    if (!unitData) {
-      cc.error("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF\u5931\u8D25: unitData\u4E3A\u7A7A");
-      return;
-    }
-    cc.log("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF: " + unitData.name + ", team=" + team + ", prefab=" + (unitData.prefab ? unitData.prefab.name : 'null'));
-    this._displayCharacterPrefab(unitData);
+    var _this16 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9() {
+      return _regeneratorRuntime().wrap(function _callee9$(_context9) {
+        while (1) switch (_context9.prev = _context9.next) {
+          case 0:
+            if (unitData) {
+              _context9.next = 3;
+              break;
+            }
+            cc.error("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF\u5931\u8D25: unitData\u4E3A\u7A7A");
+            return _context9.abrupt("return");
+          case 3:
+            cc.log("[CharacterViewUI] \u70B9\u51FB\u5934\u50CF: " + unitData.name + ", team=" + team + ", prefab=" + (unitData.prefab ? unitData.prefab.name : 'null'));
+            _this16._displayCharacterPrefab(unitData);
+          case 5:
+          case "end":
+            return _context9.stop();
+        }
+      }, _callee9);
+    }))();
   },
   /**
    * 显示人物原型
@@ -1140,67 +1792,84 @@ cc.Class({
    * @param {Object} unitData - 单位数据
    */
   _displayCharacterPrefab: function _displayCharacterPrefab(unitData) {
-    var _this11 = this;
-    if (!this.characterDisplayArea) {
-      cc.warn("[CharacterViewUI] 未设置characterDisplayArea，无法显示人物原型");
-      return;
-    }
+    var _this17 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee10() {
+      var prefabInstance;
+      return _regeneratorRuntime().wrap(function _callee10$(_context10) {
+        while (1) switch (_context10.prev = _context10.next) {
+          case 0:
+            if (_this17.characterDisplayArea) {
+              _context10.next = 3;
+              break;
+            }
+            cc.warn("[CharacterViewUI] 未设置characterDisplayArea，无法显示人物原型");
+            return _context10.abrupt("return");
+          case 3:
+            // 清除之前显示的原型
+            if (_this17.currentDisplayPrefab) {
+              _this17.currentDisplayPrefab.destroy();
+              _this17.currentDisplayPrefab = null;
+            }
 
-    // 清除之前显示的原型
-    if (this.currentDisplayPrefab) {
-      this.currentDisplayPrefab.destroy();
-      this.currentDisplayPrefab = null;
-    }
+            // 隐藏属性面板
+            if (_this17.statsPanel) {
+              _this17.statsPanel.active = false;
+            }
 
-    // 隐藏属性面板
-    if (this.statsPanel) {
-      this.statsPanel.active = false;
-    }
+            // 保存当前单位数据
+            _this17.currentUnitData = unitData;
 
-    // 保存当前单位数据
-    this.currentUnitData = unitData;
+            // 更新道具栏与装备栏（每位英雄装备独立）
+            _context10.next = 8;
+            return _this17._updateInventory();
+          case 8:
+            _context10.next = 10;
+            return _this17._updateEquipmentBar();
+          case 10:
+            // 如果有Prefab，实例化并显示
+            if (unitData.prefab) {
+              prefabInstance = cc.instantiate(unitData.prefab);
+              prefabInstance.name = "Display_" + unitData.name;
 
-    // 更新道具栏显示
-    this._updateInventory();
+              // 保存原始角色名称，用于数据保存和加载
+              prefabInstance._originalCharacterName = unitData.name;
 
-    // 如果有Prefab，实例化并显示
-    if (unitData.prefab) {
-      var prefabInstance = cc.instantiate(unitData.prefab);
-      prefabInstance.name = "Display_" + unitData.name;
+              // 确保节点可见
+              prefabInstance.active = true;
+              prefabInstance.opacity = 255;
+              _this17.characterDisplayArea.addChild(prefabInstance);
+              _this17.currentDisplayPrefab = prefabInstance;
 
-      // 保存原始角色名称，用于数据保存和加载
-      prefabInstance._originalCharacterName = unitData.name;
+              // 设置位置和缩放（居中显示，缩小显示，位置向上调整）
+              prefabInstance.setPosition(0, 100);
+              prefabInstance.setScale(0.7);
 
-      // 确保节点可见
-      prefabInstance.active = true;
-      prefabInstance.opacity = 255;
-      this.characterDisplayArea.addChild(prefabInstance);
-      this.currentDisplayPrefab = prefabInstance;
+              // 初始化角色属性（根据保存的等级数据，支持异步）
+              _this17._initCharacterStats(prefabInstance, unitData)["catch"](function (err) {
+                cc.error("[CharacterViewUI] \u521D\u59CB\u5316\u89D2\u8272\u5C5E\u6027\u5931\u8D25: " + err.message);
+              });
 
-      // 设置位置和缩放（居中显示，缩小显示，位置向上调整）
-      prefabInstance.setPosition(0, 100);
-      prefabInstance.setScale(0.7);
+              // 绑定点击事件（点击人物原型显示属性面板）
+              prefabInstance.on(cc.Node.EventType.TOUCH_END, function (event) {
+                event.stopPropagation(); // 阻止事件冒泡
+                _this17._showStatsPanel(unitData);
+              }, _this17);
 
-      // 初始化角色属性（根据保存的等级数据，支持异步）
-      this._initCharacterStats(prefabInstance, unitData)["catch"](function (err) {
-        cc.error("[CharacterViewUI] \u521D\u59CB\u5316\u89D2\u8272\u5C5E\u6027\u5931\u8D25: " + err.message);
-      });
+              // 确保可以接收触摸事件
+              prefabInstance.setContentSize(200, 200);
 
-      // 绑定点击事件（点击人物原型显示属性面板）
-      prefabInstance.on(cc.Node.EventType.TOUCH_END, function (event) {
-        event.stopPropagation(); // 阻止事件冒泡
-        _this11._showStatsPanel(unitData);
-      }, this);
-
-      // 确保可以接收触摸事件
-      prefabInstance.setContentSize(200, 200);
-
-      // 标记这是人物原型节点（用于判断点击位置）
-      prefabInstance._isCharacterPrefab = true;
-      cc.log("[CharacterViewUI] \u2713 \u663E\u793A\u4EBA\u7269\u539F\u578B: " + unitData.name);
-    } else {
-      cc.warn("[CharacterViewUI] \u2717 \u5355\u4F4D " + unitData.name + " \u6CA1\u6709\u8BBE\u7F6Eprefab");
-    }
+              // 标记这是人物原型节点（用于判断点击位置）
+              prefabInstance._isCharacterPrefab = true;
+              cc.log("[CharacterViewUI] \u2713 \u663E\u793A\u4EBA\u7269\u539F\u578B: " + unitData.name);
+            } else {
+              cc.warn("[CharacterViewUI] \u2717 \u5355\u4F4D " + unitData.name + " \u6CA1\u6709\u8BBE\u7F6Eprefab");
+            }
+          case 11:
+          case "end":
+            return _context10.stop();
+        }
+      }, _callee10);
+    }))();
   },
   /**
    * 初始化角色属性（根据保存的等级数据）
@@ -1209,25 +1878,26 @@ cc.Class({
    * @param {Object} unitData - 单位数据
    */
   _initCharacterStats: function _initCharacterStats(prefabInstance, unitData) {
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6() {
-      var CharacterDataManager, stats, savedData;
-      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
-        while (1) switch (_context6.prev = _context6.next) {
+    var _this18 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee11() {
+      var CharacterDataManager, stats, savedData, bonuses;
+      return _regeneratorRuntime().wrap(function _callee11$(_context11) {
+        while (1) switch (_context11.prev = _context11.next) {
           case 0:
             CharacterDataManager = require("CharacterDataManager"); // StatsComponent 是组件类，不需要 require，直接使用 getComponent 获取
             // 获取StatsComponent组件
             stats = prefabInstance.getComponent("StatsComponent");
             if (stats) {
-              _context6.next = 5;
+              _context11.next = 5;
               break;
             }
             cc.log("[CharacterViewUI] " + unitData.name + " \u6CA1\u6709StatsComponent\u7EC4\u4EF6\uFF0C\u8DF3\u8FC7\u5C5E\u6027\u521D\u59CB\u5316");
-            return _context6.abrupt("return");
+            return _context11.abrupt("return");
           case 5:
-            _context6.next = 7;
+            _context11.next = 7;
             return CharacterDataManager.loadCharacterLevel(unitData.name);
           case 7:
-            savedData = _context6.sent;
+            savedData = _context11.sent;
             if (savedData) {
               // 如果有保存的数据，使用保存的基础属性
               stats.baseHp = savedData.baseHp || unitData.hp || 100;
@@ -1278,11 +1948,78 @@ cc.Class({
               stats.rage = 0;
               stats.updateRageBar();
             }
-          case 13:
+
+            // 应用装备加成（每位英雄独立装备，属性同步更新）
+            _context11.next = 15;
+            return _this18._getEquipmentBonuses(unitData.name);
+          case 15:
+            bonuses = _context11.sent;
+            if (stats.applyEquipmentBonuses) {
+              stats.applyEquipmentBonuses(bonuses);
+            }
+          case 17:
           case "end":
-            return _context6.stop();
+            return _context11.stop();
         }
-      }, _callee6);
+      }, _callee11);
+    }))();
+  },
+  /**
+   * 根据角色装备计算属性加成
+   * @param {string} characterName - 角色名称
+   * @returns {Promise<{ attack: number, defense: number, speed: number }>}
+   */
+  _getEquipmentBonuses: function _getEquipmentBonuses(characterName) {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee12() {
+      var EquipmentDataManager, ItemConfig, _yield$EquipmentDataM2, slots, bonuses, _iterator, _step, itemId, cfg, t, v;
+      return _regeneratorRuntime().wrap(function _callee12$(_context12) {
+        while (1) switch (_context12.prev = _context12.next) {
+          case 0:
+            EquipmentDataManager = require("EquipmentDataManager");
+            ItemConfig = require("ItemConfig");
+            _context12.next = 4;
+            return EquipmentDataManager.getEquipment(characterName);
+          case 4:
+            _yield$EquipmentDataM2 = _context12.sent;
+            slots = _yield$EquipmentDataM2.slots;
+            bonuses = {
+              attack: 0,
+              defense: 0,
+              speed: 0
+            };
+            _iterator = _createForOfIteratorHelperLoose(slots);
+          case 8:
+            if ((_step = _iterator()).done) {
+              _context12.next = 20;
+              break;
+            }
+            itemId = _step.value;
+            if (itemId) {
+              _context12.next = 12;
+              break;
+            }
+            return _context12.abrupt("continue", 18);
+          case 12:
+            cfg = ItemConfig.getItemById(itemId);
+            if (!(!cfg || !cfg.effectType)) {
+              _context12.next = 15;
+              break;
+            }
+            return _context12.abrupt("continue", 18);
+          case 15:
+            t = String(cfg.effectType).toLowerCase();
+            v = cfg.effectValue || 0;
+            if (t === "attack") bonuses.attack += v;else if (t === "defense") bonuses.defense += v;else if (t === "speed") bonuses.speed += v;
+          case 18:
+            _context12.next = 8;
+            break;
+          case 20:
+            return _context12.abrupt("return", bonuses);
+          case 21:
+          case "end":
+            return _context12.stop();
+        }
+      }, _callee12);
     }))();
   },
   /**
@@ -1367,7 +2104,7 @@ cc.Class({
    * @private
    */
   _onCanvasClick: function _onCanvasClick(event) {
-    var _this12 = this;
+    var _this19 = this;
     // 如果点击的是属性面板本身，不关闭
     if (this.statsPanel && cc.isValid(this.statsPanel) && this.statsPanel.active) {
       var target = event.target;
@@ -1405,7 +2142,7 @@ cc.Class({
         opacity: 0,
         scale: 0.8
       }).call(function () {
-        _this12.statsPanel.active = false;
+        _this19.statsPanel.active = false;
       }).start();
       cc.log("[CharacterViewUI] \u5173\u95ED\u5C5E\u6027\u9762\u677F");
     }

@@ -6179,19 +6179,14 @@
     "meta": 1768893086496,
     "relativePath": "Scripts\\system\\LevelConfig.js"
   },
-  "5ef1c009-ed80-4b4e-a678-c4e68d3fcd18": {
-    "asset": 1768902598265,
-    "meta": 1768902976464,
-    "relativePath": "Scripts\\ecs\\StatsComponent.js"
-  },
   "00bc462c-45d7-42f7-aa2e-3d7229c24726": {
     "asset": 1768902606634,
     "meta": 1768902976582,
     "relativePath": "Scripts\\system\\BattleSystem.js"
   },
   "09b1dbc8-462d-48c0-9f57-54cd3f4f0d71": {
-    "asset": 1769767312398,
-    "meta": 1769767312400,
+    "asset": 1770191806985,
+    "meta": 1770191806987,
     "relativePath": "Scenes\\CharacterViewScene.fire"
   },
   "fe798d59-199e-4633-9f42-c00df6972a8d": {
@@ -6215,8 +6210,8 @@
     "relativePath": "newspine\\格子图片.png"
   },
   "cf6f2443-d8f7-4535-bf34-02aa44466432": {
-    "asset": 1769151945433,
-    "meta": 1769151945435,
+    "asset": 1770177130059,
+    "meta": 1770177130062,
     "relativePath": "Prefabs2\\格子图片.prefab"
   },
   "3a6d667c-53b6-4e07-a4ae-4fd1c0d182ab": {
@@ -6290,8 +6285,8 @@
     "relativePath": "头像\\法师头像 (2).png"
   },
   "cf6ac42d-564d-4151-9b6a-4f37bab8f00a": {
-    "asset": 1769766348586,
-    "meta": 1769766348590,
+    "asset": 1770198730943,
+    "meta": 1770198730946,
     "relativePath": "Scenes\\ShopScene.fire"
   },
   "2777fbe0-2c92-4a08-9b11-f26333247139": {
@@ -6314,20 +6309,10 @@
     "meta": 1769587482980,
     "relativePath": "Scripts\\game\\ShopScene.js"
   },
-  "8b1d8707-f248-4408-87fa-9b5d3072eb7f": {
-    "asset": 1769589325033,
-    "meta": 1769590032040,
-    "relativePath": "Scripts\\system\\CoinManager.js"
-  },
   "56e2a783-d036-43ca-80bb-fe8cb6cb9c98": {
     "asset": 1769667645941,
     "meta": 1769667646013,
     "relativePath": "Background\\商城背景.png"
-  },
-  "a2d9e750-37c5-4e8d-9546-5b880b1440df": {
-    "asset": 1769678405195,
-    "meta": 1769679506956,
-    "relativePath": "Scripts\\game\\BattleController.js"
   },
   "ad7223ff-1d39-4acb-9e23-431b1d8b6049": {
     "asset": 1769678405017,
@@ -6374,19 +6359,64 @@
     "meta": 1769765379617,
     "relativePath": "Scripts\\ecs\\ShopUI.js"
   },
+  "79b3471d-b217-4c69-b242-40e081b5b7cf": {
+    "asset": 1770022375430,
+    "meta": 1770022375432,
+    "relativePath": "Prefabs2\\ItemSlot.prefab"
+  },
+  "b1c77b6c-fbc4-479a-8858-3bec42a51930": {
+    "asset": 1770177670319,
+    "meta": 1770190273735,
+    "relativePath": "Items\\战锤图片.png"
+  },
   "7a9030ef-91a3-4255-905f-61b577d31726": {
-    "asset": 1769765949343,
-    "meta": 1769765973652,
+    "asset": 1770186926968,
+    "meta": 1770187363001,
     "relativePath": "Scripts\\game\\ItemConfig.js"
   },
   "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
-    "asset": 1769765952220,
-    "meta": 1769765973681,
+    "asset": 1770186926947,
+    "meta": 1770187363026,
     "relativePath": "Scripts\\game\\ShopConfig.js"
   },
+  "5ef1c009-ed80-4b4e-a678-c4e68d3fcd18": {
+    "asset": 1770188450815,
+    "meta": 1770188475188,
+    "relativePath": "Scripts\\ecs\\StatsComponent.js"
+  },
+  "03a054e2-4126-4c8a-b219-1bbdba8d924d": {
+    "asset": 1770191434041,
+    "meta": 1770191434081,
+    "relativePath": "Items\\铁甲图片.png"
+  },
+  "a63d0006-c05d-41df-b08f-6df456661c65": {
+    "asset": 1770191795735,
+    "meta": 1770191795771,
+    "relativePath": "Items\\铁靴图片.png"
+  },
+  "a2d9e750-37c5-4e8d-9546-5b880b1440df": {
+    "asset": 1770192531970,
+    "meta": 1770192573409,
+    "relativePath": "Scripts\\game\\BattleController.js"
+  },
+  "bd583a68-8560-4779-8797-9fc0315528c1": {
+    "asset": 1770193809528,
+    "meta": 1770194120491,
+    "relativePath": "Scripts\\system\\EquipmentDataAdapter.js"
+  },
+  "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d": {
+    "asset": 1770195428266,
+    "meta": 1770195834792,
+    "relativePath": "Scripts\\system\\EquipmentDataManager.js"
+  },
   "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
-    "asset": 1769766938194,
-    "meta": 1769766989373,
+    "asset": 1770197390820,
+    "meta": 1770197467634,
     "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
+  },
+  "8b1d8707-f248-4408-87fa-9b5d3072eb7f": {
+    "asset": 1770204814996,
+    "meta": 1770204859956,
+    "relativePath": "Scripts\\system\\CoinManager.js"
   }
 }

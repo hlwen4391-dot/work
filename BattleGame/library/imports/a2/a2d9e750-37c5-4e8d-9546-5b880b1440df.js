@@ -814,8 +814,9 @@ cc.Class({
     };
   },
   initEntity: function initEntity(node, data, teamName) {
+    var _this4 = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
-      var stats, team, skills, CharacterDataManager, savedData, LevelSystem, initialLevel, initialExp, skillsToInit, SkillDataManager, characterName, savedSkills, _require2, SkillConfig;
+      var stats, team, skills, CharacterDataManager, savedData, LevelSystem, initialLevel, initialExp, characterName, bonuses, skillsToInit, SkillDataManager, _characterName, savedSkills, _require2, SkillConfig;
       return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) switch (_context2.prev = _context2.next) {
           case 0:
@@ -882,6 +883,27 @@ cc.Class({
             // 这会调用_applyLevelBonus，根据等级计算实际属性值（maxHp, attack等）
             LevelSystem.initLevel(node, initialLevel, initialExp, false);
 
+            // ⭐ 应用装备属性加成（战斗中使用的 Stats 也要带上装备效果）
+            _context2.prev = 26;
+            characterName = data.name || node._originalCharacterName || node.name;
+            if (!(characterName && stats.applyEquipmentBonuses)) {
+              _context2.next = 34;
+              break;
+            }
+            _context2.next = 31;
+            return _this4._getEquipmentBonuses(characterName);
+          case 31:
+            bonuses = _context2.sent;
+            stats.applyEquipmentBonuses(bonuses);
+            cc.log("[BattleController] \u5DF2\u4E3A " + characterName + " \u5E94\u7528\u88C5\u5907\u52A0\u6210:", bonuses);
+          case 34:
+            _context2.next = 39;
+            break;
+          case 36:
+            _context2.prev = 36;
+            _context2.t0 = _context2["catch"](26);
+            cc.warn("[BattleController] \u5E94\u7528\u88C5\u5907\u52A0\u6210\u65F6\u51FA\u9519: " + _context2.t0.message);
+          case 39:
             // 设置当前生命值为最大生命值（满血）
             stats.hp = stats.maxHp;
 
@@ -897,12 +919,12 @@ cc.Class({
 
             // ⭐ 初始化技能（优先从服务器加载，否则使用data中的技能）
             skillsToInit = data.skills || []; // 尝试从服务器加载技能数据
-            _context2.prev = 30;
+            _context2.prev = 43;
             SkillDataManager = require("SkillDataManager");
-            characterName = data.name || node.name;
-            _context2.next = 35;
-            return SkillDataManager.loadCharacterSkills(characterName);
-          case 35:
+            _characterName = data.name || node.name;
+            _context2.next = 48;
+            return SkillDataManager.loadCharacterSkills(_characterName);
+          case 48:
             savedSkills = _context2.sent;
             if (savedSkills && savedSkills.length > 0) {
               // ⭐ 将保存的技能ID转换为完整的技能配置
@@ -930,15 +952,15 @@ cc.Class({
                 return skill !== null;
               }); // 过滤掉未找到的技能
 
-              cc.log("[BattleController] \u2713 \u4ECE\u670D\u52A1\u5668\u52A0\u8F7D\u6280\u80FD: " + characterName + ", \u6570\u91CF=" + skillsToInit.length);
+              cc.log("[BattleController] \u2713 \u4ECE\u670D\u52A1\u5668\u52A0\u8F7D\u6280\u80FD: " + _characterName + ", \u6570\u91CF=" + skillsToInit.length);
             }
-            _context2.next = 42;
+            _context2.next = 55;
             break;
-          case 39:
-            _context2.prev = 39;
-            _context2.t0 = _context2["catch"](30);
-            cc.warn("[BattleController] \u52A0\u8F7D\u6280\u80FD\u6570\u636E\u5931\u8D25\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u6280\u80FD: " + _context2.t0.message);
-          case 42:
+          case 52:
+            _context2.prev = 52;
+            _context2.t1 = _context2["catch"](43);
+            cc.warn("[BattleController] \u52A0\u8F7D\u6280\u80FD\u6570\u636E\u5931\u8D25\uFF0C\u4F7F\u7528\u9ED8\u8BA4\u6280\u80FD: " + _context2.t1.message);
+          case 55:
             // 初始化技能
             if (skillsToInit && skillsToInit.length > 0) {
               skills.init(skillsToInit);
@@ -952,11 +974,90 @@ cc.Class({
               stats.updateHealthBar();
             }
             cc.log("\u2705 [BattleController] " + node.name + " \u521D\u59CB\u5316\u6210\u529F (" + teamName + ") - Lv." + stats.level + ", HP:" + stats.hp + ", ATK:" + stats.attack + ", DEF:" + stats.defense + ", SPD:" + stats.speed);
-          case 46:
+          case 59:
           case "end":
             return _context2.stop();
         }
-      }, _callee2, null, [[30, 39]]);
+      }, _callee2, null, [[26, 36], [43, 52]]);
+    }))();
+  },
+  /**
+   * 根据角色装备计算属性加成（攻/防/速），供战斗初始化使用
+   * @param {string} characterName
+   * @returns {Promise<{attack:number, defense:number, speed:number}>}
+   * @private
+   */
+  _getEquipmentBonuses: function _getEquipmentBonuses(characterName) {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+      var bonuses, EquipmentDataManager, ItemConfig, _yield$EquipmentDataM, slots, _iterator3, _step3, itemId, cfg, t, v;
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) switch (_context3.prev = _context3.next) {
+          case 0:
+            bonuses = {
+              attack: 0,
+              defense: 0,
+              speed: 0
+            };
+            if (characterName) {
+              _context3.next = 3;
+              break;
+            }
+            return _context3.abrupt("return", bonuses);
+          case 3:
+            _context3.prev = 3;
+            EquipmentDataManager = require("EquipmentDataManager");
+            ItemConfig = require("ItemConfig");
+            _context3.next = 8;
+            return EquipmentDataManager.getEquipment(characterName);
+          case 8:
+            _yield$EquipmentDataM = _context3.sent;
+            slots = _yield$EquipmentDataM.slots;
+            if (!(!slots || !Array.isArray(slots))) {
+              _context3.next = 12;
+              break;
+            }
+            return _context3.abrupt("return", bonuses);
+          case 12:
+            _iterator3 = _createForOfIteratorHelperLoose(slots);
+          case 13:
+            if ((_step3 = _iterator3()).done) {
+              _context3.next = 25;
+              break;
+            }
+            itemId = _step3.value;
+            if (itemId) {
+              _context3.next = 17;
+              break;
+            }
+            return _context3.abrupt("continue", 23);
+          case 17:
+            cfg = ItemConfig.getItemById(itemId);
+            if (!(!cfg || !cfg.effectType)) {
+              _context3.next = 20;
+              break;
+            }
+            return _context3.abrupt("continue", 23);
+          case 20:
+            t = String(cfg.effectType).toLowerCase();
+            v = cfg.effectValue || 0;
+            if (t === "attack") bonuses.attack += v;else if (t === "defense") bonuses.defense += v;else if (t === "speed") bonuses.speed += v;
+          case 23:
+            _context3.next = 13;
+            break;
+          case 25:
+            _context3.next = 30;
+            break;
+          case 27:
+            _context3.prev = 27;
+            _context3.t0 = _context3["catch"](3);
+            cc.warn("[BattleController] \u8BA1\u7B97\u88C5\u5907\u52A0\u6210\u5931\u8D25(" + characterName + "): " + _context3.t0.message);
+          case 30:
+            return _context3.abrupt("return", bonuses);
+          case 31:
+          case "end":
+            return _context3.stop();
+        }
+      }, _callee3, null, [[3, 27]]);
     }))();
   },
   update: function update() {
@@ -1115,7 +1216,7 @@ cc.Class({
    * @param {string} team - 队伍类型（"hero" 或 "monster"）
    */
   _createBattleAvatars: function _createBattleAvatars(selectedUnits, team) {
-    var _this4 = this;
+    var _this5 = this;
     if (!selectedUnits || selectedUnits.length === 0) {
       return;
     }
@@ -1133,7 +1234,7 @@ cc.Class({
 
     // 创建头像
     selectedUnits.forEach(function (unitData, index) {
-      var avatarNode = _this4._createBattleAvatar(unitData, team, index, iconList);
+      var avatarNode = _this5._createBattleAvatar(unitData, team, index, iconList);
       if (avatarNode) {
         container.addChild(avatarNode);
       }
@@ -1277,7 +1378,7 @@ cc.Class({
    * @param {cc.Node} characterNode - 人物节点
    */
   _addAvatarClickHandler: function _addAvatarClickHandler(avatarNode, characterNode) {
-    var _this5 = this;
+    var _this6 = this;
     // 确保节点可以接收触摸事件
     avatarNode._touchEnabled = true;
 
@@ -1304,7 +1405,7 @@ cc.Class({
       cc.log("[BattleController] \u5934\u50CFButton\u70B9\u51FB\u4E8B\u4EF6\u89E6\u53D1: " + avatarNode.name);
       // 注意：Button的click事件对象可能不支持stopPropagation，所以不调用
       // 如果需要阻止事件冒泡，可以在事件处理函数中直接返回
-      _this5._onAvatarClick(characterNode, event);
+      _this6._onAvatarClick(characterNode, event);
     }, this);
 
     // 确保Icon子节点也可以接收触摸（如果存在）
@@ -1399,18 +1500,18 @@ cc.Class({
    * @private
    */
   _updateAllAvatarColors: function _updateAllAvatarColors() {
-    var _this6 = this;
+    var _this7 = this;
     // 更新英雄头像的颜色
     if (this.heroAvatarContainer) {
       this.heroAvatarContainer.children.forEach(function (avatarNode) {
-        _this6._updateAvatarColor(avatarNode, avatarNode._characterNode);
+        _this7._updateAvatarColor(avatarNode, avatarNode._characterNode);
       });
     }
 
     // 更新怪物头像的颜色
     if (this.monsterAvatarContainer) {
       this.monsterAvatarContainer.children.forEach(function (avatarNode) {
-        _this6._updateAvatarColor(avatarNode, avatarNode._characterNode);
+        _this7._updateAvatarColor(avatarNode, avatarNode._characterNode);
       });
     }
   },
@@ -1473,7 +1574,7 @@ cc.Class({
    * @private
    */
   _transitionToGameOverScene: function _transitionToGameOverScene(winner, winnerText) {
-    var _this7 = this;
+    var _this8 = this;
     cc.log("[BattleController] ===== \u5F00\u59CB\u573A\u666F\u8DF3\u8F6C\u6D41\u7A0B =====");
     cc.log("[BattleController] \u51C6\u5907\u8DF3\u8F6C\u5230\u6E38\u620F\u7ED3\u675F\u573A\u666F: \"" + this.gameOverSceneName + "\"");
     cc.log("[BattleController] \u80DC\u5229\u65B9: " + winnerText + " (" + winner + ")");
@@ -1488,23 +1589,23 @@ cc.Class({
     // 延迟一小段时间再跳转，确保所有战斗动画完成
     cc.log("[BattleController] \u5EF6\u8FDF0.5\u79D2\u540E\u8DF3\u8F6C\u573A\u666F...");
     this.scheduleOnce(function () {
-      cc.log("[BattleController] \u5F00\u59CB\u52A0\u8F7D\u573A\u666F: " + _this7.gameOverSceneName);
+      cc.log("[BattleController] \u5F00\u59CB\u52A0\u8F7D\u573A\u666F: " + _this8.gameOverSceneName);
       try {
-        cc.director.loadScene(_this7.gameOverSceneName, function (error) {
+        cc.director.loadScene(_this8.gameOverSceneName, function (error) {
           if (error) {
             cc.error("[BattleController] \u573A\u666F\u52A0\u8F7D\u5931\u8D25: " + error);
             cc.error("[BattleController] \u8BF7\u68C0\u67E5\u573A\u666F\u540D\u79F0\u662F\u5426\u6B63\u786E\uFF0C\u573A\u666F\u6587\u4EF6\u662F\u5426\u5B58\u5728");
             // 如果场景加载失败，回退到面板显示方式
-            _this7._showGameOverPanel(winner);
+            _this8._showGameOverPanel(winner);
           } else {
-            cc.log("[BattleController] \u2705 \u573A\u666F\u52A0\u8F7D\u6210\u529F: " + _this7.gameOverSceneName);
+            cc.log("[BattleController] \u2705 \u573A\u666F\u52A0\u8F7D\u6210\u529F: " + _this8.gameOverSceneName);
           }
         });
       } catch (e) {
         cc.error("[BattleController] \u573A\u666F\u8DF3\u8F6C\u5F02\u5E38: " + e.message);
         cc.error("[BattleController] \u9519\u8BEF\u5806\u6808: " + e.stack);
         // 如果发生异常，回退到面板显示方式
-        _this7._showGameOverPanel(winner);
+        _this8._showGameOverPanel(winner);
       }
     }, 0.5); // 延迟0.5秒
   },

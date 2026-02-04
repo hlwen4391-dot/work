@@ -7,6 +7,7 @@ cc._RF.push(module, '5ef1cAJ7YBLTqZ4xOaNP80Y', 'StatsComponent');
 function _createForOfIteratorHelperLoose(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (it) return (it = it.call(o)).next.bind(it); if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; return function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+// @ts-nocheck
 cc.Class({
   "extends": cc.Component,
   properties: {
@@ -38,7 +39,13 @@ cc.Class({
     // 基础速度（1级时的值）
     baseCrit: 0,
     // 基础暴击率（1级时的值）
-    baseMiss: 0 // 基础闪避率（1级时的值）
+    baseMiss: 0,
+    // 基础闪避率（1级时的值）
+    equipmentBonusAttack: 0,
+    // 装备加成攻击
+    equipmentBonusDefense: 0,
+    // 装备加成防御
+    equipmentBonusSpeed: 0 // 装备加成速度
   },
   onLoad: function onLoad() {
     this.updateAttackInterval();
@@ -200,16 +207,17 @@ cc.Class({
     return leveledUp;
   },
   /**
-   * 应用等级加成到属性
+   * 应用等级加成到属性（含装备加成）
    */
   _applyLevelBonus: function _applyLevelBonus() {
     var LevelConfig = require("LevelConfig");
-
-    // 根据等级重新计算属性值
+    var eqAtk = this.equipmentBonusAttack || 0;
+    var eqDef = this.equipmentBonusDefense || 0;
+    var eqSpd = this.equipmentBonusSpeed || 0;
     this.maxHp = LevelConfig.calculateStatValue(this.baseHp, this.level, 'hp');
-    this.attack = LevelConfig.calculateStatValue(this.baseAttack, this.level, 'attack');
-    this.defense = LevelConfig.calculateStatValue(this.baseDefense, this.level, 'defense');
-    this.speed = LevelConfig.calculateStatValue(this.baseSpeed, this.level, 'speed');
+    this.attack = LevelConfig.calculateStatValue(this.baseAttack, this.level, 'attack') + eqAtk;
+    this.defense = LevelConfig.calculateStatValue(this.baseDefense, this.level, 'defense') + eqDef;
+    this.speed = LevelConfig.calculateStatValue(this.baseSpeed, this.level, 'speed') + eqSpd;
     this.crit = LevelConfig.calculateStatValue(this.baseCrit, this.level, 'crit');
     this.miss = LevelConfig.calculateStatValue(this.baseMiss, this.level, 'miss');
 
@@ -224,9 +232,15 @@ cc.Class({
     // 更新血条显示
     this.updateHealthBar();
   },
-  /**
-   * 更新经验条显示
-   */
+  // 应用装备加成并刷新属性
+  applyEquipmentBonuses: function applyEquipmentBonuses(bonuses) {
+    if (!bonuses) return;
+    this.equipmentBonusAttack = bonuses.attack || 0;
+    this.equipmentBonusDefense = bonuses.defense || 0;
+    this.equipmentBonusSpeed = bonuses.speed || 0;
+    this._applyLevelBonus();
+  },
+  // 更新经验条显示
   updateExpBar: function updateExpBar() {
     if (this.expBar) {
       var LevelConfig = require("LevelConfig");
@@ -238,10 +252,7 @@ cc.Class({
       this.expBar.updateExp(expInCurrentLevel, expToNext, currentLevel, progress);
     }
   },
-  /**
-   * 检查是否达到最大等级
-   * @returns {boolean}
-   */
+  // 检查是否达到最大等级
   isMaxLevel: function isMaxLevel() {
     var LevelConfig = require("LevelConfig");
     return this.level >= LevelConfig.MAX_LEVEL;

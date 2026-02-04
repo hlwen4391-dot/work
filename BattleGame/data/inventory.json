@@ -1,7 +1,15 @@
 {
   "1": [
     {
-      "itemId": "scroll_stun",
+      "itemId": "leather_boots",
+      "count": 1
+    },
+    {
+      "itemId": "iron_armor",
+      "count": 1
+    },
+    {
+      "itemId": "war_hammer",
       "count": 1
     }
   ]

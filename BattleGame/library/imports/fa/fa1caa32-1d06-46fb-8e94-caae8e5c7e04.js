@@ -175,6 +175,38 @@ var ShopConfig = {
       icon: null,
       description: "10个生命药水打包，超值优惠",
       category: this.CATEGORY.CONSUMABLE
+    },
+    // ========== 装备类 ==========
+    {
+      id: "shop_war_hammer",
+      name: "战锤(武器)",
+      price: 500,
+      itemId: "war_hammer",
+      count: 1,
+      icon: null,
+      description: "装备后攻击力+15",
+      category: this.CATEGORY.EQUIPMENT,
+      equipmentSlot: "weapon"
+    }, {
+      id: "shop_iron_armor",
+      name: "铁甲",
+      price: 400,
+      itemId: "iron_armor",
+      count: 1,
+      icon: null,
+      description: "装备后防御力+10",
+      category: this.CATEGORY.EQUIPMENT,
+      equipmentSlot: "armor"
+    }, {
+      id: "shop_leather_boots",
+      name: "皮靴",
+      price: 200,
+      itemId: "leather_boots",
+      count: 1,
+      icon: null,
+      description: "装备后速度+2",
+      category: this.CATEGORY.EQUIPMENT,
+      equipmentSlot: "shoes"
     }
     // ========== 后续扩展示例 ==========
     // 消耗品示例：

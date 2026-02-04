@@ -1,3 +1,4 @@
+// @ts-nocheck
 cc.Class({
     extends: cc.Component,
 
@@ -20,7 +21,10 @@ cc.Class({
         baseDefense: 1, // 基础防御力（1级时的值）
         baseSpeed: 1,   // 基础速度（1级时的值）
         baseCrit: 0,    // 基础暴击率（1级时的值）
-        baseMiss: 0     // 基础闪避率（1级时的值）
+        baseMiss: 0,    // 基础闪避率（1级时的值）
+        equipmentBonusAttack: 0,   // 装备加成攻击
+        equipmentBonusDefense: 0,  // 装备加成防御
+        equipmentBonusSpeed: 0     // 装备加成速度
     },
 
     onLoad() {
@@ -193,16 +197,19 @@ cc.Class({
     },
 
     /**
-     * 应用等级加成到属性
+     * 应用等级加成到属性（含装备加成）
      */
     _applyLevelBonus() {
         const LevelConfig = require("LevelConfig");
 
-        // 根据等级重新计算属性值
+        const eqAtk = this.equipmentBonusAttack || 0;
+        const eqDef = this.equipmentBonusDefense || 0;
+        const eqSpd = this.equipmentBonusSpeed || 0;
+
         this.maxHp = LevelConfig.calculateStatValue(this.baseHp, this.level, 'hp');
-        this.attack = LevelConfig.calculateStatValue(this.baseAttack, this.level, 'attack');
-        this.defense = LevelConfig.calculateStatValue(this.baseDefense, this.level, 'defense');
-        this.speed = LevelConfig.calculateStatValue(this.baseSpeed, this.level, 'speed');
+        this.attack = LevelConfig.calculateStatValue(this.baseAttack, this.level, 'attack') + eqAtk;
+        this.defense = LevelConfig.calculateStatValue(this.baseDefense, this.level, 'defense') + eqDef;
+        this.speed = LevelConfig.calculateStatValue(this.baseSpeed, this.level, 'speed') + eqSpd;
         this.crit = LevelConfig.calculateStatValue(this.baseCrit, this.level, 'crit');
         this.miss = LevelConfig.calculateStatValue(this.baseMiss, this.level, 'miss');
 
@@ -218,9 +225,16 @@ cc.Class({
         this.updateHealthBar();
     },
 
-    /**
-     * 更新经验条显示
-     */
+    // 应用装备加成并刷新属性
+    applyEquipmentBonuses(bonuses) {
+        if (!bonuses) return;
+        this.equipmentBonusAttack = bonuses.attack || 0;
+        this.equipmentBonusDefense = bonuses.defense || 0;
+        this.equipmentBonusSpeed = bonuses.speed || 0;
+        this._applyLevelBonus();
+    },
+
+    // 更新经验条显示
     updateExpBar() {
         if (this.expBar) {
             const LevelConfig = require("LevelConfig");
@@ -234,12 +248,10 @@ cc.Class({
         }
     },
 
-    /**
-     * 检查是否达到最大等级
-     * @returns {boolean}
-     */
+    // 检查是否达到最大等级
     isMaxLevel() {
         const LevelConfig = require("LevelConfig");
         return this.level >= LevelConfig.MAX_LEVEL;
     }
 });
+
