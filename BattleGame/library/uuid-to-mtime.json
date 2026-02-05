@@ -6224,11 +6224,6 @@
     "meta": 1769162866607,
     "relativePath": "Scripts\\system\\ItemDataAdapter.js"
   },
-  "cf3e7766-0a83-40cb-bb3b-c6e7fe61abe8": {
-    "asset": 1769161843731,
-    "meta": 1769162866661,
-    "relativePath": "Scripts\\system\\ItemDataManager.js"
-  },
   "c3c016ed-3377-4121-a4c3-42f9f84323aa": {
     "asset": 1769165956746,
     "meta": 1769165956746,
@@ -6344,11 +6339,6 @@
     "meta": 1769759081931,
     "relativePath": "Scripts\\ecs\\ItemIconSetter.js"
   },
-  "f6e729e9-2304-42bb-95b4-419e391cedae": {
-    "asset": 1769761743815,
-    "meta": 1769761884535,
-    "relativePath": "Scripts\\system\\ItemSystem.js"
-  },
   "c38239ba-4ff9-46f1-ab60-c9e6620dd1f0": {
     "asset": 1769761813453,
     "meta": 1769761884614,
@@ -6409,14 +6399,24 @@
     "meta": 1770195834792,
     "relativePath": "Scripts\\system\\EquipmentDataManager.js"
   },
-  "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
-    "asset": 1770197390820,
-    "meta": 1770197467634,
-    "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
-  },
   "8b1d8707-f248-4408-87fa-9b5d3072eb7f": {
     "asset": 1770204814996,
     "meta": 1770204859956,
     "relativePath": "Scripts\\system\\CoinManager.js"
+  },
+  "b65e60b2-2e31-4989-9960-3cf3c72972d1": {
+    "asset": 1770285224705,
+    "meta": 1770285238132,
+    "relativePath": "Scripts\\ecs\\CharacterViewUI.js"
+  },
+  "f6e729e9-2304-42bb-95b4-419e391cedae": {
+    "asset": 1770289932172,
+    "meta": 1770289933821,
+    "relativePath": "Scripts\\system\\ItemSystem.js"
+  },
+  "cf3e7766-0a83-40cb-bb3b-c6e7fe61abe8": {
+    "asset": 1770291156762,
+    "meta": 1770291353965,
+    "relativePath": "Scripts\\system\\ItemDataManager.js"
   }
 }

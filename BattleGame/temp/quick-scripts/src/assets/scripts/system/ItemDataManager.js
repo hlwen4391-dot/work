@@ -78,7 +78,7 @@ var ItemDataManager = {
   addItem: function addItem(itemId, count) {
     var _this = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var items, ItemConfig, itemConfig, existingItem, newCount;
+      var items, existingItemBefore, beforeCount, ItemConfig, itemConfig, existingItem, oldCount, newCount, saveResult, existingItemAfter, afterCount;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -89,22 +89,30 @@ var ItemDataManager = {
             return _this.loadItems();
           case 3:
             items = _context.sent;
+            existingItemBefore = items.find(function (item) {
+              return item.itemId === itemId;
+            });
+            beforeCount = existingItemBefore ? existingItemBefore.count : 0;
+            cc.log("[ItemDebug] addItem \u524D => itemId=" + itemId + ", count=" + beforeCount + ", \u589E\u52A0=" + count);
             ItemConfig = require("ItemConfig");
             itemConfig = ItemConfig.getItemById(itemId);
             if (itemConfig) {
-              _context.next = 9;
+              _context.next = 12;
               break;
             }
             cc.error("[ItemDataManager] \u65E0\u6548\u7684\u9053\u5177ID: " + itemId);
             return _context.abrupt("return", false);
-          case 9:
-            // 查找是否已有该道具
+          case 12:
+            // 查找是否已有该道具（使用上面加载的 items，不再重新加载）
             existingItem = items.find(function (item) {
               return item.itemId === itemId;
-            });
+            }); // [ItemDebug] 详细日志：检查 existingItem 的状态
+            cc.log("[ItemDebug] addItem \u5185\u90E8\u68C0\u67E5 => existingItem=" + (existingItem ? JSON.stringify(existingItem) : 'null') + ", items\u6570\u7EC4\u957F\u5EA6=" + items.length + ", items\u5185\u5BB9=" + JSON.stringify(items));
             if (existingItem) {
               // 已有该道具，增加数量（不超过最大堆叠）
+              oldCount = existingItem.count;
               newCount = Math.min(existingItem.count + count, itemConfig.maxStack || 99);
+              cc.log("[ItemDebug] addItem \u8BA1\u7B97 => oldCount=" + oldCount + ", count=" + count + ", maxStack=" + (itemConfig.maxStack || 99) + ", newCount=" + newCount);
               existingItem.count = newCount;
               cc.log("[ItemDataManager] \u589E\u52A0\u9053\u5177\u6570\u91CF: " + itemId + ", \u5F53\u524D\u6570\u91CF: " + newCount);
             } else {
@@ -115,11 +123,24 @@ var ItemDataManager = {
               });
               cc.log("[ItemDataManager] \u6DFB\u52A0\u65B0\u9053\u5177: " + itemId + ", \u6570\u91CF: " + count);
             }
-            _context.next = 13;
+
+            // [ItemDebug] 保存前的完整 items 数组状态
+            cc.log("[ItemDebug] addItem \u4FDD\u5B58\u524D => items\u6570\u7EC4=" + JSON.stringify(items));
+            _context.next = 18;
             return _this.saveItems(items);
-          case 13:
-            return _context.abrupt("return", _context.sent);
-          case 14:
+          case 18:
+            saveResult = _context.sent;
+            // [ItemDebug] 保存后的完整 items 数组状态
+            cc.log("[ItemDebug] addItem \u4FDD\u5B58\u540E => items\u6570\u7EC4=" + JSON.stringify(items) + ", \u4FDD\u5B58\u7ED3\u679C=" + saveResult);
+
+            // [ItemDebug] 记录操作后的数量（从保存后的 items 数组计算，不再重新请求）
+            existingItemAfter = items.find(function (item) {
+              return item.itemId === itemId;
+            });
+            afterCount = existingItemAfter ? existingItemAfter.count : 0;
+            cc.log("[ItemDebug] addItem \u540E => itemId=" + itemId + ", count=" + afterCount + ", \u6210\u529F=" + saveResult);
+            return _context.abrupt("return", saveResult);
+          case 24:
           case "end":
             return _context.stop();
         }
@@ -135,7 +156,7 @@ var ItemDataManager = {
   removeItem: function removeItem(itemId, count) {
     var _this2 = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
-      var items, itemIndex, item;
+      var items, existingItemBefore, beforeCount, itemIndex, item, saveResult, existingItemAfter, afterCount;
       return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) switch (_context2.prev = _context2.next) {
           case 0:
@@ -146,24 +167,31 @@ var ItemDataManager = {
             return _this2.loadItems();
           case 3:
             items = _context2.sent;
+            existingItemBefore = items.find(function (item) {
+              return item.itemId === itemId;
+            });
+            beforeCount = existingItemBefore ? existingItemBefore.count : 0;
+            cc.log("[ItemDebug] removeItem \u524D => itemId=" + itemId + ", count=" + beforeCount + ", \u51CF\u5C11=" + count);
             itemIndex = items.findIndex(function (item) {
               return item.itemId === itemId;
             });
             if (!(itemIndex === -1)) {
-              _context2.next = 8;
-              break;
-            }
-            cc.warn("[ItemDataManager] \u6CA1\u6709\u9053\u5177: " + itemId);
-            return _context2.abrupt("return", false);
-          case 8:
-            item = items[itemIndex];
-            if (!(item.count < count)) {
               _context2.next = 12;
               break;
             }
-            cc.warn("[ItemDataManager] \u9053\u5177\u6570\u91CF\u4E0D\u8DB3: " + itemId + ", \u5F53\u524D: " + item.count + ", \u9700\u8981: " + count);
+            cc.warn("[ItemDataManager] \u6CA1\u6709\u9053\u5177: " + itemId);
+            cc.log("[ItemDebug] removeItem \u540E => itemId=" + itemId + ", count=" + beforeCount + ", \u6210\u529F=false (\u9053\u5177\u4E0D\u5B58\u5728)");
             return _context2.abrupt("return", false);
           case 12:
+            item = items[itemIndex];
+            if (!(item.count < count)) {
+              _context2.next = 17;
+              break;
+            }
+            cc.warn("[ItemDataManager] \u9053\u5177\u6570\u91CF\u4E0D\u8DB3: " + itemId + ", \u5F53\u524D: " + item.count + ", \u9700\u8981: " + count);
+            cc.log("[ItemDebug] removeItem \u540E => itemId=" + itemId + ", count=" + beforeCount + ", \u6210\u529F=false (\u6570\u91CF\u4E0D\u8DB3)");
+            return _context2.abrupt("return", false);
+          case 17:
             item.count -= count;
             if (item.count <= 0) {
               // 数量为0，移除该道具
@@ -172,11 +200,18 @@ var ItemDataManager = {
             } else {
               cc.log("[ItemDataManager] \u51CF\u5C11\u9053\u5177\u6570\u91CF: " + itemId + ", \u5269\u4F59\u6570\u91CF: " + item.count);
             }
-            _context2.next = 16;
+            _context2.next = 21;
             return _this2.saveItems(items);
-          case 16:
-            return _context2.abrupt("return", _context2.sent);
-          case 17:
+          case 21:
+            saveResult = _context2.sent;
+            // [ItemDebug] 记录操作后的数量（从保存后的 items 数组计算，不再重新请求）
+            existingItemAfter = items.find(function (item) {
+              return item.itemId === itemId;
+            });
+            afterCount = existingItemAfter ? existingItemAfter.count : 0;
+            cc.log("[ItemDebug] removeItem \u540E => itemId=" + itemId + ", count=" + afterCount + ", \u6210\u529F=" + saveResult);
+            return _context2.abrupt("return", saveResult);
+          case 26:
           case "end":
             return _context2.stop();
         }

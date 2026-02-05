@@ -472,6 +472,9 @@ app.get('/api/inventory', authenticateToken, async (req, res) => {
         // 从内存中获取数据
         const items = inventoryData[userId] || [];
 
+        // [ServerDebug] 记录读取的状态
+        console.log(`[ServerDebug] GET /api/inventory => userId=${userId}, 返回的items=${JSON.stringify(items)}`);
+
         res.json({
             success: true,
             data: {
@@ -493,8 +496,15 @@ app.put('/api/inventory', authenticateToken, async (req, res) => {
         const userId = req.user.id;
         const { items } = req.body;
 
+        // [ServerDebug] 记录保存前的状态
+        const beforeItems = inventoryData[userId] || [];
+        console.log(`[ServerDebug] PUT /api/inventory => userId=${userId}, 接收到的items=${JSON.stringify(items)}, 保存前的items=${JSON.stringify(beforeItems)}`);
+
         // 保存到内存
         inventoryData[userId] = items || [];
+
+        // [ServerDebug] 记录保存后的状态
+        console.log(`[ServerDebug] PUT /api/inventory => userId=${userId}, 保存后的items=${JSON.stringify(inventoryData[userId])}`);
 
         // 异步保存到文件（不阻塞响应）
         saveInventoryData().catch(err => {

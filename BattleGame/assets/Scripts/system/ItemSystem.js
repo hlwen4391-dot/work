@@ -73,7 +73,14 @@ var ItemSystem = {
 
         // 如果使用成功，减少道具数量（全局道具栏）
         if (result.success) {
+            // [ItemDebug] 使用前先记录当前数量
+            const beforeCount = await ItemDataManager.getItemCount(itemId);
+            cc.log(`[ItemDebug] useItem 前 => itemId=${itemId}, count=${beforeCount}, effectType=${effectType}`);
+
             await ItemDataManager.removeItem(itemId, 1);
+
+            const afterCount = await ItemDataManager.getItemCount(itemId);
+            cc.log(`1111111[ItemDebug] useItem 后 => itemId=${itemId}, count=${afterCount}, effectType=${effectType}`);
             cc.log(`[ItemSystem] 使用道具成功: ${itemConfig.name}`);
         }
 

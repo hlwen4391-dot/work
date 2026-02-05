@@ -1092,9 +1092,16 @@ cc.Class({
                 }
                 const EquipmentDataManager = require("EquipmentDataManager");
                 const ItemDataManager = require("ItemDataManager");
+                // 调试：卸下前的装备槽与背包数量
+                const beforeEquip = await EquipmentDataManager.getEquipment(characterName);
+                const beforeCount = await ItemDataManager.getItemCount(itemData.id);
+                cc.log(`[EquipDebug] 卸下前 => 角色=${characterName}, 槽位=${slotIndex}, itemId=${itemData.id}, 背包数量=${beforeCount}, 槽位=`, beforeEquip && beforeEquip.slots);
                 // 装备占用背包数量：卸下时需要把装备还回背包
                 await EquipmentDataManager.unequipSlot(characterName, slotIndex);
                 await ItemDataManager.addItem(itemData.id, 1);
+                const afterEquip = await EquipmentDataManager.getEquipment(characterName);
+                const afterCount = await ItemDataManager.getItemCount(itemData.id);
+                cc.log(`[EquipDebug] 卸下后 => 角色=${characterName}, 槽位=${slotIndex}, itemId=${itemData.id}, 背包数量=${afterCount}, 槽位=`, afterEquip && afterEquip.slots);
                 await this._updateEquipmentBar();
                 await this._updateInventory();
                 await this._applyEquipmentBonusesToDisplay();
@@ -1132,6 +1139,10 @@ cc.Class({
                         return;
                     }
 
+                    // 调试：装备前的装备槽与背包数量
+                    const beforeCount = await ItemDataManager.getItemCount(itemToEquip.id);
+                    cc.log(`[EquipDebug] 装备前 => 角色=${characterName}, 槽位=${slotIndex}, itemId=${itemToEquip.id}, 背包数量=${beforeCount}, 槽位=`, current && current.slots);
+
                     // 如果该槽位原来有装备，先把旧装备还回背包
                     const prevItemId = current.slots[slotIndex];
                     if (prevItemId) {
@@ -1154,6 +1165,10 @@ cc.Class({
                         this._clearDragState();
                         return;
                     }
+
+                    const afterEquip = await EquipmentDataManager.getEquipment(characterName);
+                    const afterCount = await ItemDataManager.getItemCount(itemToEquip.id);
+                    cc.log(`[EquipDebug] 装备后 => 角色=${characterName}, 槽位=${slotIndex}, itemId=${itemToEquip.id}, 背包数量=${afterCount}, 槽位=`, afterEquip && afterEquip.slots);
 
                     await this._updateEquipmentBar();
                     await this._updateInventory();

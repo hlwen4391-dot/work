@@ -28,7 +28,7 @@ var ItemSystem = {
   useItem: function useItem(characterNode, itemId) {
     var _this = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var itemCount, itemConfig, result, effectType;
+      var itemCount, itemConfig, result, effectType, beforeCount, afterCount;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -106,16 +106,26 @@ var ItemSystem = {
             return _context.abrupt("break", 33);
           case 33:
             if (!result.success) {
-              _context.next = 37;
+              _context.next = 45;
               break;
             }
             _context.next = 36;
-            return ItemDataManager.removeItem(itemId, 1);
+            return ItemDataManager.getItemCount(itemId);
           case 36:
+            beforeCount = _context.sent;
+            cc.log("[ItemDebug] useItem \u524D => itemId=" + itemId + ", count=" + beforeCount + ", effectType=" + effectType);
+            _context.next = 40;
+            return ItemDataManager.removeItem(itemId, 1);
+          case 40:
+            _context.next = 42;
+            return ItemDataManager.getItemCount(itemId);
+          case 42:
+            afterCount = _context.sent;
+            cc.log("1111111[ItemDebug] useItem \u540E => itemId=" + itemId + ", count=" + afterCount + ", effectType=" + effectType);
             cc.log("[ItemSystem] \u4F7F\u7528\u9053\u5177\u6210\u529F: " + itemConfig.name);
-          case 37:
+          case 45:
             return _context.abrupt("return", result);
-          case 38:
+          case 46:
           case "end":
             return _context.stop();
         }

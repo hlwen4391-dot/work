@@ -1062,7 +1062,7 @@ cc.Class({
   _onGlobalTouchEnd: function _onGlobalTouchEnd(event) {
     var _this10 = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
-      var wasDragging, hadDragState, target, characterName, slotNode, slotIndex, itemData, EquipmentDataManager, ItemDataManager, item, ItemConfig, cfg, itemToEquip, _EquipmentDataManager, _ItemDataManager, _slotIndex, current, prevItemId, count, ok;
+      var wasDragging, hadDragState, target, characterName, slotNode, slotIndex, itemData, EquipmentDataManager, ItemDataManager, beforeEquip, beforeCount, afterEquip, afterCount, item, ItemConfig, cfg, itemToEquip, _EquipmentDataManager, _ItemDataManager, _slotIndex, current, _beforeCount, prevItemId, count, ok, _afterEquip, _afterCount;
       return _regeneratorRuntime().wrap(function _callee4$(_context4) {
         while (1) switch (_context4.prev = _context4.next) {
           case 0:
@@ -1092,7 +1092,7 @@ cc.Class({
             characterName = _this10.currentUnitData ? _this10.currentUnitData.name : null;
             _context4.prev = 10;
             if (!(_this10._draggingFromEquipment && characterName)) {
-              _context4.next = 33;
+              _context4.next = 47;
               break;
             }
             slotNode = _this10._draggingFromEquipment;
@@ -1108,26 +1108,45 @@ cc.Class({
             return _context4.abrupt("return");
           case 20:
             EquipmentDataManager = require("EquipmentDataManager");
-            ItemDataManager = require("ItemDataManager"); // 装备占用背包数量：卸下时需要把装备还回背包
+            ItemDataManager = require("ItemDataManager"); // 调试：卸下前的装备槽与背包数量
             _context4.next = 24;
-            return EquipmentDataManager.unequipSlot(characterName, slotIndex);
+            return EquipmentDataManager.getEquipment(characterName);
           case 24:
-            _context4.next = 26;
+            beforeEquip = _context4.sent;
+            _context4.next = 27;
+            return ItemDataManager.getItemCount(itemData.id);
+          case 27:
+            beforeCount = _context4.sent;
+            cc.log("[EquipDebug] \u5378\u4E0B\u524D => \u89D2\u8272=" + characterName + ", \u69FD\u4F4D=" + slotIndex + ", itemId=" + itemData.id + ", \u80CC\u5305\u6570\u91CF=" + beforeCount + ", \u69FD\u4F4D=", beforeEquip && beforeEquip.slots);
+            // 装备占用背包数量：卸下时需要把装备还回背包
+            _context4.next = 31;
+            return EquipmentDataManager.unequipSlot(characterName, slotIndex);
+          case 31:
+            _context4.next = 33;
             return ItemDataManager.addItem(itemData.id, 1);
-          case 26:
-            _context4.next = 28;
-            return _this10._updateEquipmentBar();
-          case 28:
-            _context4.next = 30;
-            return _this10._updateInventory();
-          case 30:
-            _context4.next = 32;
-            return _this10._applyEquipmentBonusesToDisplay();
-          case 32:
-            return _context4.abrupt("return");
           case 33:
+            _context4.next = 35;
+            return EquipmentDataManager.getEquipment(characterName);
+          case 35:
+            afterEquip = _context4.sent;
+            _context4.next = 38;
+            return ItemDataManager.getItemCount(itemData.id);
+          case 38:
+            afterCount = _context4.sent;
+            cc.log("[EquipDebug] \u5378\u4E0B\u540E => \u89D2\u8272=" + characterName + ", \u69FD\u4F4D=" + slotIndex + ", itemId=" + itemData.id + ", \u80CC\u5305\u6570\u91CF=" + afterCount + ", \u69FD\u4F4D=", afterEquip && afterEquip.slots);
+            _context4.next = 42;
+            return _this10._updateEquipmentBar();
+          case 42:
+            _context4.next = 44;
+            return _this10._updateInventory();
+          case 44:
+            _context4.next = 46;
+            return _this10._applyEquipmentBonusesToDisplay();
+          case 46:
+            return _context4.abrupt("return");
+          case 47:
             if (!(_this10._draggingSlot && _this10._draggingItem && characterName)) {
-              _context4.next = 85;
+              _context4.next = 110;
               break;
             }
             item = _this10._draggingItem;
@@ -1137,104 +1156,119 @@ cc.Class({
             _this10._draggingSlot = null;
             _this10._draggingItem = null;
             if (!(!cfg || cfg.type !== "equipment" || !cfg.equipmentSlot)) {
-              _context4.next = 43;
+              _context4.next = 57;
               break;
             }
             _this10._clearDragState();
             return _context4.abrupt("return");
-          case 43:
+          case 57:
             if (!(wasDragging && target && target.isEquipment && target.slotType === cfg.equipmentSlot)) {
-              _context4.next = 84;
+              _context4.next = 109;
               break;
             }
             _EquipmentDataManager = require("EquipmentDataManager");
             _ItemDataManager = require("ItemDataManager");
             _slotIndex = target.slotIndex;
-            _context4.next = 49;
+            _context4.next = 63;
             return _EquipmentDataManager.getEquipment(characterName);
-          case 49:
+          case 63:
             current = _context4.sent;
             if (!(current && current.slots && current.slots[_slotIndex] === itemToEquip.id)) {
-              _context4.next = 54;
+              _context4.next = 68;
               break;
             }
             cc.log("[CharacterViewUI] \u69FD\u4F4D " + _slotIndex + " \u5DF2\u7ECF\u662F\u88C5\u5907 " + itemToEquip.id + "\uFF0C\u62D6\u62FD\u5FFD\u7565");
             _this10._clearDragState();
             return _context4.abrupt("return");
-          case 54:
+          case 68:
             if (!(current && current.slots && current.slots.some(function (id, idx) {
               return idx !== _slotIndex && id === itemToEquip.id;
             }))) {
-              _context4.next = 58;
+              _context4.next = 72;
               break;
             }
             cc.warn("[CharacterViewUI] \u89D2\u8272 " + characterName + " \u5DF2\u7ECF\u88C5\u5907\u4E86\u76F8\u540C\u7684\u88C5\u5907(" + itemToEquip.id + ")\uFF0C\u672C\u6B21\u62D6\u62FD\u4E0D\u751F\u6548");
             _this10._clearDragState();
             return _context4.abrupt("return");
-          case 58:
+          case 72:
+            _context4.next = 74;
+            return _ItemDataManager.getItemCount(itemToEquip.id);
+          case 74:
+            _beforeCount = _context4.sent;
+            cc.log("[EquipDebug] \u88C5\u5907\u524D => \u89D2\u8272=" + characterName + ", \u69FD\u4F4D=" + _slotIndex + ", itemId=" + itemToEquip.id + ", \u80CC\u5305\u6570\u91CF=" + _beforeCount + ", \u69FD\u4F4D=", current && current.slots);
+
             // 如果该槽位原来有装备，先把旧装备还回背包
             prevItemId = current.slots[_slotIndex];
             if (!prevItemId) {
-              _context4.next = 62;
+              _context4.next = 80;
               break;
             }
-            _context4.next = 62;
-            return _ItemDataManager.addItem(prevItemId, 1);
-          case 62:
-            _context4.next = 64;
-            return _ItemDataManager.getItemCount(itemToEquip.id);
-          case 64:
-            count = _context4.sent;
-            if (!(count <= 0)) {
-              _context4.next = 68;
-              break;
-            }
-            _this10._clearDragState();
-            return _context4.abrupt("return");
-          case 68:
-            _context4.next = 70;
-            return _ItemDataManager.removeItem(itemToEquip.id, 1);
-          case 70:
-            _context4.next = 72;
-            return _EquipmentDataManager.setEquipmentSlot(characterName, _slotIndex, itemToEquip.id);
-          case 72:
-            ok = _context4.sent;
-            if (ok) {
-              _context4.next = 78;
-              break;
-            }
-            _context4.next = 76;
-            return _ItemDataManager.addItem(itemToEquip.id, 1);
-          case 76:
-            _this10._clearDragState();
-            return _context4.abrupt("return");
-          case 78:
             _context4.next = 80;
-            return _this10._updateEquipmentBar();
+            return _ItemDataManager.addItem(prevItemId, 1);
           case 80:
             _context4.next = 82;
-            return _this10._updateInventory();
+            return _ItemDataManager.getItemCount(itemToEquip.id);
           case 82:
-            _context4.next = 84;
-            return _this10._applyEquipmentBonusesToDisplay();
-          case 84:
+            count = _context4.sent;
+            if (!(count <= 0)) {
+              _context4.next = 86;
+              break;
+            }
+            _this10._clearDragState();
             return _context4.abrupt("return");
-          case 85:
+          case 86:
+            _context4.next = 88;
+            return _ItemDataManager.removeItem(itemToEquip.id, 1);
+          case 88:
             _context4.next = 90;
+            return _EquipmentDataManager.setEquipmentSlot(characterName, _slotIndex, itemToEquip.id);
+          case 90:
+            ok = _context4.sent;
+            if (ok) {
+              _context4.next = 96;
+              break;
+            }
+            _context4.next = 94;
+            return _ItemDataManager.addItem(itemToEquip.id, 1);
+          case 94:
+            _this10._clearDragState();
+            return _context4.abrupt("return");
+          case 96:
+            _context4.next = 98;
+            return _EquipmentDataManager.getEquipment(characterName);
+          case 98:
+            _afterEquip = _context4.sent;
+            _context4.next = 101;
+            return _ItemDataManager.getItemCount(itemToEquip.id);
+          case 101:
+            _afterCount = _context4.sent;
+            cc.log("[EquipDebug] \u88C5\u5907\u540E => \u89D2\u8272=" + characterName + ", \u69FD\u4F4D=" + _slotIndex + ", itemId=" + itemToEquip.id + ", \u80CC\u5305\u6570\u91CF=" + _afterCount + ", \u69FD\u4F4D=", _afterEquip && _afterEquip.slots);
+            _context4.next = 105;
+            return _this10._updateEquipmentBar();
+          case 105:
+            _context4.next = 107;
+            return _this10._updateInventory();
+          case 107:
+            _context4.next = 109;
+            return _this10._applyEquipmentBonusesToDisplay();
+          case 109:
+            return _context4.abrupt("return");
+          case 110:
+            _context4.next = 115;
             break;
-          case 87:
-            _context4.prev = 87;
+          case 112:
+            _context4.prev = 112;
             _context4.t0 = _context4["catch"](10);
             cc.error("[CharacterViewUI] 拖拽处理错误:", _context4.t0.message);
-          case 90:
-            _context4.prev = 90;
+          case 115:
+            _context4.prev = 115;
             _this10._clearDragState();
-            return _context4.finish(90);
-          case 93:
+            return _context4.finish(115);
+          case 118:
           case "end":
             return _context4.stop();
         }
-      }, _callee4, null, [[10, 87, 90, 93]]);
+      }, _callee4, null, [[10, 112, 115, 118]]);
     }))();
   },
   /**

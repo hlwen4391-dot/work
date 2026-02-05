@@ -72,7 +72,12 @@ var ItemDataManager = {
      * @returns {Promise<boolean>|boolean} 是否添加成功（服务器模式下返回Promise）
      */
     async addItem(itemId, count = 1) {
+        // 先加载一次数据，用于记录操作前的数量（避免多次请求导致数据不一致）
         const items = await this.loadItems();
+        const existingItemBefore = items.find(item => item.itemId === itemId);
+        const beforeCount = existingItemBefore ? existingItemBefore.count : 0;
+        cc.log(`[ItemDebug] addItem 前 => itemId=${itemId}, count=${beforeCount}, 增加=${count}`);
+
         const ItemConfig = require("ItemConfig");
         const itemConfig = ItemConfig.getItemById(itemId);
 
@@ -81,12 +86,17 @@ var ItemDataManager = {
             return false;
         }
 
-        // 查找是否已有该道具
+        // 查找是否已有该道具（使用上面加载的 items，不再重新加载）
         const existingItem = items.find(item => item.itemId === itemId);
+
+        // [ItemDebug] 详细日志：检查 existingItem 的状态
+        cc.log(`[ItemDebug] addItem 内部检查 => existingItem=${existingItem ? JSON.stringify(existingItem) : 'null'}, items数组长度=${items.length}, items内容=${JSON.stringify(items)}`);
 
         if (existingItem) {
             // 已有该道具，增加数量（不超过最大堆叠）
+            const oldCount = existingItem.count;
             const newCount = Math.min(existingItem.count + count, itemConfig.maxStack || 99);
+            cc.log(`[ItemDebug] addItem 计算 => oldCount=${oldCount}, count=${count}, maxStack=${itemConfig.maxStack || 99}, newCount=${newCount}`);
             existingItem.count = newCount;
             cc.log(`[ItemDataManager] 增加道具数量: ${itemId}, 当前数量: ${newCount}`);
         } else {
@@ -95,7 +105,20 @@ var ItemDataManager = {
             cc.log(`[ItemDataManager] 添加新道具: ${itemId}, 数量: ${count}`);
         }
 
-        return await this.saveItems(items);
+        // [ItemDebug] 保存前的完整 items 数组状态
+        cc.log(`[ItemDebug] addItem 保存前 => items数组=${JSON.stringify(items)}`);
+
+        const saveResult = await this.saveItems(items);
+
+        // [ItemDebug] 保存后的完整 items 数组状态
+        cc.log(`[ItemDebug] addItem 保存后 => items数组=${JSON.stringify(items)}, 保存结果=${saveResult}`);
+
+        // [ItemDebug] 记录操作后的数量（从保存后的 items 数组计算，不再重新请求）
+        const existingItemAfter = items.find(item => item.itemId === itemId);
+        const afterCount = existingItemAfter ? existingItemAfter.count : 0;
+        cc.log(`[ItemDebug] addItem 后 => itemId=${itemId}, count=${afterCount}, 成功=${saveResult}`);
+
+        return saveResult;
     },
 
     /**
@@ -105,17 +128,24 @@ var ItemDataManager = {
      * @returns {Promise<boolean>|boolean} 是否移除成功（服务器模式下返回Promise）
      */
     async removeItem(itemId, count = 1) {
+        // 先加载一次数据，用于记录操作前的数量（避免多次请求导致数据不一致）
         const items = await this.loadItems();
+        const existingItemBefore = items.find(item => item.itemId === itemId);
+        const beforeCount = existingItemBefore ? existingItemBefore.count : 0;
+        cc.log(`[ItemDebug] removeItem 前 => itemId=${itemId}, count=${beforeCount}, 减少=${count}`);
+
         const itemIndex = items.findIndex(item => item.itemId === itemId);
 
         if (itemIndex === -1) {
             cc.warn(`[ItemDataManager] 没有道具: ${itemId}`);
+            cc.log(`[ItemDebug] removeItem 后 => itemId=${itemId}, count=${beforeCount}, 成功=false (道具不存在)`);
             return false;
         }
 
         const item = items[itemIndex];
         if (item.count < count) {
             cc.warn(`[ItemDataManager] 道具数量不足: ${itemId}, 当前: ${item.count}, 需要: ${count}`);
+            cc.log(`[ItemDebug] removeItem 后 => itemId=${itemId}, count=${beforeCount}, 成功=false (数量不足)`);
             return false;
         }
 
@@ -128,7 +158,14 @@ var ItemDataManager = {
             cc.log(`[ItemDataManager] 减少道具数量: ${itemId}, 剩余数量: ${item.count}`);
         }
 
-        return await this.saveItems(items);
+        const saveResult = await this.saveItems(items);
+
+        // [ItemDebug] 记录操作后的数量（从保存后的 items 数组计算，不再重新请求）
+        const existingItemAfter = items.find(item => item.itemId === itemId);
+        const afterCount = existingItemAfter ? existingItemAfter.count : 0;
+        cc.log(`[ItemDebug] removeItem 后 => itemId=${itemId}, count=${afterCount}, 成功=${saveResult}`);
+
+        return saveResult;
     },
 
     /**
