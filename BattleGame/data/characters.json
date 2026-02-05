@@ -1,16 +1,1 @@
-{
-  "1": {
-    "战士": {
-      "level": 2,
-      "exp": 100,
-      "baseHp": 120,
-      "baseAttack": 18,
-      "baseDefense": 1,
-      "baseSpeed": 2,
-      "baseCrit": 0,
-      "baseMiss": 0,
-      "skills": [],
-      "saveTime": 1770205202912
-    }
-  }
-}
+{}
