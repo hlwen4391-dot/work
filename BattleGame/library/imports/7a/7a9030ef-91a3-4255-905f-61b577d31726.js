@@ -169,6 +169,7 @@ var ItemConfig = {
     price: 30
   },
   // 装备：可穿戴到装备栏
+  // 装备在背包中可堆叠多件；装备栏“每槽位一件”由槽位逻辑保证
   {
     id: "war_hammer",
     name: "战锤",
@@ -178,7 +179,7 @@ var ItemConfig = {
     type: "equipment",
     effectType: "attack",
     effectValue: 15,
-    maxStack: 1,
+    maxStack: 99,
     rarity: "uncommon",
     price: 500,
     equipmentSlot: "weapon"
@@ -191,7 +192,7 @@ var ItemConfig = {
     type: "equipment",
     effectType: "defense",
     effectValue: 10,
-    maxStack: 1,
+    maxStack: 99,
     rarity: "uncommon",
     price: 400,
     equipmentSlot: "armor"
@@ -204,7 +205,7 @@ var ItemConfig = {
     type: "equipment",
     effectType: "speed",
     effectValue: 2,
-    maxStack: 1,
+    maxStack: 99,
     rarity: "common",
     price: 200,
     equipmentSlot: "shoes"

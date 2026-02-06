@@ -6359,11 +6359,6 @@
     "meta": 1770190273735,
     "relativePath": "Items\\战锤图片.png"
   },
-  "7a9030ef-91a3-4255-905f-61b577d31726": {
-    "asset": 1770186926968,
-    "meta": 1770187363001,
-    "relativePath": "Scripts\\game\\ItemConfig.js"
-  },
   "fa1caa32-1d06-46fb-8e94-caae8e5c7e04": {
     "asset": 1770186926947,
     "meta": 1770187363026,
@@ -6418,5 +6413,10 @@
     "asset": 1770291156762,
     "meta": 1770291353965,
     "relativePath": "Scripts\\system\\ItemDataManager.js"
+  },
+  "7a9030ef-91a3-4255-905f-61b577d31726": {
+    "asset": 1770346181448,
+    "meta": 1770346268208,
+    "relativePath": "Scripts\\game\\ItemConfig.js"
   }
 }
