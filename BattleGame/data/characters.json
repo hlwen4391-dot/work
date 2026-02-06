@@ -1,1 +1,85 @@
-{}
+{
+  "1": {
+    "怪物": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 130,
+      "baseAttack": 12,
+      "baseDefense": 1,
+      "baseSpeed": 1,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "skills": [
+        {
+          "id": 1,
+          "name": "普通攻击",
+          "cooldown": 0.5,
+          "requireRage": 0,
+          "isUltimate": false
+        },
+        {
+          "id": 7,
+          "name": "兽化狂暴",
+          "cooldown": 4,
+          "requireRage": 0,
+          "isUltimate": false
+        }
+      ],
+      "saveTime": 1770358333581
+    },
+    "Boss": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 150,
+      "baseAttack": 20,
+      "baseDefense": 1,
+      "baseSpeed": 1,
+      "baseCrit": 0,
+      "baseMiss": 0,
+      "skills": [
+        {
+          "id": 1,
+          "name": "普通攻击",
+          "cooldown": 0.5,
+          "requireRage": 0,
+          "isUltimate": false
+        },
+        {
+          "id": 5,
+          "name": "战吼",
+          "cooldown": 5,
+          "requireRage": 100,
+          "isUltimate": true
+        }
+      ],
+      "saveTime": 1770358333583
+    },
+    "大祭司": {
+      "level": 2,
+      "exp": 200,
+      "baseHp": 110,
+      "baseAttack": 19,
+      "baseDefense": 1,
+      "baseSpeed": 2,
+      "baseCrit": -0.1,
+      "baseMiss": 0,
+      "skills": [
+        {
+          "id": 1,
+          "name": "普通攻击",
+          "cooldown": 0.5,
+          "requireRage": 0,
+          "isUltimate": false
+        },
+        {
+          "id": 10,
+          "name": "净化术",
+          "cooldown": 4,
+          "requireRage": 100,
+          "isUltimate": true
+        }
+      ],
+      "saveTime": 1770358333586
+    }
+  }
+}

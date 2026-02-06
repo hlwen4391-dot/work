@@ -1,1 +1,52 @@
-{}
+{
+  "1": {
+    "怪物": [
+      {
+        "id": 1,
+        "name": "普通攻击",
+        "cooldown": 0.5,
+        "requireRage": 0,
+        "isUltimate": false
+      },
+      {
+        "id": 7,
+        "name": "兽化狂暴",
+        "cooldown": 4,
+        "requireRage": 0,
+        "isUltimate": false
+      }
+    ],
+    "Boss": [
+      {
+        "id": 1,
+        "name": "普通攻击",
+        "cooldown": 0.5,
+        "requireRage": 0,
+        "isUltimate": false
+      },
+      {
+        "id": 5,
+        "name": "战吼",
+        "cooldown": 5,
+        "requireRage": 100,
+        "isUltimate": true
+      }
+    ],
+    "大祭司": [
+      {
+        "id": 1,
+        "name": "普通攻击",
+        "cooldown": 0.5,
+        "requireRage": 0,
+        "isUltimate": false
+      },
+      {
+        "id": 10,
+        "name": "净化术",
+        "cooldown": 4,
+        "requireRage": 100,
+        "isUltimate": true
+      }
+    ]
+  }
+}

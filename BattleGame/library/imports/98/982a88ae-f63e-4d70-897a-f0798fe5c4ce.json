@@ -1417,6 +1417,9 @@
     "baseSpeed": 1,
     "baseCrit": 0,
     "baseMiss": 0,
+    "equipmentBonusAttack": 0,
+    "equipmentBonusDefense": 0,
+    "equipmentBonusSpeed": 0,
     "_id": ""
   },
   {
@@ -1533,6 +1536,7 @@
     "tickTimer": 0,
     "status": {},
     "shieldValue": 0,
+    "caster": null,
     "_id": ""
   },
   {
